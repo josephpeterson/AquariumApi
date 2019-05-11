@@ -1,0 +1,5 @@
+﻿{
+  "Database": {
+    "dbAquarium": "Data Source=dbaquarium.cryph2qahkpk.us-east-2.rds.amazonaws.com;Database=dbAquarium;Trusted_Connection=True;MultipleActiveResultSets=true;User ID=SA; Password=devaquarium;"
+  }
+}

@@ -1,0 +1,53 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.Core", "AquariumApi.Core\AquariumApi.Core.csproj", "{28F3DA58-15A1-424F-90BC-1EBE294370E3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5A7E1897-C2AC-4F80-BD50-5098F58B0375} = {5A7E1897-C2AC-4F80-BD50-5098F58B0375}
+		{09533DD1-ACC8-469F-8A13-65366BB94748} = {09533DD1-ACC8-469F-8A13-65366BB94748}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.DataAccess", "AquariumApi.DataAccess\AquariumApi.DataAccess.csproj", "{09533DD1-ACC8-469F-8A13-65366BB94748}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5A7E1897-C2AC-4F80-BD50-5098F58B0375} = {5A7E1897-C2AC-4F80-BD50-5098F58B0375}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.Models", "AquariumApi.Models\AquariumApi.Models.csproj", "{5A7E1897-C2AC-4F80-BD50-5098F58B0375}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AquariumApi", "AquariumApi\AquariumApi.csproj", "{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{28F3DA58-15A1-424F-90BC-1EBE294370E3} = {28F3DA58-15A1-424F-90BC-1EBE294370E3}
+		{09533DD1-ACC8-469F-8A13-65366BB94748} = {09533DD1-ACC8-469F-8A13-65366BB94748}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{28F3DA58-15A1-424F-90BC-1EBE294370E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28F3DA58-15A1-424F-90BC-1EBE294370E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28F3DA58-15A1-424F-90BC-1EBE294370E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28F3DA58-15A1-424F-90BC-1EBE294370E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09533DD1-ACC8-469F-8A13-65366BB94748}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09533DD1-ACC8-469F-8A13-65366BB94748}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09533DD1-ACC8-469F-8A13-65366BB94748}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09533DD1-ACC8-469F-8A13-65366BB94748}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A7E1897-C2AC-4F80-BD50-5098F58B0375}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A7E1897-C2AC-4F80-BD50-5098F58B0375}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A7E1897-C2AC-4F80-BD50-5098F58B0375}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A7E1897-C2AC-4F80-BD50-5098F58B0375}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {50A6F070-4954-47A8-A8B1-FA3D5974E864}
+	EndGlobalSection
+EndGlobal
