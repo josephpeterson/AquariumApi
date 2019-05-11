@@ -9,7 +9,7 @@ namespace AquariumApi.DataAccess
 {
     public interface IAquariumDao
     {
-        List<AquariumTank> GetTanks();
+        List<Aquarium> GetTanks();
     }
 
     public class AquariumDao : IAquariumDao
@@ -26,9 +26,9 @@ namespace AquariumApi.DataAccess
             _logger = logger;
         }
 
-        public List<AquariumTank> GetTanks()
+        public List<Aquarium> GetTanks()
         {
-            return _dbAquariumContext.TblTank.AsNoTracking().Select(t => _mapper.Map<AquariumTank>(t)).ToList();
+            return _dbAquariumContext.TblTank.AsNoTracking().Select(t => _mapper.Map<Aquarium>(t)).ToList();
         }
     }
 }

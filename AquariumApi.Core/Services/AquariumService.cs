@@ -10,7 +10,7 @@ namespace AquariumApi.Core
 {
     public interface IAquariumService
     {
-        List<AquariumTank> GetAllAquariums();
+        List<Aquarium> GetAllAquariums();
     }
     public class AquariumService : IAquariumService
     {
@@ -22,7 +22,7 @@ namespace AquariumApi.Core
             _logger = logger;
         }
 
-        public List<AquariumTank> GetAllAquariums()
+        public List<Aquarium> GetAllAquariums()
         {
             return _aquariumDao.GetTanks();
         }

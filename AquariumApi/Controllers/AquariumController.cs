@@ -21,7 +21,7 @@ namespace AquariumApi.Controllers
         }
         [HttpGet]
         [Route("/v1/Aquariums")]
-        [ProducesResponseType(typeof(List<AquariumTank>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Aquarium>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult Index()
         {

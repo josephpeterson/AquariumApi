@@ -1,11 +1,12 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace AquariumApi.DataAccess
+namespace AquariumApi.Models
 {
-    [Table("tblTank")]
-    public partial class tblTank
+    public class Aquarium
     {
+        [Required]
         public int Id { get; set; }
         public string Name { get; set; }
         public int Gallons { get; set; }
