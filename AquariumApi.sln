@@ -21,6 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi", "AquariumApi\
 		{09533DD1-ACC8-469F-8A13-65366BB94748} = {09533DD1-ACC8-469F-8A13-65366BB94748}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AquariumApi.Tests", "AquariumApi.Tests\AquariumApi.Tests.csproj", "{4A891A6C-E7F3-4183-9E5E-82475EB5539E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0} = {88D70AE2-48E0-4DFC-9916-B14F3D7806D0}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +48,10 @@ Global
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

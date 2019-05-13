@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MMALSharp" Version="0.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AquariumApi.DataAccess\AquariumApi.DataAccess.csproj" />
   </ItemGroup>
 

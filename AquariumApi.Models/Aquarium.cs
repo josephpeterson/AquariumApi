@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
+    [Table("tblAquarium")]
     public class Aquarium
     {
         [Required]
@@ -12,5 +14,6 @@ namespace AquariumApi.Models
         public int Gallons { get; set; }
         public string Type { get; set; }
         public DateTime StartDate { get; set; }
+
     }
 }

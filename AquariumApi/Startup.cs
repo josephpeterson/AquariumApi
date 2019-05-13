@@ -69,6 +69,7 @@ namespace AquariumApi
             app.UseStaticFiles();
 
 
+
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 
@@ -77,11 +78,20 @@ namespace AquariumApi
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = string.Empty;
+                c.RoutePrefix = "swagger";
             });
 
+            app.UseMvc(routes =>
+            {
+                // default routes plus any other custom routes
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
+                    routes.MapSpaFallbackRoute(
+                    name: "spa-fallback",
+                    defaults: new { controller = "Home", action = "Spa" });
+            });
             app.UseHttpsRedirection();
-            app.UseMvc();
         }
 
         private void RegisterServices(IServiceCollection services)
@@ -90,7 +100,9 @@ namespace AquariumApi
                 .UseSqlServer(Configuration["Database:dbAquarium"])
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
             services.AddTransient<IAquariumDao, AquariumDao>();
+            services.AddTransient<IPhotoManager, PhotoManager>();
             services.AddTransient<IAquariumService, AquariumService>();
+            services.AddSingleton<IConfiguration>(Configuration);
         }
     }
 }
