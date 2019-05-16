@@ -21,6 +21,7 @@ namespace AquariumApi.Models
         public decimal Nitrate { get; set; }
         public decimal Ph { get; set; }
         public int Temperature { get; set; }
+        public int? PhotoId { get; set; }
 
     }
 }

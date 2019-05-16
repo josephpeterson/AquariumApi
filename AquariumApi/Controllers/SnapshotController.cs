@@ -54,14 +54,6 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation($"GET /v1/Snapshot/{aquariumId}/Take called");
                 //Take snapshot
                 var snapshot = _aquariumService.TakeSnapshot(aquariumId);
-                //Take photo
-                var folder = _config["PhotoSubPath"] + $"{aquariumId}";
-                var destination = $"{folder}/{snapshot.Id}.jpg";
-                Directory.CreateDirectory(folder);
-                _logger.LogInformation($"Taking photo snapshot {snapshot.Id}...");
-                var photo = _photoManager.TakePhoto().Result;
-                _logger.LogInformation($"Moving photo {photo}...");
-                System.IO.File.Move(photo, destination);
 
                 return new OkObjectResult(snapshot);
             }

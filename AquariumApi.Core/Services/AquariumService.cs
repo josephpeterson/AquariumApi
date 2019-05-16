@@ -56,7 +56,26 @@ namespace AquariumApi.Core
 
         public AquariumSnapshot TakeSnapshot(int aquariumId)
         {
-            var snapshotId = _aquariumDao.GetSnapshots().Where(s => s.AquariumId == aquariumId).Count();
+            int? snapshotId = _aquariumDao.GetSnapshots().Where(s => s.AquariumId == aquariumId).Count();
+
+            //Take photo
+            try
+            {
+                var folder = _config["PhotoSubPath"] + $"{aquariumId}";
+                var destination = $"{folder}/{snapshotId}.jpg";
+                Directory.CreateDirectory(folder);
+                _logger.LogInformation($"Taking photo snapshot {snapshotId}...");
+                var photo = _photoManager.TakePhoto().Result;
+                _logger.LogInformation($"Moving photo {photo}...");
+                System.IO.File.Move(photo, destination);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+                snapshotId = null;
+            }
+
+
             var snapshot = new AquariumSnapshot()
             {
                 AquariumId = aquariumId,
@@ -64,7 +83,8 @@ namespace AquariumApi.Core
                 Temperature = 0,
                 Nitrate = 0.0M,
                 Nitrite = 0.0M,
-                Ph = 5.5M
+                Ph = 5.5M,
+                PhotoId = snapshotId
             };
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
             return newSnapshot;
