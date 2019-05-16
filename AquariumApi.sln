@@ -21,9 +21,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi", "AquariumApi\
 		{09533DD1-ACC8-469F-8A13-65366BB94748} = {09533DD1-ACC8-469F-8A13-65366BB94748}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AquariumApi.Tests", "AquariumApi.Tests\AquariumApi.Tests.csproj", "{4A891A6C-E7F3-4183-9E5E-82475EB5539E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.Tests", "AquariumApi.Tests\AquariumApi.Tests.csproj", "{4A891A6C-E7F3-4183-9E5E-82475EB5539E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0} = {88D70AE2-48E0-4DFC-9916-B14F3D7806D0}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3FB6B02F-06D7-43A6-BBE1-8B13ADBBB2BF}"
+	ProjectSection(SolutionItems) = preProject
+		readme.txt = readme.txt
 	EndProjectSection
 EndProject
 Global

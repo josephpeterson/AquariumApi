@@ -18,7 +18,7 @@ namespace AquariumApi.Controllers
         private readonly IConfiguration _config;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public SnapshotController(IConfiguration config,IPhotoManager photoManager,IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        public SnapshotController(IConfiguration config, IPhotoManager photoManager, IAquariumService aquariumService, ILogger<SnapshotController> logger)
         {
             _photoManager = photoManager;
             _config = config;
@@ -29,10 +29,18 @@ namespace AquariumApi.Controllers
         [Route("/v1/Snapshot/{id}/All")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult GetSnapshots(int id,[FromQuery] int count, [FromQuery] int offset = 0)
+        public IActionResult GetSnapshots(int id, [FromQuery] int count, [FromQuery] int offset = 0)
         {
-            var data = _aquariumService.GetSnapshots(id);
-            return new OkObjectResult(data);
+            try
+            {
+                var data = _aquariumService.GetSnapshots(id);
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Snapshot/{id}/All endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
         }
         [HttpGet]
         [Route("/v1/Snapshot/{aquariumId}/{snapshotId}")]
@@ -40,8 +48,17 @@ namespace AquariumApi.Controllers
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetSnapshotById(int aquariumId, int snapshotId, [FromQuery] int count, [FromQuery] int offset = 0)
         {
-            var data = _aquariumService.GetSnapshots(aquariumId).Where(s => s.Id == snapshotId).First();
-            return new OkObjectResult(data);
+            try
+            {
+                var data = _aquariumService.GetSnapshots(aquariumId).Where(s => s.Id == snapshotId).First();
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Snapshot/{aquariumId}/GetSnapshotById endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+
         }
         [HttpGet]
         [Route("/v1/Snapshot/{aquariumId}/Take")]
