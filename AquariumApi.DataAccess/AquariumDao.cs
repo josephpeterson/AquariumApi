@@ -1,5 +1,6 @@
 ﻿using AquariumApi.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace AquariumApi.DataAccess
         List<AquariumSnapshot> GetSnapshots();
         Aquarium AddAquarium(Aquarium aquarium);
         AquariumSnapshot AddSnapshot(AquariumSnapshot snapshot);
+        Aquarium UpdateAquarium(Aquarium aquarium);
     }
 
     public class AquariumDao : IAquariumDao
@@ -50,6 +52,19 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblSnapshot.Add(model);
             _dbAquariumContext.SaveChanges();
             return model;
+        }
+
+        public Aquarium UpdateAquarium(Aquarium aquarium)
+        {
+            var aqToUpdate = _dbAquariumContext.TblAquarium.SingleOrDefault(aq => aq.Id == aquarium.Id);
+            if (aqToUpdate == null)
+                throw new KeyNotFoundException();
+            aqToUpdate.Gallons = aquarium.Gallons;
+            aqToUpdate.Type = aquarium.Type;
+            aqToUpdate.StartDate = aquarium.StartDate;
+            aqToUpdate.Name = aquarium.Name;
+            _dbAquariumContext.SaveChanges();
+            return aqToUpdate;
         }
     }
 }

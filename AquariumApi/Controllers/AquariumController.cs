@@ -77,5 +77,21 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        [HttpPost]
+        [Route("/v1/Aquarium/Update")]
+        public IActionResult UpdateAquarium([FromBody] Aquarium updatedAquarium)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Update called");
+                var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
+                return new OkObjectResult(aquarium);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }

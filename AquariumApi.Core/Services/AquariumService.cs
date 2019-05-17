@@ -17,6 +17,7 @@ namespace AquariumApi.Core
         Aquarium GetAquarium(int id);
         List<AquariumSnapshot> GetSnapshots(int aquariumId);
         AquariumSnapshot TakeSnapshot(int aquariumId);
+        Aquarium UpdateAquarium(Aquarium aquarium);
     }
     public class AquariumService : IAquariumService
     {
@@ -42,6 +43,10 @@ namespace AquariumApi.Core
         public Aquarium AddAquarium(Aquarium aquarium)
         {
             return _aquariumDao.AddAquarium(aquarium);
+        }
+        public Aquarium UpdateAquarium(Aquarium aquarium)
+        {
+            return _aquariumDao.UpdateAquarium(aquarium);
         }
         public List<AquariumSnapshot> GetSnapshots(int aquariumId)
         {

@@ -9,6 +9,7 @@ namespace AquariumApi.Models
     public class Aquarium
     {
         [Required]
+        [Key]
         public int Id { get; set; }
         public string Name { get; set; }
         public int Gallons { get; set; }

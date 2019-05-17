@@ -98,7 +98,7 @@ namespace AquariumApi
         {
             services.AddDbContext<DbAquariumContext>(options => options
                 .UseSqlServer(Configuration["Database:dbAquarium"])
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll));
             services.AddTransient<IAquariumDao, AquariumDao>();
             services.AddTransient<IPhotoManager, PhotoManager>();
             services.AddTransient<IAquariumService, AquariumService>();
