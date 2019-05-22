@@ -4,6 +4,7 @@ using MMALSharp.Handlers;
 using MMALSharp.Native;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,9 +24,13 @@ namespace AquariumApi.Core
         }
         public async Task<string> TakePhoto()
         {
-            MMALCameraConfig.Debug = true;
-            var path = "temp";
+            var path = "./temp";
             var ext = "jpg";
+
+            var output = $"/usr/bin/raspistill -o {path}.{ext}".Bash();
+
+            return $"{path}.{ext}";
+
             MMALCamera cam = MMALCamera.Instance;
             using (var imgCaptureHandler = new ImageStreamCaptureHandler(path, ext))
             {

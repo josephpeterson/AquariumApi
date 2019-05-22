@@ -78,7 +78,7 @@ public class AquariumServiceTests
             Nitrate = 0,
             Nitrite = 0,
             Temperature = 70,
-            Ph = 7.0,
+            Ph = 7.0M,
             Date = DateTime.Now
         };
 

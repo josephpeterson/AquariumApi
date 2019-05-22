@@ -73,7 +73,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Counterparties caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/Add caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
@@ -86,6 +86,22 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation("POST /v1/Aquariums/Update called");
                 var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
                 return new OkObjectResult(aquarium);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Aquarium/Delete")]
+        public IActionResult DeleteAquarium([FromBody] int removeAquariumId)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                _aquariumService.DeleteAquarium(removeAquariumId);
+                return new OkResult();
             }
             catch (Exception ex)
             {

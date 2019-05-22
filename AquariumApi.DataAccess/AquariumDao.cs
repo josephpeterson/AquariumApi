@@ -15,6 +15,8 @@ namespace AquariumApi.DataAccess
         Aquarium AddAquarium(Aquarium aquarium);
         AquariumSnapshot AddSnapshot(AquariumSnapshot snapshot);
         Aquarium UpdateAquarium(Aquarium aquarium);
+        void DeleteAquarium(int aquariumId);
+        AquariumSnapshot DeleteSnapshot(int snapshotId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -46,6 +48,12 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return model;
         }
+        public void DeleteAquarium(int aquariumId)
+        {
+            var aquarium = GetAquariums().Where(aq => aq.Id == aquariumId).First();
+            _dbAquariumContext.TblAquarium.Remove(aquarium);
+            _dbAquariumContext.SaveChanges();
+        }
 
         public AquariumSnapshot AddSnapshot(AquariumSnapshot model)
         {
@@ -65,6 +73,14 @@ namespace AquariumApi.DataAccess
             aqToUpdate.Name = aquarium.Name;
             _dbAquariumContext.SaveChanges();
             return aqToUpdate;
+        }
+
+        public AquariumSnapshot DeleteSnapshot(int snapshotId)
+        {
+            var snapshot = GetSnapshots().Where(snap => snap.Id == snapshotId).First();
+            _dbAquariumContext.TblSnapshot.Remove(snapshot);
+            _dbAquariumContext.SaveChanges();
+            return snapshot;
         }
     }
 }

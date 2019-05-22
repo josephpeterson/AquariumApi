@@ -60,17 +60,33 @@ namespace AquariumApi.Controllers
             }
 
         }
+        [HttpPost]
+        [Route("/v1/Snapshot/Delete")]
+        public IActionResult DeleteSnapshot([FromBody] int removeSnapshotId)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                _aquariumService.DeleteSnapshot(removeSnapshotId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
         [HttpGet]
-        [Route("/v1/Snapshot/{aquariumId}/Take")]
+        [Route("/v1/Snapshot/{aquariumId}/Take/{photo}")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult TakeSnapshot(int aquariumId)
+        public IActionResult TakeSnapshot(int aquariumId,bool photo)
         {
             try
             {
                 _logger.LogInformation($"GET /v1/Snapshot/{aquariumId}/Take called");
                 //Take snapshot
-                var snapshot = _aquariumService.TakeSnapshot(aquariumId);
+                var snapshot = _aquariumService.TakeSnapshot(aquariumId, photo);
 
                 return new OkObjectResult(snapshot);
             }
