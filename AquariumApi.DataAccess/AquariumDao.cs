@@ -50,9 +50,17 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteAquarium(int aquariumId)
         {
-            var aquarium = GetAquariums().Where(aq => aq.Id == aquariumId).First();
+            DeleteSnapshotsByAquarium(aquariumId);
+             var aquarium = GetAquariums().Where(aq => aq.Id == aquariumId).First();
             _dbAquariumContext.TblAquarium.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
+        }
+        public List<AquariumSnapshot> DeleteSnapshotsByAquarium(int aquariumId)
+        {
+            var snapshots = GetSnapshots().Where(snap => snap.AquariumId == aquariumId);
+            _dbAquariumContext.TblSnapshot.RemoveRange(snapshots);
+            _dbAquariumContext.SaveChanges();
+            return snapshots.ToList();
         }
 
         public AquariumSnapshot AddSnapshot(AquariumSnapshot model)
