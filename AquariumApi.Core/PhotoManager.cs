@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using AquariumApi.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MMALSharp;
 using MMALSharp.Handlers;
 using MMALSharp.Native;
@@ -13,33 +15,23 @@ namespace AquariumApi.Core
 {
     public interface IPhotoManager
     {
-        Task<string> TakePhoto();
+        void TakePhoto(CameraConfiguration config);
     }
     public class PhotoManager : IPhotoManager
     {
         private readonly IConfiguration _config;
-        public PhotoManager(IConfiguration config)
+        private readonly ILogger<PhotoManager> _logger;
+
+        public PhotoManager(IConfiguration config, ILogger<PhotoManager> logger)
         {
             _config = config;
+            _logger = logger;
         }
-        public async Task<string> TakePhoto()
+        public void TakePhoto(CameraConfiguration config)
         {
-            var path = "./temp";
-            var ext = "jpg";
-
-            var output = $"/usr/bin/raspistill -o {path}.{ext}".Bash();
-
-            return $"{path}.{ext}";
-
-            MMALCamera cam = MMALCamera.Instance;
-            using (var imgCaptureHandler = new ImageStreamCaptureHandler(path, ext))
-            {
-                cam.ForceStop(cam.Camera.StillPort);
-                await cam.TakePicture(imgCaptureHandler, MMALEncoding.JPEG, MMALEncoding.I420);
-                cam.Cleanup();
-                return imgCaptureHandler.GetFilepath();
-            }
-            //return $"{path}.{ext}";
+            Directory.CreateDirectory(Path.GetDirectoryName(config.Output));
+            _logger.LogInformation($"Taking Photo: " + config);
+            $"/usr/bin/raspistill {config}".Bash();
         }
     }
 }

@@ -20,6 +20,7 @@ namespace AquariumApi.Core
         Aquarium UpdateAquarium(Aquarium aquarium);
         void DeleteAquarium (int aquariumId);
         void DeleteSnapshot(int removeSnapshotId);
+        AquariumSnapshot GetSnapshotById(int snapshotId);
     }
     public class AquariumService : IAquariumService
     {
@@ -54,11 +55,14 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.GetSnapshots().Where(s => s.AquariumId == aquariumId).ToList();
         }
+        public AquariumSnapshot GetSnapshotById(int snapshotId)
+        {
+            return _aquariumDao.GetSnapshotById(snapshotId);
+        }
 
         public Aquarium GetAquarium(int id)
         {
-            var all = _aquariumDao.GetAquariums();
-            return all.Where(aq => aq.Id == id).FirstOrDefault();
+            return _aquariumDao.GetAquariumById(id);
         }
         public void DeleteAquarium(int aquariumId)
         {
@@ -67,35 +71,28 @@ namespace AquariumApi.Core
         public void DeleteSnapshot(int snapshotId)
         {
             var snapshot = _aquariumDao.DeleteSnapshot(snapshotId);
-            if(snapshot.PhotoId != null)
-            {
-                var destination = _config["PhotoSubPath"] + $"{snapshot.AquariumId}/{snapshot.PhotoId}.jpg";
-                if(File.Exists(destination))
-                    System.IO.File.Delete(destination);
-            }
         }
 
         public AquariumSnapshot TakeSnapshot(int aquariumId,bool forcePhoto)
         {
-            int? photoId = _aquariumDao.GetSnapshots().Where(s => s.AquariumId == aquariumId).Count();
+            int snapshotId = _aquariumDao.GetSnapshots().ToList().Count();
+            var path = String.Format(_config["PhotoFilePath"], aquariumId, snapshotId);
+            var config = _aquariumDao.GetAquariumById(aquariumId).CameraConfiguration;
+            config.Output = path;
+
+
 
             //Take photo
             try
             {
-                var folder = _config["PhotoSubPath"] + $"{aquariumId}";
-                var destination = $"{folder}/{photoId}.jpg";
-                Directory.CreateDirectory(folder);
-                _logger.LogInformation($"Taking photo snapshot with photoId: {photoId}...");
-                var photo = _photoManager.TakePhoto().Result;
-                _logger.LogInformation($"Moving photo {photo}...");
-                System.IO.File.Move(photo, destination);
+                _photoManager.TakePhoto(config);
             }
             catch (Exception e)
             {
                 if (forcePhoto)
                     throw e;
                 _logger.LogError(e.ToString());
-                photoId = null;
+                path = null;
             }
 
 
@@ -107,7 +104,7 @@ namespace AquariumApi.Core
                 Nitrate = 0.0M,
                 Nitrite = 0.0M,
                 Ph = 5.5M,
-                PhotoId = photoId
+                PhotoPath = path
             };
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
             return newSnapshot;

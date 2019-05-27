@@ -14,7 +14,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<Aquarium> TblAquarium { get; set; }
         public virtual DbSet<AquariumSnapshot> TblSnapshot { get; set; }
         public virtual DbSet<tblWaterParameters> TblWaterParameters { get; set; }
-        public virtual DbSet<CameraConfiguration> TblConfiguration { get; set; }
+        public virtual DbSet<CameraConfiguration> TblCameraConfiguration { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,7 @@ namespace AquariumApi.DataAccess
 
                 entity.ToTable("tblAquarium");
                 entity.HasKey(e => new { e.Id });
+                entity.HasOne(e => e.CameraConfiguration);
             });
             modelBuilder.Entity<AquariumSnapshot>(entity =>
             {
@@ -31,8 +32,7 @@ namespace AquariumApi.DataAccess
             });
             modelBuilder.Entity<CameraConfiguration>(entity =>
             {
-                entity.ToTable("tblConfiguration");
-                entity.HasKey(e => new { e.Id });
+                entity.ToTable("tblCameraConfiguration");
             });
         }
     }

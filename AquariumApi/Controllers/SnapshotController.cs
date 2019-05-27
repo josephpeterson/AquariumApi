@@ -60,6 +60,23 @@ namespace AquariumApi.Controllers
             }
 
         }
+        [HttpGet]
+        [Route("/v1/Snapshot/Photo/{snapshotId}")]
+        public IActionResult GetSnapshotPhoto(int snapshotId)
+        {
+            try
+            {
+                AquariumSnapshot data = _aquariumService.GetSnapshotById(snapshotId);
+                var b = System.IO.File.ReadAllBytes(data.PhotoPath);
+                return File(b, "image/jpeg");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Snapshot/Photo/{snapshotId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+
+        }
         [HttpPost]
         [Route("/v1/Snapshot/Delete")]
         public IActionResult DeleteSnapshot([FromBody] int removeSnapshotId)

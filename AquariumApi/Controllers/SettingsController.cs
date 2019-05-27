@@ -42,5 +42,19 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+
+        [HttpGet]
+        [Route("/v1/Settings/Log")]
+        public string GetApplicationLog()
+        {
+            try
+            {
+                return System.IO.File.ReadAllText(_config["DashboardLogFilePath"]);
+            }
+            catch(FileNotFoundException) {
+                return "No error log found";
+            }
+        }
+
     }
 }

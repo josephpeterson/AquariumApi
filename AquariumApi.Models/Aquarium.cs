@@ -16,5 +16,8 @@ namespace AquariumApi.Models
         public string Type { get; set; }
         public DateTime StartDate { get; set; }
 
+
+        [ForeignKey("CameraConfigurationId")]
+        public CameraConfiguration CameraConfiguration { get; set; }
     }
 }
