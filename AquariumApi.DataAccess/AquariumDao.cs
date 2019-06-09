@@ -21,6 +21,14 @@ namespace AquariumApi.DataAccess
         AquariumSnapshot DeleteSnapshot(int snapshotId);
         Aquarium GetAquariumById(int aquariumId);
         AquariumSnapshot GetSnapshotById(int snapshotId);
+        List<Species> GetAllSpecies();
+        Species UpdateSpecies(Species species);
+        void DeleteSpecies(int speciesId);
+        Species AddSpecies(Species species);
+        Fish AddFish(Fish fish);
+        Fish UpdateFish(Fish fish);
+        void DeleteFish(int fishId);
+        Fish GetFishById(int fishId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -44,12 +52,16 @@ namespace AquariumApi.DataAccess
         }
         public Aquarium GetAquariumById(int aquariumId)
         {
-            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.CameraConfiguration).First();
+            var aquarium = _dbAquariumContext.TblAquarium
+                .Where(aq => aq.Id == aquariumId)
+                .Include(aq => aq.CameraConfiguration)
+                .Include(aq => aq.Fish)
+                .First();
             return aquarium;
         }
         public List<AquariumSnapshot> GetSnapshots()
         {
-            return _dbAquariumContext.TblSnapshot.AsNoTracking().Include(s => s.Aquarium).ToList();
+            return _dbAquariumContext.TblSnapshot.AsNoTracking().ToList();
         }
         public AquariumSnapshot GetSnapshotById(int id)
         {
@@ -116,6 +128,70 @@ namespace AquariumApi.DataAccess
             if (File.Exists(snapshot.PhotoPath))
                 System.IO.File.Delete(snapshot.PhotoPath);
             return snapshot;
+        }
+
+        public List<Species> GetAllSpecies()
+        {
+            return _dbAquariumContext.TblSpecies.AsNoTracking().ToList();
+        }
+
+        /* Species */
+        public Species AddSpecies(Species species)
+        {
+            _dbAquariumContext.TblSpecies.Add(species);
+            _dbAquariumContext.SaveChanges();
+            return species;
+        }
+        public Species UpdateSpecies(Species species)
+        {
+            var speciesTpUpdate = _dbAquariumContext.TblSpecies.AsNoTracking().Where(s => s.Id == species.Id).First();
+            if (species == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblSpecies.Update(species);
+            _dbAquariumContext.SaveChanges();
+            return species;
+        }
+
+        public void DeleteSpecies(int speciesId)
+        {
+            var speciesTpUpdate = _dbAquariumContext.TblSpecies.Where(s => s.Id == speciesId).First();
+            if (speciesTpUpdate == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblSpecies.Remove(speciesTpUpdate);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        /* Fish */
+        public Fish GetFishById(int fishId)
+        {
+            return _dbAquariumContext.TblFish.AsNoTracking()
+                .Include(f => f.Species)
+                .Include(f => f.Aquarium)
+                .Where(s => s.Id == fishId).First();
+        }
+        public Fish AddFish(Fish fish)
+        {
+            _dbAquariumContext.TblFish.Add(fish);
+            _dbAquariumContext.SaveChanges();
+            return fish;
+        }
+        public Fish UpdateFish(Fish fish)
+        {
+            var fishToUpdate = GetFishById(fish.Id);
+            if (fishToUpdate == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblFish.Update(fish);
+            _dbAquariumContext.SaveChanges();
+            return fish;
+        }
+
+        public void DeleteFish(int fishId)
+        {
+            var fishToUpdate = _dbAquariumContext.TblFish.Where(s => s.Id == fishId).First();
+            if (fishToUpdate == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblFish.Remove(fishToUpdate);
+            _dbAquariumContext.SaveChanges();
         }
     }
 }

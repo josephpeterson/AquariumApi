@@ -58,7 +58,7 @@ public class AquariumServiceTests
             new NullLogger<AquariumService>());
 
         aquariumService.AddAquarium(expected);
-        var test = aquariumService.GetAquarium(expected.Id);
+        var test = aquariumService.GetAquariumById(expected.Id);
         Assert.Equal(expected.Gallons, test.Gallons);
     }
     [Fact]

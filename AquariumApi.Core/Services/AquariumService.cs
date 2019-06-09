@@ -14,13 +14,21 @@ namespace AquariumApi.Core
     {
         List<Aquarium> GetAllAquariums();
         Aquarium AddAquarium(Aquarium aquarium);
-        Aquarium GetAquarium(int id);
+        Aquarium GetAquariumById(int id);
         List<AquariumSnapshot> GetSnapshots(int aquariumId);
         AquariumSnapshot TakeSnapshot(int aquariumId,bool forcePhoto);
         Aquarium UpdateAquarium(Aquarium aquarium);
         void DeleteAquarium (int aquariumId);
         void DeleteSnapshot(int removeSnapshotId);
         AquariumSnapshot GetSnapshotById(int snapshotId);
+        void DeleteSpecies(int speciesId);
+        Species AddSpecies(Species species);
+        Species UpdateSpecies(Species species);
+        List<Species> GetAllSpecies();
+        void DeleteFish(int fishId);
+        Fish UpdateFish(Fish fish);
+        Fish AddFish(Fish fish);
+        Fish GetFishById(int fishId);
     }
     public class AquariumService : IAquariumService
     {
@@ -51,6 +59,16 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.UpdateAquarium(aquarium);
         }
+        public Aquarium GetAquariumById(int id)
+        {
+            return _aquariumDao.GetAquariumById(id);
+        }
+        public void DeleteAquarium(int aquariumId)
+        {
+            _aquariumDao.DeleteAquarium(aquariumId);
+        }
+
+        /* Snapshots */
         public List<AquariumSnapshot> GetSnapshots(int aquariumId)
         {
             return _aquariumDao.GetSnapshots().Where(s => s.AquariumId == aquariumId).ToList();
@@ -58,15 +76,6 @@ namespace AquariumApi.Core
         public AquariumSnapshot GetSnapshotById(int snapshotId)
         {
             return _aquariumDao.GetSnapshotById(snapshotId);
-        }
-
-        public Aquarium GetAquarium(int id)
-        {
-            return _aquariumDao.GetAquariumById(id);
-        }
-        public void DeleteAquarium(int aquariumId)
-        {
-           _aquariumDao.DeleteAquarium(aquariumId);
         }
         public void DeleteSnapshot(int snapshotId)
         {
@@ -108,6 +117,39 @@ namespace AquariumApi.Core
             };
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
             return newSnapshot;
+        }
+        
+        public List<Species> GetAllSpecies()
+        {
+            return _aquariumDao.GetAllSpecies();
+        }
+        public Species AddSpecies(Species species)
+        {
+            return _aquariumDao.AddSpecies(species);
+        }
+        public Species UpdateSpecies(Species species)
+        {
+            return _aquariumDao.UpdateSpecies(species);
+        }
+        public void DeleteSpecies(int speciesId)
+        {
+            _aquariumDao.DeleteSpecies(speciesId);
+        }
+        public Fish GetFishById(int fishId)
+        {
+            return _aquariumDao.GetFishById(fishId);
+        }
+        public Fish AddFish(Fish fish)
+        {
+            return _aquariumDao.AddFish(fish);
+        }
+        public Fish UpdateFish(Fish fish)
+        {
+            return _aquariumDao.UpdateFish(fish);
+        }
+        public void DeleteFish(int fishId)
+        {
+            _aquariumDao.DeleteFish(fishId);
         }
     }
 }

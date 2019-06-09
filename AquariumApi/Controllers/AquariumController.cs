@@ -47,7 +47,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"GET /v1/Aquarium/{id} called");
-                var aquarium = _aquariumService.GetAquarium(id);
+                var aquarium = _aquariumService.GetAquariumById(id);
                 if (aquarium == null)
                     return NotFound();
                 return new OkObjectResult(aquarium);
