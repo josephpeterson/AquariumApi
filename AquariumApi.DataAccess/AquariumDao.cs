@@ -52,11 +52,19 @@ namespace AquariumApi.DataAccess
         }
         public Aquarium GetAquariumById(int aquariumId)
         {
+            var a = _dbAquariumContext.TblFish.Where(f => f.AquariumId == aquariumId).ToList();
+
             var aquarium = _dbAquariumContext.TblAquarium
                 .Where(aq => aq.Id == aquariumId)
                 .Include(aq => aq.CameraConfiguration)
                 .Include(aq => aq.Fish)
                 .First();
+
+            aquarium.Feedings = new List<Feeding>();
+            aquarium.Feedings.Add(new Feeding());
+            aquarium.Feedings.Add(new Feeding());
+            aquarium.Feedings.Add(new Feeding());
+            aquarium.Feedings.Add(new Feeding());
             return aquarium;
         }
         public List<AquariumSnapshot> GetSnapshots()
@@ -76,9 +84,10 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteAquarium(int aquariumId)
         {
-            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.CameraConfiguration).First();
+            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.CameraConfiguration).Include(aq => aq.Fish).First();
             _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
-            _dbAquariumContext.TblCameraConfiguration.Remove(aquarium.CameraConfiguration);
+            if(aquarium.CameraConfiguration != null)
+                _dbAquariumContext.TblCameraConfiguration.Remove(aquarium.CameraConfiguration);
             _dbAquariumContext.TblAquarium.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
         }
@@ -93,6 +102,7 @@ namespace AquariumApi.DataAccess
             if (Directory.Exists(photoPath))
                 Directory.Delete(photoPath,true);
             return snapshots.ToList();
+
         }
 
         public AquariumSnapshot AddSnapshot(AquariumSnapshot model)
@@ -132,7 +142,14 @@ namespace AquariumApi.DataAccess
 
         public List<Species> GetAllSpecies()
         {
-            return _dbAquariumContext.TblSpecies.AsNoTracking().ToList();
+            var species = _dbAquariumContext.TblSpecies.AsNoTracking().ToList();
+            species.ForEach(s =>
+            {
+                var fish = _dbAquariumContext.TblFish.AsNoTracking().Where(f => f.SpeciesId == s.Id);
+                s.FishCount = fish.Count();
+                s.AquariumCount = fish.Select(f => f.AquariumId).Distinct().Count();
+            });
+            return species;
         }
 
         /* Species */
@@ -171,16 +188,25 @@ namespace AquariumApi.DataAccess
         }
         public Fish AddFish(Fish fish)
         {
+            fish.Species = null;
+            fish.Aquarium = null; //todo separate this into a request/response models
             _dbAquariumContext.TblFish.Add(fish);
             _dbAquariumContext.SaveChanges();
             return fish;
         }
         public Fish UpdateFish(Fish fish)
         {
-            var fishToUpdate = GetFishById(fish.Id);
+            var fishToUpdate = _dbAquariumContext.TblFish.Where(s => s.Id == fish.Id).First();
             if (fishToUpdate == null)
                 throw new KeyNotFoundException();
-            _dbAquariumContext.TblFish.Update(fish);
+
+            fishToUpdate.Name = fish.Name;
+            fishToUpdate.Date = fish.Date;
+            fishToUpdate.Gender = fish.Gender;
+            fishToUpdate.Description = fish.Description;
+            fishToUpdate.SpeciesId = fish.SpeciesId;
+            //fishToUpdate.AquariumId = fish.AquariumId; //todo automapper
+            _dbAquariumContext.TblFish.Update(fishToUpdate);
             _dbAquariumContext.SaveChanges();
             return fish;
         }

@@ -46,7 +46,7 @@ namespace AquariumApi.Controllers
             {
                 _logger.LogInformation("POST /v1/Fish/Add called");
                 var newFish = _aquariumService.AddFish(fish);
-                return CreatedAtAction(nameof(GetFishById),new { id = newFish.Id });
+                return CreatedAtAction(nameof(GetFishById),newFish);
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ namespace AquariumApi.Controllers
         }
         [HttpPost]
         [Route("/v1/Fish/Update")]
-        public IActionResult UpdateFish([FromBody] Fish fish)
+        public IActionResult UpdateFish([FromBody]Fish fish)
         {
             try
             {

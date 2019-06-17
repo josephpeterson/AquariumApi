@@ -47,7 +47,7 @@ namespace AquariumApi.Controllers
             {
                 _logger.LogInformation("POST /v1/Species/Add called");
                 var newSpecies = _aquariumService.AddSpecies(species);
-                return CreatedAtAction(nameof(GetAllSpecies),new { id = newSpecies.Id });
+                return CreatedAtAction(nameof(GetAllSpecies),species);
             }
             catch (Exception ex)
             {

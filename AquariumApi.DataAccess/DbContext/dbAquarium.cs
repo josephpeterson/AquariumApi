@@ -27,7 +27,7 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblAquarium");
                 entity.HasKey(e => new { e.Id });
                 entity.HasOne(e => e.CameraConfiguration);
-                entity.HasMany(e => e.Fish).WithOne(f => f.Aquarium);
+                entity.HasMany(e => e.Fish);
             });
             modelBuilder.Entity<AquariumSnapshot>(entity =>
             {

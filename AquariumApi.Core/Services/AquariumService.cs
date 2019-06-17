@@ -86,7 +86,7 @@ namespace AquariumApi.Core
         {
             int snapshotId = _aquariumDao.GetSnapshots().ToList().Count();
             var path = String.Format(_config["PhotoFilePath"], aquariumId, snapshotId);
-            var config = _aquariumDao.GetAquariumById(aquariumId).CameraConfiguration;
+            var config = _aquariumDao.GetAquariumById(aquariumId).CameraConfiguration ?? new CameraConfiguration();
             config.Output = path;
 
 

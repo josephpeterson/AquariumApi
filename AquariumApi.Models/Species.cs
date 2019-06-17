@@ -13,5 +13,11 @@ namespace AquariumApi.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+
+        //Aggregate fields
+        [NotMapped]
+        public int AquariumCount { get; set; }
+        [NotMapped]
+        public int FishCount { get; set; }
     }
 }

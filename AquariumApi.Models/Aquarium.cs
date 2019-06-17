@@ -20,6 +20,7 @@ namespace AquariumApi.Models
         [ForeignKey("CameraConfigurationId")]
         public CameraConfiguration CameraConfiguration { get; set; }
 
-        public List<Fish> Fish { get; set; }
+        public ICollection<Fish> Fish { get; set; }
+        public ICollection<Feeding> Feedings { get; set; }
     }
 }
