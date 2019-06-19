@@ -12,23 +12,32 @@ namespace AquariumApi.Core
 {
     public interface IAquariumService
     {
-        List<Aquarium> GetAllAquariums();
         Aquarium AddAquarium(Aquarium aquarium);
+        List<Aquarium> GetAllAquariums();
         Aquarium GetAquariumById(int id);
-        List<AquariumSnapshot> GetSnapshots(int aquariumId);
-        AquariumSnapshot TakeSnapshot(int aquariumId,bool forcePhoto);
         Aquarium UpdateAquarium(Aquarium aquarium);
-        void DeleteAquarium (int aquariumId);
-        void DeleteSnapshot(int removeSnapshotId);
+        void DeleteAquarium(int aquariumId);
+
+        AquariumSnapshot TakeSnapshot(int aquariumId,bool forcePhoto);
+        List<AquariumSnapshot> GetSnapshots(int aquariumId);
         AquariumSnapshot GetSnapshotById(int snapshotId);
-        void DeleteSpecies(int speciesId);
+        void DeleteSnapshot(int removeSnapshotId);
+
         Species AddSpecies(Species species);
-        Species UpdateSpecies(Species species);
         List<Species> GetAllSpecies();
-        void DeleteFish(int fishId);
-        Fish UpdateFish(Fish fish);
+        Species UpdateSpecies(Species species);
+        void DeleteSpecies(int speciesId);
+
         Fish AddFish(Fish fish);
         Fish GetFishById(int fishId);
+        Fish UpdateFish(Fish fish);
+        void DeleteFish(int fishId);
+
+        Feeding AddFeeding(Feeding feeding);
+        Feeding GetFeedingById(int feedingId);
+        List<Feeding> GetFeedingByAquariumId(int aquariumId);
+        Feeding UpdateFeeding(Feeding feeding);
+        void DeleteFeeding(int feedingId);
     }
     public class AquariumService : IAquariumService
     {
@@ -135,6 +144,11 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DeleteSpecies(speciesId);
         }
+
+
+
+
+
         public Fish GetFishById(int fishId)
         {
             return _aquariumDao.GetFishById(fishId);
@@ -151,5 +165,33 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DeleteFish(fishId);
         }
+
+
+        public Feeding AddFeeding(Feeding feeding)
+        {
+            //Make sure the fed fish is currently in the tank
+            var fish = _aquariumDao.GetFishById(feeding.FishId);
+            if (fish.AquariumId != feeding.AquariumId)
+                throw new KeyNotFoundException();
+
+            return _aquariumDao.AddFeeding(feeding);
+        }
+        public Feeding GetFeedingById(int feedingId)
+        {
+            return _aquariumDao.GetFeedingById(feedingId);
+        }
+        public List<Feeding> GetFeedingByAquariumId(int aquariumId)
+        {
+            return _aquariumDao.GetFeedingByAquariumId(aquariumId);
+        }
+        public Feeding UpdateFeeding(Feeding feeding)
+        {
+            return _aquariumDao.UpdateFeeding(feeding);
+        }
+        public void DeleteFeeding(int feedId)
+        {
+            _aquariumDao.DeleteFeeding(feedId);
+        }
+
     }
 }

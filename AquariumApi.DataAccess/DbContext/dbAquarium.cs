@@ -28,6 +28,7 @@ namespace AquariumApi.DataAccess
                 entity.HasKey(e => new { e.Id });
                 entity.HasOne(e => e.CameraConfiguration);
                 entity.HasMany(e => e.Fish);
+                entity.HasMany(e => e.Feedings);
             });
             modelBuilder.Entity<AquariumSnapshot>(entity =>
             {
@@ -42,7 +43,7 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblFeeding");
                 entity.HasOne(e => e.Aquarium);
-                entity.HasOne(e => e.Fish);
+                entity.HasOne(e => e.Fish).WithMany(f => f.Feedings);
             });
             modelBuilder.Entity<Fish>(entity =>
             {

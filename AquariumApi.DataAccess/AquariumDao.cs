@@ -12,23 +12,32 @@ namespace AquariumApi.DataAccess
 {
     public interface IAquariumDao
     {
-        List<Aquarium> GetAquariums();
-        List<AquariumSnapshot> GetSnapshots();
         Aquarium AddAquarium(Aquarium aquarium);
-        AquariumSnapshot AddSnapshot(AquariumSnapshot snapshot);
+        List<Aquarium> GetAquariums();
+        Aquarium GetAquariumById(int aquariumId);
         Aquarium UpdateAquarium(Aquarium aquarium);
         void DeleteAquarium(int aquariumId);
-        AquariumSnapshot DeleteSnapshot(int snapshotId);
-        Aquarium GetAquariumById(int aquariumId);
+
+        AquariumSnapshot AddSnapshot(AquariumSnapshot snapshot);
+        List<AquariumSnapshot> GetSnapshots();
         AquariumSnapshot GetSnapshotById(int snapshotId);
+        AquariumSnapshot DeleteSnapshot(int snapshotId);
+
+        Species AddSpecies(Species species);
         List<Species> GetAllSpecies();
         Species UpdateSpecies(Species species);
         void DeleteSpecies(int speciesId);
-        Species AddSpecies(Species species);
+
         Fish AddFish(Fish fish);
+        Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
         void DeleteFish(int fishId);
-        Fish GetFishById(int fishId);
+
+        Feeding AddFeeding(Feeding feeding);
+        Feeding GetFeedingById(int feedingId);
+        List<Feeding> GetFeedingByAquariumId(int aquariumId);
+        Feeding UpdateFeeding(Feeding feeding);
+        void DeleteFeeding(int feedingId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -58,13 +67,8 @@ namespace AquariumApi.DataAccess
                 .Where(aq => aq.Id == aquariumId)
                 .Include(aq => aq.CameraConfiguration)
                 .Include(aq => aq.Fish)
+                .Include(aq => aq.Feedings)
                 .First();
-
-            aquarium.Feedings = new List<Feeding>();
-            aquarium.Feedings.Add(new Feeding());
-            aquarium.Feedings.Add(new Feeding());
-            aquarium.Feedings.Add(new Feeding());
-            aquarium.Feedings.Add(new Feeding());
             return aquarium;
         }
         public List<AquariumSnapshot> GetSnapshots()
@@ -184,6 +188,7 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblFish.AsNoTracking()
                 .Include(f => f.Species)
                 .Include(f => f.Aquarium)
+                .Include(f => f.Feedings)
                 .Where(s => s.Id == fishId).First();
         }
         public Fish AddFish(Fish fish)
@@ -219,5 +224,52 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblFish.Remove(fishToUpdate);
             _dbAquariumContext.SaveChanges();
         }
+
+        /* Feeding */
+        public Feeding AddFeeding(Feeding feeding)
+        {
+            feeding.Fish = null;
+            feeding.Aquarium = null; //todo separate this into a request/response models
+            _dbAquariumContext.TblFeeding.Add(feeding);
+            _dbAquariumContext.SaveChanges();
+            return feeding;
+        }
+        public Feeding GetFeedingById(int feedingId)
+        {
+            return _dbAquariumContext.TblFeeding.AsNoTracking()
+                .Include(f => f.Fish)
+                .Include(f => f.Aquarium)
+                .Where(s => s.Id == feedingId).First();
+        }
+        public List<Feeding> GetFeedingByAquariumId(int aquariumId)
+        {
+            return _dbAquariumContext.TblFeeding.AsNoTracking().Where(f => f.AquariumId == aquariumId).ToList();
+        }
+        public Feeding UpdateFeeding(Feeding feeding)
+        {
+            var feedingToUpdate = _dbAquariumContext.TblFeeding.Where(s => s.Id == feeding.Id).First();
+            if (feedingToUpdate == null)
+                throw new KeyNotFoundException();
+
+            feedingToUpdate.Date = feeding.Date;
+            feedingToUpdate.FishId = feeding.FishId;
+            feedingToUpdate.Amount = feeding.Amount;
+            feedingToUpdate.FoodBrand = feeding.FoodBrand;
+            feedingToUpdate.FoodBrand = feeding.FoodBrand;
+            //feedingToUpdate.AquariumId = feeding.AquariumId; //todo automapper
+            _dbAquariumContext.TblFeeding.Update(feedingToUpdate);
+            _dbAquariumContext.SaveChanges();
+            return feeding;
+        }
+
+        public void DeleteFeeding(int feedingId)
+        {
+            var feedingToUpdate = _dbAquariumContext.TblFeeding.Where(s => s.Id == feedingId).First();
+            if (feedingToUpdate == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblFeeding.Remove(feedingToUpdate);
+            _dbAquariumContext.SaveChanges();
+        }
+
     }
 }

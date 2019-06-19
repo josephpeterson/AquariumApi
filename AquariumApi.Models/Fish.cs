@@ -23,5 +23,7 @@ namespace AquariumApi.Models
         public Species Species { get; set; }
         [ForeignKey("AquariumId")]
         public Aquarium Aquarium { get; set; }
+
+        public ICollection<Feeding> Feedings { get; set; }
     }
 }
