@@ -38,6 +38,7 @@ namespace AquariumApi.DataAccess
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
+        Species GetSpeciesById(int speciesId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -144,6 +145,16 @@ namespace AquariumApi.DataAccess
             return snapshot;
         }
 
+        
+
+        /* Species */
+        public Species AddSpecies(Species species)
+        {
+            _dbAquariumContext.TblSpecies.Add(species);
+            _dbAquariumContext.SaveChanges();
+            _dbAquariumContext.Entry(species).State = EntityState.Detached;
+            return species;
+        }
         public List<Species> GetAllSpecies()
         {
             var species = _dbAquariumContext.TblSpecies.AsNoTracking().ToList();
@@ -155,12 +166,9 @@ namespace AquariumApi.DataAccess
             });
             return species;
         }
-
-        /* Species */
-        public Species AddSpecies(Species species)
+        public Species GetSpeciesById(int speciesId)
         {
-            _dbAquariumContext.TblSpecies.Add(species);
-            _dbAquariumContext.SaveChanges();
+            var species = _dbAquariumContext.TblSpecies.AsNoTracking().Where(s => s.Id == speciesId).First();
             return species;
         }
         public Species UpdateSpecies(Species species)
@@ -271,5 +279,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
 
+        
     }
 }

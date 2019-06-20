@@ -5,6 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Fizzler.Systems.HtmlAgilityPack" Version="1.2.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.7" />
     <PackageReference Include="MMALSharp" Version="0.5.0" />
   </ItemGroup>
 
@@ -22,6 +24,10 @@
     <None Update="raspistill.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ScraperDefinitions\" />
   </ItemGroup>
 
 </Project>

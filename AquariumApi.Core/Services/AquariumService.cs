@@ -38,6 +38,7 @@ namespace AquariumApi.Core
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
+        Species GetSpeciesById(int speciesId);
     }
     public class AquariumService : IAquariumService
     {
@@ -131,6 +132,10 @@ namespace AquariumApi.Core
         public List<Species> GetAllSpecies()
         {
             return _aquariumDao.GetAllSpecies();
+        }
+        public Species GetSpeciesById(int speciesId)
+        {
+            return _aquariumDao.GetSpeciesById(speciesId);
         }
         public Species AddSpecies(Species species)
         {

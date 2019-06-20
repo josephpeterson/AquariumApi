@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using AquariumApi.Core;
+using AquariumApi.Core.Services;
 using AquariumApi.DataAccess;
 using AquariumApi.DataAccess.AutoMapper;
 using AutoMapper;
@@ -108,6 +109,7 @@ namespace AquariumApi
             services.AddTransient<IAquariumDao, AquariumDao>();
             services.AddTransient<IPhotoManager, PhotoManager>();
             services.AddTransient<IAquariumService, AquariumService>();
+            services.AddTransient<IWebScraperService, WebScraperService>();
             services.AddSingleton<IConfiguration>(Configuration);
         }
     }
