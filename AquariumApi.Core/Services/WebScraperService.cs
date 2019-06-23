@@ -11,17 +11,20 @@ using Fizzler.Systems.HtmlAgilityPack;
 using System.Net;
 using System.Linq;
 using System.Globalization;
+using AquariumApi.Core.ScraperDefinitions;
 
 namespace AquariumApi.Core.Services
 {
     public interface IWebScraperService
     {
         void ApplyWebpageToSpecies(string url, Species species);
+        List<IScraperDefinition> GetDefinitions();
     }
     public class WebScraperService : IWebScraperService
     {
         private readonly IAquariumDao _aquariumDao;
         private readonly ILogger<WebScraperService> _logger;
+        private readonly List<IScraperDefinition> _definitions;
         private readonly IConfiguration _config;
 
         public WebScraperService(IConfiguration config, IAquariumDao aquariumDao, IPhotoManager photoManager, ILogger<WebScraperService> logger)
@@ -29,9 +32,15 @@ namespace AquariumApi.Core.Services
             _config = config;
             _aquariumDao = aquariumDao;
             _logger = logger;
+
+            _definitions = new List<IScraperDefinition>();
+            _definitions.Add(new LiveAquariaScraperDefinition("www.liveaquaria.com",logger)); //todo read from config
+            _definitions.Add(new FishbaseScraperDefinition("www.fishbase.se",logger)); //todo read from config
+
         }
-        public void ApplyWebpageToSpecies(string url,Species species)
+        public static HtmlNode RetrievePage(Uri uri)
         {
+            var url = uri.AbsoluteUri;
             string strPage = string.Empty;
             byte[] aReqtHTML;
             WebClient objWebClient = new WebClient();
@@ -39,115 +48,46 @@ namespace AquariumApi.Core.Services
             aReqtHTML = objWebClient.DownloadData(url);  //Do the name search
             UTF8Encoding utf8 = new UTF8Encoding();
             strPage = utf8.GetString(aReqtHTML); // get the string from the bytes
-
-
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(strPage);
             var body = htmlDoc.DocumentNode.SelectSingleNode("//body");
+            return body;
+        }
+        public void ApplyWebpageToSpecies(string url,Species species)
+        {
+            var uri = new Uri(url);
 
-            var statsContainer = body.QuerySelector(".quick_stats_container");
-            var statsData = statsContainer.NextSibling;
-
-
-            var facts = statsContainer.InnerText.Replace("\t", "").Split("\r\n").ToList().Where(f => f != string.Empty && f != "\n" && f != "\r");
-
-            for(var i=0;i<facts.Count();i+=2)
-            {
-                var label = facts.ElementAt(i);
-                var value = facts.ElementAt(i+1);
-
-                switch(label)
-                {
-                    case "Max. Size":
-                        //Fix size
-                        value = value.Replace("&frac34;", ".75")
-                            .Replace("&frac14;", ".25")
-                            .Replace("&frac12;", ".50")
-                            .Replace("\"", "");
-                        try
-                        {
-
-                            species.MaxSize = Convert.ToDecimal(value.Trim());
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogInformation("[WebScraper] Error parsing Max. Size");
-                            _logger.LogError(ex.ToString());
-                        }
-                        break;
-                    case "Minimum Tank Size":
-                        //Fix size
-                        value = value.Replace("&frac34;", ".75")
-                            .Replace("&frac14;", ".25")
-                            .Replace("&frac12;", ".50");
-                        try {
-                            species.MinimumGallons = Convert.ToInt16(value.Substring(0, value.IndexOf(" gallons")).Trim());
-                        }
-                        catch(Exception ex)
-                        {
-                            _logger.LogInformation("[WebScraper] Error parsing minimum gallons");
-                            _logger.LogError(ex.ToString());
-                        }
-                        break;
-                    case "Color Form":
-                        //Fix size
-                        var colors = value.Split(",");
-                        if (colors.Count() > 0)
-                            species.PrimaryColor = colors.ElementAt(0).Trim();
-                        if (colors.Count() > 1)
-                            species.SecondaryColor = colors.ElementAt(1).Trim();
-                        break;
-                    case "Care Level":
-                        //Fix size
-                        species.CareLevel = value.Trim();
-                        break;
-                    case "Water Conditions":
-                        //Fix size
-                        var stuff = value.Split("-");
-                        try
-                        {
-                            var tempMin = stuff.ElementAt(0).Trim();
-                            var tempMax = stuff.ElementAt(1).Substring(0, stuff.ElementAt(1).IndexOf("&")).Trim();
-                            var phMin = stuff.ElementAt(2).Substring(stuff.ElementAt(2).IndexOf("pH") + 2).Trim();
-                            var phMax = stuff.ElementAt(3).Trim();
-
-                            species.TemperatureMax = int.Parse(tempMax);
-                            species.TemperatureMin = int.Parse(tempMin);
-                            species.PhMin = Convert.ToDecimal(phMin);
-                            species.PhMax = Convert.ToDecimal(phMax);
-                        }
-                        catch(Exception ex)
-                        {
-                            _logger.LogInformation("[WebScraper] Error parsing water conditions");
-                            _logger.LogError(ex.ToString());
-                        }
-                        
-                        break;
-                    default:
-                         break;
-                }
-
-            }
-
-            //Description
-            var description = body.QuerySelector(".product_overview").QuerySelector(".overview-content").InnerText.Replace("\r"," ").Replace("\n"," ").Trim();
-            species.Description = description.Substring(0,description.Length > 600 ? 600:description.Length); 
-
-            //Try for price
-            var price = body.QuerySelector(".product_selection_container").QuerySelector("button").Attributes["data-list_price"].Value;
-            species.Price = Convert.ToDecimal(price);
-
-            //Thumbnail
-            var thumbnailSrc = body.QuerySelector(".product-image").QuerySelector("img").Attributes["src"].Value;
-            Uri uri = new Uri(url);
-            string host = uri.Host;
-            string prefix = uri.Scheme;
-            species.Thumbnail = prefix + "://" + host +  thumbnailSrc;
+            var definition = _definitions.Where(p => p.Host == uri.Host).First();
+            definition.ApplyToSpecies(uri, species);
+        }
+        public List<IScraperDefinition> GetDefinitions()
+        {
+            return _definitions;
         }
     }
-
-}
-public interface IScraperDefinition
-{
-
+    public interface IScraperDefinition
+    {
+        string Host { get; set; }
+        void ApplyToSpecies(Uri url, Species species);
+        string GetDescription();
+        string GetThumbnail();
+        decimal GetPrice();
+        int GetTemperatureMin();
+        int GetTemperatureMax();
+        decimal GetMaxSize();
+        decimal GetPhMin();
+        decimal GetPhMax();
+        int GetLifespan();
+        int GetMinimumGallons();
+        string GetPrimaryColor();
+        string GetSecondaryColor();
+        string GetCareLevel();
+        ScrapeableSource SearchByName(string speciesName);
+    }
+    public class ScrapeableSource
+    {
+        public IScraperDefinition Definition;
+        public string SpeciesName;
+        public string WebsiteSource;
+    }
 }
