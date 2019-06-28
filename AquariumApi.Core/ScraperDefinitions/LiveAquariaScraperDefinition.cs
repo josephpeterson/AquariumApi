@@ -53,6 +53,7 @@ namespace AquariumApi.Core.ScraperDefinitions
             species.Description = GetDescription();
             species.Thumbnail = GetThumbnail();
             species.Price = GetPrice();
+            species.MaxSize = GetMaxSize();
 
         }
 
@@ -90,7 +91,9 @@ namespace AquariumApi.Core.ScraperDefinitions
                         //Fix size
                         value = value.Replace("&frac34;", ".75")
                             .Replace("&frac14;", ".25")
-                            .Replace("&frac12;", ".50");
+                            .Replace("&frac12;", ".50")
+                            .Replace("1/4", ".25")
+                            .Replace("1/2", ".5");
                         try
                         {
                             MinimumGallons = Convert.ToInt16(value.Substring(0, value.IndexOf(" gallons")).Trim());
@@ -121,7 +124,7 @@ namespace AquariumApi.Core.ScraperDefinitions
                             var tempMin = stuff.ElementAt(0).Trim();
                             var tempMax = stuff.ElementAt(1).Substring(0, stuff.ElementAt(1).IndexOf("&")).Trim();
                             var phMin = stuff.ElementAt(2).Substring(stuff.ElementAt(2).IndexOf("pH") + 2).Trim();
-                            var phMax = stuff.ElementAt(3).Trim();
+                            var phMax = stuff.ElementAt(3).Split(",").ElementAt(0).Trim();
 
                             TemperatureMax = int.Parse(tempMax);
                             TemperatureMin = int.Parse(tempMin);
