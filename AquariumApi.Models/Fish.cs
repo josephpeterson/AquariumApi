@@ -25,5 +25,7 @@ namespace AquariumApi.Models
         public Aquarium Aquarium { get; set; }
 
         public ICollection<Feeding> Feedings { get; set; }
+        public ICollection<FishPhoto> Photos { get; set; }
+        public ICollection<FishSnapshot> Snapshots { get; set; }
     }
 }

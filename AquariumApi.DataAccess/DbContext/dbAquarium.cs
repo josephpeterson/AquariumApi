@@ -55,6 +55,18 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblSpecies");
             });
+            modelBuilder.Entity<FishPhoto>(entity =>
+            {
+                entity.ToTable("tblFishPhoto");
+                entity.HasOne(e => e.Fish).WithMany(e => e.Photos);
+            });
+            modelBuilder.Entity<FishSnapshot>(entity =>
+            {
+                entity.ToTable("tblFishSnapshot");
+                entity.HasOne(e => e.Fish).WithMany(e => e.Snapshots);
+                entity.HasOne(e => e.AquariumSnapshot);
+                entity.HasOne(e => e.FishPhoto);
+            });
         }
     }
 }
