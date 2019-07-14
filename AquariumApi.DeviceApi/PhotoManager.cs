@@ -11,7 +11,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AquariumApi.Core
+namespace AquariumApi.DeviceApi
 {
     public interface IPhotoManager
     {
@@ -29,7 +29,9 @@ namespace AquariumApi.Core
         }
         public void TakePhoto(CameraConfiguration config)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(config.Output));
+            //Directory.CreateDirectory(Path.GetDirectoryName(config.Output));
+            if (File.Exists(config.Output))
+                File.Delete(config.Output);
             _logger.LogInformation($"Taking Photo: " + config);
             $"/usr/bin/raspistill {config}".Bash();
         }

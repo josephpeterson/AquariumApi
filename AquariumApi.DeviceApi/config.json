@@ -1,0 +1,5 @@
+﻿{
+  "Port": 80,
+  "PhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
+  //"DashboardLogFilePath": "./AquariumApi.log"
+}

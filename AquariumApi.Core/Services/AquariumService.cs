@@ -18,7 +18,7 @@ namespace AquariumApi.Core
         Aquarium UpdateAquarium(Aquarium aquarium);
         void DeleteAquarium(int aquariumId);
 
-        AquariumSnapshot TakeSnapshot(int aquariumId,bool forcePhoto);
+        AquariumSnapshot TakeSnapshot(int aquariumId,bool takePhoto);
         List<AquariumSnapshot> GetSnapshots(int aquariumId);
         AquariumSnapshot GetSnapshotById(int snapshotId);
         void DeleteSnapshot(int removeSnapshotId);
@@ -39,22 +39,30 @@ namespace AquariumApi.Core
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
         Species GetSpeciesById(int speciesId);
+
+        AquariumDevice AddAquariumDevice(AquariumDevice device);
+        AquariumDevice GetAquariumDeviceById(int deviceId);
+        AquariumDevice DeleteAquariumDevice(int deviceId);
+        AquariumDevice UpdateAquariumDevice(AquariumDevice deviceId);
+        void SetAquariumDevice(int aquariumId,int deviceId);
+        AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
+        AquariumPhoto GetAquariumPhotoById(int photoId);
+        AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
+        List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
     }
     public class AquariumService : IAquariumService
     {
         private readonly IAquariumDao _aquariumDao;
         private readonly ILogger<AquariumService> _logger;
+        private readonly IDeviceService _deviceService;
         private readonly IConfiguration _config;
 
-        //Drivers
-        private readonly IPhotoManager _photoManager;
-        public AquariumService(IConfiguration config,IAquariumDao aquariumDao,IPhotoManager photoManager, ILogger<AquariumService> logger)
+        public AquariumService(IConfiguration config,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger)
         {
             _config = config;
             _aquariumDao = aquariumDao;
             _logger = logger;
-            _photoManager = photoManager;
-            //_photoManager = new PhotoManager(config);
+            _deviceService = deviceService;
         }
 
         public List<Aquarium> GetAllAquariums()
@@ -78,6 +86,28 @@ namespace AquariumApi.Core
             _aquariumDao.DeleteAquarium(aquariumId);
         }
 
+
+        /* Aquarium Photos */
+        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
+        {
+            return _aquariumDao.GetAquariumPhotos(aquariumId).Where(s => s.AquariumId == aquariumId).ToList();
+        }
+
+        public void DeleteAquariumPhoto(int photoId)
+        {
+            _aquariumDao.DeleteAquariumPhoto(photoId);
+        }
+        public AquariumPhoto GetAquariumPhotoById(int photoId)
+        {
+            return _aquariumDao.GetAquariumPhotoById(photoId);
+        }
+        public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
+        {
+            if (!File.Exists(photo.Filepath))
+                throw new KeyNotFoundException();
+            return _aquariumDao.AddAquariumPhoto(photo);
+        }
+
         /* Snapshots */
         public List<AquariumSnapshot> GetSnapshots(int aquariumId)
         {
@@ -92,39 +122,20 @@ namespace AquariumApi.Core
             var snapshot = _aquariumDao.DeleteSnapshot(snapshotId);
         }
 
-        public AquariumSnapshot TakeSnapshot(int aquariumId,bool forcePhoto)
+        public AquariumSnapshot TakeSnapshot(int aquariumId, bool takePhoto)
         {
-            int snapshotId = _aquariumDao.GetSnapshots().ToList().Count();
-            var path = String.Format(_config["PhotoFilePath"], aquariumId, snapshotId);
-            var config = _aquariumDao.GetAquariumById(aquariumId).CameraConfiguration ?? new CameraConfiguration();
-            config.Output = path;
+            Aquarium aquarium = _aquariumDao.GetAquariumById(aquariumId);
+            var deviceId = aquarium.Device.Id.Value;
 
+            AquariumSnapshot snapshot = _deviceService.TakeSnapshot(deviceId);
 
-
-            //Take photo
-            try
+            if (takePhoto)
             {
-                _photoManager.TakePhoto(config);
+                var aquariumPhoto = _deviceService.TakePhoto(deviceId,aquarium.CameraConfiguration);
+                aquariumPhoto.AquariumId = aquarium.Id;
+                aquariumPhoto = AddAquariumPhoto(aquariumPhoto);
+                snapshot.PhotoId = aquariumPhoto.Id.Value;
             }
-            catch (Exception e)
-            {
-                if (forcePhoto)
-                    throw e;
-                _logger.LogError(e.ToString());
-                path = null;
-            }
-
-
-            var snapshot = new AquariumSnapshot()
-            {
-                AquariumId = aquariumId,
-                Date = DateTime.Now,
-                Temperature = 0,
-                Nitrate = 0.0M,
-                Nitrite = 0.0M,
-                Ph = 5.5M,
-                PhotoPath = path
-            };
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
             return newSnapshot;
         }
@@ -198,5 +209,29 @@ namespace AquariumApi.Core
             _aquariumDao.DeleteFeeding(feedId);
         }
 
+        public AquariumDevice AddAquariumDevice(AquariumDevice device)
+        {
+            return _aquariumDao.AddAquariumDevice(device);
+        }
+        public AquariumDevice GetAquariumDeviceById(int deviceId)
+        {
+            return _aquariumDao.GetAquariumDeviceById(deviceId);
+        }
+        public AquariumDevice DeleteAquariumDevice(int deviceId)
+        {
+            return _aquariumDao.DeleteAquariumDevice(deviceId);
+        }
+        public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
+        {
+            return _aquariumDao.UpdateAquariumDevice(device);
+        }
+        public void SetAquariumDevice(int aquariumId,int deviceId)
+        {
+            _aquariumDao.SetAquariumDevice(aquariumId, deviceId);
+        }
+        public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
+        {
+            return _aquariumDao.ApplyAquariumDeviceHardware(deviceId, updatedDevice);
+        }
     }
 }

@@ -1,27 +1,25 @@
-﻿using System.IO;
-using AquariumApi.Core;
-using AquariumApi.Core.Services;
-using AquariumApi.DataAccess;
-using AquariumApi.DataAccess.AutoMapper;
-using AutoMapper;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace AquariumApi
+namespace AquariumApi.DeviceApi
 {
     public class Startup
     {
-        public IConfigurationRoot Configuration { get; }
         public Startup(IConfiguration configuration)
         {
             var currentDirectory = Directory.GetCurrentDirectory();
-
             // Set up configuration sources.
             var builder = new ConfigurationBuilder()
                 .SetBasePath(currentDirectory)
@@ -29,6 +27,8 @@ namespace AquariumApi
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
         }
+
+        public IConfigurationRoot Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         [System.Obsolete]
@@ -38,19 +38,18 @@ namespace AquariumApi
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "Aquarium API", Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = "AquariumDevice API", Version = "v1" });
             });
 
-            services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
             RegisterServices(services);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+        }
 
-
-            services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-                .AddJsonOptions(options => {
-                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                });
+        private void RegisterServices(IServiceCollection services)
+        {
+            services.AddTransient<IPhotoManager, PhotoManager>();
+            services.AddTransient<IHardwareService, HardwareService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -64,8 +63,6 @@ namespace AquariumApi
             {
                 app.UseHsts();
             }
-
-
             // global cors policy
             app.UseCors(x => x
                 .AllowAnyOrigin()
@@ -94,23 +91,11 @@ namespace AquariumApi
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
-                    routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new { controller = "Home", action = "Spa" });
+                routes.MapSpaFallbackRoute(
+                name: "spa-fallback",
+                defaults: new { controller = "Home", action = "Spa" });
             });
             app.UseHttpsRedirection();
-        }
-
-        private void RegisterServices(IServiceCollection services)
-        {
-            services.AddDbContext<DbAquariumContext>(options => options
-                .UseSqlServer(Configuration["Database:dbAquarium"])
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll));
-            services.AddTransient<IAquariumDao, AquariumDao>();
-            services.AddTransient<IAquariumService, AquariumService>();
-            services.AddTransient<IWebScraperService, WebScraperService>();
-            services.AddTransient<IDeviceService, DeviceService>();
-            services.AddSingleton<IConfiguration>(Configuration);
         }
     }
 }

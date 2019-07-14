@@ -27,7 +27,7 @@ namespace AquariumApi.Core.Services
         private readonly List<IScraperDefinition> _definitions;
         private readonly IConfiguration _config;
 
-        public WebScraperService(IConfiguration config, IAquariumDao aquariumDao, IPhotoManager photoManager, ILogger<WebScraperService> logger)
+        public WebScraperService(IConfiguration config, IAquariumDao aquariumDao, ILogger<WebScraperService> logger)
         {
             _config = config;
             _aquariumDao = aquariumDao;

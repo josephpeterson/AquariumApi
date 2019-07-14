@@ -14,13 +14,11 @@ namespace AquariumApi.Controllers
 {
     public class SettingsController : Controller
     {
-        private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public SettingsController(IConfiguration config, IPhotoManager photoManager, IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        public SettingsController(IConfiguration config, IAquariumService aquariumService, ILogger<SnapshotController> logger)
         {
-            _photoManager = photoManager;
             _config = config;
             _aquariumService = aquariumService;
             _logger = logger;

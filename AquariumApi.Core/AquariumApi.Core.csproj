@@ -20,10 +20,4 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="raspistill.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

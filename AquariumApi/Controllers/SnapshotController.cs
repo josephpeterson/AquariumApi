@@ -14,13 +14,11 @@ namespace AquariumApi.Controllers
 {
     public class SnapshotController : Controller
     {
-        private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public SnapshotController(IConfiguration config, IPhotoManager photoManager, IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        public SnapshotController(IConfiguration config, IAquariumService aquariumService, ILogger<SnapshotController> logger)
         {
-            _photoManager = photoManager;
             _config = config;
             _aquariumService = aquariumService;
             _logger = logger;
@@ -67,7 +65,7 @@ namespace AquariumApi.Controllers
             try
             {
                 AquariumSnapshot data = _aquariumService.GetSnapshotById(snapshotId);
-                var b = System.IO.File.ReadAllBytes(data.PhotoPath);
+                var b = System.IO.File.ReadAllBytes(data.Photo.Filepath);
                 return File(b, "image/jpeg");
             }
             catch (Exception ex)
@@ -94,22 +92,21 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpGet]
-        [Route("/v1/Snapshot/{aquariumId}/Take/{photo}")]
+        [Route("/v1/Snapshot/{aquariumId}/Take/{takePhoto}")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult TakeSnapshot(int aquariumId,bool photo)
+        public IActionResult TakeSnapshot(int aquariumId,bool takePhoto)
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Snapshot/{aquariumId}/Take called");
+                _logger.LogInformation($"GET /v1/Snapshot/{aquariumId}/Take/{takePhoto} called");
                 //Take snapshot
-                var snapshot = _aquariumService.TakeSnapshot(aquariumId, photo);
-
+                var snapshot = _aquariumService.TakeSnapshot(aquariumId, takePhoto);
                 return new OkObjectResult(snapshot);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Snapshot/{aquariumId}/Take endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/Snapshot/{aquariumId}/Take/{takePhoto} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

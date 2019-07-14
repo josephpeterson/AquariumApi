@@ -13,11 +13,12 @@ namespace AquariumApi.DataAccess
 
         public virtual DbSet<Aquarium> TblAquarium { get; set; }
         public virtual DbSet<AquariumSnapshot> TblSnapshot { get; set; }
-        public virtual DbSet<tblWaterParameters> TblWaterParameters { get; set; }
+        public virtual DbSet<AquariumPhoto> TblAquariumPhoto { get; set; }
         public virtual DbSet<CameraConfiguration> TblCameraConfiguration { get; set; }
         public virtual DbSet<Feeding> TblFeeding { get; set; }
         public virtual DbSet<Fish> TblFish { get; set; }
         public virtual DbSet<Species> TblSpecies { get; set; }
+        public virtual DbSet<AquariumDevice> TblDevice { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +35,7 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblSnapshot");
                 entity.HasKey(e => new { e.Id });
+                entity.HasOne(e => e.Photo).WithOne(e => e.Snapshot);
             });
             modelBuilder.Entity<CameraConfiguration>(entity =>
             {
@@ -66,6 +68,16 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(e => e.Fish).WithMany(e => e.Snapshots);
                 entity.HasOne(e => e.AquariumSnapshot);
                 entity.HasOne(e => e.FishPhoto);
+            });
+            modelBuilder.Entity<AquariumDevice>(entity =>
+            {
+                entity.ToTable("tblDevice");
+                entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
+            });
+            modelBuilder.Entity<AquariumPhoto>(entity =>
+            {
+                entity.ToTable("tblAquariumPhoto");
+                entity.HasOne(e => e.Aquarium);
             });
         }
     }

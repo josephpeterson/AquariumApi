@@ -15,13 +15,16 @@ namespace AquariumApi.Models
         [ForeignKey("AquariumId")]
         public Aquarium Aquarium { get; set; }
         public int AquariumId { get; set; }
+        [ForeignKey("PhotoId")]
+        public AquariumPhoto Photo { get; set; }
+        public int? PhotoId { get; set; }
         public DateTime Date { get; set; }
         public decimal Ammonia { get; set; }
         public decimal Nitrite { get; set; }
         public decimal Nitrate { get; set; }
         public decimal Ph { get; set; }
         public int Temperature { get; set; }
-        public string PhotoPath { get; set; }
+
 
     }
 }

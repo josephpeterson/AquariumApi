@@ -109,5 +109,21 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost]
+        [Route("/v1/Aquarium/{aquariumId}/Device")]
+        public IActionResult SetAquariumDevice(int aquariumId,[FromBody] int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
+                _aquariumService.SetAquariumDevice(aquariumId, deviceId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }

@@ -39,6 +39,16 @@ namespace AquariumApi.DataAccess
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
         Species GetSpeciesById(int speciesId);
+        void SetAquariumDevice(int aquariumId,int deviceId);
+        AquariumDevice AddAquariumDevice(AquariumDevice device);
+        AquariumDevice UpdateAquariumDevice(AquariumDevice device);
+        AquariumDevice DeleteAquariumDevice(int deviceId);
+        AquariumDevice GetAquariumDeviceById(int deviceId);
+        AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
+        List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
+        void DeleteAquariumPhoto(int photoId);
+        AquariumPhoto GetAquariumPhotoById(int photoId);
+        AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
     }
 
     public class AquariumDao : IAquariumDao
@@ -55,10 +65,10 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext = dbAquariumContext;
             _logger = logger;
         }
-
+        /* Aquarium */
         public List<Aquarium> GetAquariums()
         {
-            return _dbAquariumContext.TblAquarium.AsNoTracking().ToList();
+            return _dbAquariumContext.TblAquarium.Include(aq => aq.Device).AsNoTracking().ToList();
         }
         public Aquarium GetAquariumById(int aquariumId)
         {
@@ -69,54 +79,16 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.CameraConfiguration)
                 .Include(aq => aq.Fish)
                 .Include(aq => aq.Feedings)
+                .Include(aq => aq.Device)
                 .First();
             return aquarium;
         }
-        public List<AquariumSnapshot> GetSnapshots()
-        {
-            return _dbAquariumContext.TblSnapshot.AsNoTracking().ToList();
-        }
-        public AquariumSnapshot GetSnapshotById(int id)
-        {
-            return _dbAquariumContext.TblSnapshot.AsNoTracking().Where(snap => snap.Id == id).First();
-        }
-
         public Aquarium AddAquarium(Aquarium model)
         {
             _dbAquariumContext.TblAquarium.Add(model);
             _dbAquariumContext.SaveChanges();
             return model;
         }
-        public void DeleteAquarium(int aquariumId)
-        {
-            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.CameraConfiguration).Include(aq => aq.Fish).First();
-            _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
-            if(aquarium.CameraConfiguration != null)
-                _dbAquariumContext.TblCameraConfiguration.Remove(aquarium.CameraConfiguration);
-            _dbAquariumContext.TblAquarium.Remove(aquarium);
-            _dbAquariumContext.SaveChanges();
-        }
-        public List<AquariumSnapshot> DeleteSnapshotsByAquarium(int aquariumId)
-        {
-            var snapshots = GetSnapshots().Where(snap => snap.AquariumId == aquariumId);
-            _dbAquariumContext.TblSnapshot.RemoveRange(snapshots);
-            _dbAquariumContext.SaveChanges();
-
-            var photoPath = _config["PhotoSubPath"] + aquariumId;
-            //Check if photo folder exists
-            if (Directory.Exists(photoPath))
-                Directory.Delete(photoPath,true);
-            return snapshots.ToList();
-
-        }
-
-        public AquariumSnapshot AddSnapshot(AquariumSnapshot model)
-        {
-            _dbAquariumContext.TblSnapshot.Add(model);
-            _dbAquariumContext.SaveChanges();
-            return model;
-        }
-
         public Aquarium UpdateAquarium(Aquarium aquarium)
         {
             var aqToUpdate = _dbAquariumContext.TblAquarium.Include(aq => aq.CameraConfiguration).SingleOrDefault(aq => aq.Id == aquarium.Id);
@@ -132,20 +104,53 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return aqToUpdate;
         }
-
-        public AquariumSnapshot DeleteSnapshot(int snapshotId)
+        public void DeleteAquarium(int aquariumId)
         {
-            var snapshot = GetSnapshots().Where(snap => snap.Id == snapshotId).First();
-            _dbAquariumContext.TblSnapshot.Remove(snapshot);
+            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.CameraConfiguration).Include(aq => aq.Fish).First();
+            _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
+            if(aquarium.CameraConfiguration != null)
+                _dbAquariumContext.TblCameraConfiguration.Remove(aquarium.CameraConfiguration);
+            _dbAquariumContext.TblAquarium.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
-
-            //Check if file exists
-            if (File.Exists(snapshot.PhotoPath))
-                System.IO.File.Delete(snapshot.PhotoPath);
-            return snapshot;
         }
 
-        
+        /* Aquarium Snapshots */
+        public AquariumSnapshot AddSnapshot(AquariumSnapshot model)
+        {
+            _dbAquariumContext.TblSnapshot.Add(model);
+            _dbAquariumContext.SaveChanges();
+            return model;
+        }
+        public List<AquariumSnapshot> GetSnapshots()
+        {
+            return _dbAquariumContext.TblSnapshot.Include(s => s.Photo).AsNoTracking().ToList();
+        }
+        public AquariumSnapshot GetSnapshotById(int id)
+        {
+            return _dbAquariumContext.TblSnapshot.AsNoTracking().Include(s => s.Photo).Where(snap => snap.Id == id).First();
+        }
+        public List<AquariumSnapshot> DeleteSnapshotsByAquarium(int aquariumId)
+        {
+            var snapshots = GetSnapshots().Where(snap => snap.AquariumId == aquariumId);
+            _dbAquariumContext.TblSnapshot.RemoveRange(snapshots);
+            _dbAquariumContext.SaveChanges();
+
+            var photoPath = _config["PhotoSubPath"] + aquariumId;
+            //Check if photo folder exists
+            if (Directory.Exists(photoPath))
+                Directory.Delete(photoPath,true);
+            return snapshots.ToList();
+
+        }
+        public AquariumSnapshot DeleteSnapshot(int snapshotId)
+        {
+            var snapshot = GetSnapshotById(snapshotId);
+            _dbAquariumContext.TblSnapshot.Remove(snapshot);
+            _dbAquariumContext.SaveChanges();
+            if (snapshot.PhotoId != null)
+                DeleteAquariumPhoto(snapshot.PhotoId.Value);
+            return snapshot;
+        }
 
         /* Species */
         public Species AddSpecies(Species species)
@@ -180,7 +185,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return species;
         }
-
         public void DeleteSpecies(int speciesId)
         {
             var speciesTpUpdate = _dbAquariumContext.TblSpecies.Where(s => s.Id == speciesId).First();
@@ -223,7 +227,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return fish;
         }
-
         public void DeleteFish(int fishId)
         {
             var fishToUpdate = _dbAquariumContext.TblFish.Where(s => s.Id == fishId).First();
@@ -269,7 +272,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return feeding;
         }
-
         public void DeleteFeeding(int feedingId)
         {
             var feedingToUpdate = _dbAquariumContext.TblFeeding.Where(s => s.Id == feedingId).First();
@@ -279,6 +281,87 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
 
-        
+        public AquariumDevice AddAquariumDevice(AquariumDevice device)
+        {
+            _dbAquariumContext.TblDevice.Add(device);
+            _dbAquariumContext.SaveChanges();
+            return device;
+        }
+        public AquariumDevice GetAquariumDeviceById(int deviceId)
+        {
+            return _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
+        }
+        public AquariumDevice DeleteAquariumDevice(int deviceId)
+        {
+            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
+            if (device == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblDevice.Remove(device);
+            _dbAquariumContext.SaveChanges();
+            return device;
+        }
+        public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
+        {
+            var deviceToUpdate = _dbAquariumContext.TblDevice.Where(s => s.Id == device.Id).First();
+            if (deviceToUpdate == null)
+                throw new KeyNotFoundException();
+
+            deviceToUpdate.Name = device.Name;
+            deviceToUpdate.Type = device.Type;
+            deviceToUpdate.Port = device.Port;
+            deviceToUpdate.Address = device.Address;
+            deviceToUpdate.AquariumId = device.AquariumId;
+
+            _dbAquariumContext.TblDevice.Update(deviceToUpdate);
+            _dbAquariumContext.SaveChanges();
+            return deviceToUpdate;
+        }
+        public void SetAquariumDevice(int aquariumId, int deviceId)
+        {
+            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
+            if (device == null)
+                throw new KeyNotFoundException();
+            var aquarium = _dbAquariumContext.TblAquarium.Where(s => s.Id == aquariumId).First();
+            if (aquarium == null)
+                throw new KeyNotFoundException();
+
+            device.AquariumId = aquarium.Id;
+            _dbAquariumContext.TblDevice.Update(device);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
+        {
+            var d = GetAquariumDeviceById(deviceId);
+            d.EnabledPhoto = updatedDevice.EnabledPhoto;
+            d.EnabledTemperature = updatedDevice.EnabledTemperature;
+            d.EnabledLighting = updatedDevice.EnabledLighting;
+            d.EnabledPh = updatedDevice.EnabledPh;
+            d.EnabledNitrate = updatedDevice.EnabledNitrate;
+            return UpdateAquariumDevice(d);
+        }
+
+        public AquariumPhoto GetAquariumPhotoById(int photoId)
+        {
+            return _dbAquariumContext.TblAquariumPhoto.Where(p => p.Id == photoId).First();
+        }
+        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
+        {
+            return _dbAquariumContext.TblAquariumPhoto.Where(p => p.AquariumId == aquariumId).ToList();
+        }
+        public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
+        {
+            _dbAquariumContext.TblAquariumPhoto.Add(photo);
+            _dbAquariumContext.SaveChanges();
+            return photo;
+        }
+        public void DeleteAquariumPhoto(int photoId)
+        {
+            var photo = GetAquariumPhotoById(photoId);
+            if (File.Exists(photo.Filepath))
+                File.Delete(photo.Filepath);
+            _dbAquariumContext.TblAquariumPhoto.Remove(photo);
+            _dbAquariumContext.SaveChanges();
+        }
     }
 }

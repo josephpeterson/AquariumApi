@@ -11,7 +11,6 @@ namespace AquariumApi.DataAccess.AutoMapper
     {
         public MappingProfile()
         {
-            CreateMap<AquariumParameters, tblWaterParameters>();
             CreateMap<Aquarium, Aquarium>();
             CreateMap<CameraConfiguration, CameraConfiguration>();
         }
