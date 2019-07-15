@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AquariumApi.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -12,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
+using Unosquare.RaspberryIO;
+using Unosquare.WiringPi;
 
 namespace AquariumApi.DeviceApi
 {
@@ -26,6 +29,9 @@ namespace AquariumApi.DeviceApi
                 .AddJsonFile($"config.json", optional: false)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
+
+            Pi.Init<BootstrapWiringPi>();
+
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -50,6 +56,9 @@ namespace AquariumApi.DeviceApi
         {
             services.AddTransient<IPhotoManager, PhotoManager>();
             services.AddTransient<IHardwareService, HardwareService>();
+            services.AddSingleton<ISerialService, SerialService>();
+            services.AddSingleton<IScheduleService, ScheduleService>();
+            services.AddSingleton<Aquarium, Aquarium>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -14,11 +14,15 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IPhotoManager _photoManager;
         private ILogger<SnapshotController> _logger;
+        private ISerialService _serialService;
+        private IScheduleService _scheduleService;
 
-        public SnapshotController(ILogger<SnapshotController> logger,IPhotoManager photoManager)
+        public SnapshotController(ILogger<SnapshotController> logger,IPhotoManager photoManager,ISerialService serialService, IScheduleService scheduleService)
         {
             _photoManager = photoManager;
             _logger = logger;
+            _serialService = serialService;
+            _scheduleService = scheduleService;
         }
         [HttpGet]
         [Route("/v1/Snapshot/Take")]
@@ -26,24 +30,22 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                //_photoManager.TakePhoto(configuration);
+                _logger.LogWarning($"POST /v1/Take called");
+                var snapshot = new AquariumSnapshot()
+                {
+                    Date = DateTime.Now,
+                    Temperature = (_serialService.CanRetrieveTemperature() ? _serialService.GetTemperatureC() : 0),
+                    Nitrate = (_serialService.CanRetrieveNitrate() ? _serialService.GetNitrate() : 0.00M),
+                    Nitrite = (_serialService.CanRetrieveNitrite() ? _serialService.GetNitrite() : 0.00M),
+                    Ph = (_serialService.CanRetrievePh() ? _serialService.GetPh() : 0.00M),
+                };
+                return new OkObjectResult(snapshot);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                _logger.LogError(e.ToString());
+                _logger.LogError($"POST /v1/Take endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
+                return NotFound();
             }
-
-
-            var snapshot = new AquariumSnapshot()
-            {
-                Date = DateTime.Now,
-                Temperature = 0,
-                Nitrate = 0.0M,
-                Nitrite = 0.0M,
-                Ph = 5.5M,
-                //PhotoPath = path
-            };
-            return new OkObjectResult(snapshot);
         }
 
         [HttpPost]
@@ -54,10 +56,10 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"POST /v1/TakePhoto called");
+                _logger.LogWarning($"POST /v1/TakePhoto called");
                 configuration.Output = "temp.jpg";
                 _photoManager.TakePhoto(configuration);
-                _logger.LogInformation("Photo successfully taken");
+                _logger.LogWarning("Photo successfully taken");
                 return new FileStreamResult(new FileStream(configuration.Output, FileMode.Open, FileAccess.Read),
                     "application/octet-stream")
                 {

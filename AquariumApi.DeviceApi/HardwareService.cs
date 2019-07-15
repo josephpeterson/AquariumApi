@@ -1,15 +1,9 @@
 ﻿using AquariumApi.Models;
+using Bifrost.IO.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MMALSharp;
-using MMALSharp.Handlers;
-using MMALSharp.Native;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
@@ -21,22 +15,25 @@ namespace AquariumApi.DeviceApi
     {
         private readonly IConfiguration _config;
         private readonly ILogger<HardwareService> _logger;
+        private readonly ISerialService _serialService;
 
-        public HardwareService(IConfiguration config, ILogger<HardwareService> logger)
+        public HardwareService(IConfiguration config, ILogger<HardwareService> logger,ISerialService serialService)
         {
             _config = config;
             _logger = logger;
+            _serialService = serialService;
         }
         public AquariumDevice ScanHardware()
         {
             return new AquariumDevice()
             {
+                EnabledTemperature = _serialService.CanRetrieveTemperature(),
+                EnabledNitrate = _serialService.CanRetrieveNitrate(),
+                EnabledPh = _serialService.CanRetrievePh(),
                 EnabledPhoto = CanTakePhoto(),
-                EnabledTemperature = CanRetrieveTemperature(),
-                EnabledNitrate = CanRetrieveNitrate(),
-                EnabledPh = CanRetrievePh()
             };
         }
+
 
         public bool CanTakePhoto()
         {
@@ -55,10 +52,6 @@ namespace AquariumApi.DeviceApi
             {
                 return false;
             }
-        }
-        public bool CanRetrieveTemperature()
-        {
-            return false;
         }
         public bool CanRetrievePh()
         {

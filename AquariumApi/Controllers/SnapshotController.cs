@@ -59,18 +59,18 @@ namespace AquariumApi.Controllers
 
         }
         [HttpGet]
-        [Route("/v1/Snapshot/Photo/{snapshotId}")]
-        public IActionResult GetSnapshotPhoto(int snapshotId)
+        [Route("/v1/Snapshot/Photo/{photoId}")]
+        public IActionResult GetSnapshotPhoto(int photoId)
         {
             try
             {
-                AquariumSnapshot data = _aquariumService.GetSnapshotById(snapshotId);
-                var b = System.IO.File.ReadAllBytes(data.Photo.Filepath);
+                AquariumPhoto data = _aquariumService.GetAquariumPhotoById(photoId);
+                var b = System.IO.File.ReadAllBytes(data.Filepath);
                 return File(b, "image/jpeg");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Snapshot/Photo/{snapshotId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/Snapshot/Photo/{photoId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
 
@@ -107,6 +107,23 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Snapshot/{aquariumId}/Take/{takePhoto} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpGet]
+        [Route("/v1/Snapshot/{aquariumId}/Latest")]
+        public IActionResult GetLatestSnapshot(int aquariumId)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Snapshot/{aquariumId}/Latest called");
+                //Take snapshot
+                var snapshot = _aquariumService.GetSnapshots(aquariumId).Last();
+                return new OkObjectResult(snapshot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Snapshot/{aquariumId}/Latest endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

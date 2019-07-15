@@ -223,11 +223,13 @@ namespace AquariumApi.Core
         }
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
+            _deviceService.SetAquarium(device.Id.Value, device.AquariumId.Value);
             return _aquariumDao.UpdateAquariumDevice(device);
         }
         public void SetAquariumDevice(int aquariumId,int deviceId)
         {
             _aquariumDao.SetAquariumDevice(aquariumId, deviceId);
+            _deviceService.SetAquarium(deviceId, aquariumId);
         }
         public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
         {

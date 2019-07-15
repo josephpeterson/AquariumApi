@@ -20,6 +20,7 @@ namespace AquariumApi.Core
         bool Ping(int deviceId);
         AquariumSnapshot TakeSnapshot(int deviceId);
         AquariumPhoto TakePhoto(int deviceId,CameraConfiguration configuration);
+        bool SetAquarium(int deviceId, int aquariumId);
     }
     public class DeviceService : IDeviceService
     {
@@ -51,6 +52,20 @@ namespace AquariumApi.Core
             HttpClient client = new HttpClient();
             HttpResponseMessage response = client.GetAsync(path).Result;
             if (response.IsSuccessStatusCode)
+                return true;
+            return false;
+        }
+        public bool SetAquarium(int deviceId,int aquariumId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var aquarium = _aquariumDao.GetAquariumById(aquariumId);
+            var path = $"http://{device.Address}:{device.Port}/v1/Aquarium";
+            HttpClient client = new HttpClient();
+            JsonSerializerSettings jss = new JsonSerializerSettings();
+            jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            var httpContent = new StringContent(JsonConvert.SerializeObject(aquarium,jss), Encoding.UTF8, "application/json");
+            var result = client.PostAsync(path, httpContent).Result;
+            if (result.IsSuccessStatusCode)
                 return true;
             return false;
         }
