@@ -8,4 +8,273 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     <TimeStampOfAssociatedLegacyPublishXmlFile />
     <_PublishTargetUrl>J:\Joseph\Desktop\Aquarium\dist\aws\AquariumApi</_PublishTargetUrl>
   </PropertyGroup>
+  <ItemGroup>
+    <File Include="appsettings.Development.json">
+      <publishTime>07/18/2019 14:02:22</publishTime>
+    </File>
+    <File Include="appsettings.json">
+      <publishTime>07/18/2019 14:02:22</publishTime>
+    </File>
+    <File Include="AquariumApi.Core.dll">
+      <publishTime>07/18/2019 14:03:53</publishTime>
+    </File>
+    <File Include="AquariumApi.Core.pdb">
+      <publishTime>07/18/2019 14:03:53</publishTime>
+    </File>
+    <File Include="AquariumApi.DataAccess.dll">
+      <publishTime>07/18/2019 14:03:52</publishTime>
+    </File>
+    <File Include="AquariumApi.DataAccess.pdb">
+      <publishTime>07/18/2019 14:03:52</publishTime>
+    </File>
+    <File Include="AquariumApi.deps.json">
+      <publishTime>07/18/2019 14:03:54</publishTime>
+    </File>
+    <File Include="AquariumApi.dll">
+      <publishTime>07/18/2019 14:03:53</publishTime>
+    </File>
+    <File Include="AquariumApi.Models.dll">
+      <publishTime>07/18/2019 14:03:27</publishTime>
+    </File>
+    <File Include="AquariumApi.Models.pdb">
+      <publishTime>07/18/2019 14:03:27</publishTime>
+    </File>
+    <File Include="AquariumApi.pdb">
+      <publishTime>07/18/2019 14:03:53</publishTime>
+    </File>
+    <File Include="AquariumApi.runtimeconfig.json">
+      <publishTime>07/18/2019 14:03:54</publishTime>
+    </File>
+    <File Include="AutoMapper.dll">
+      <publishTime>04/25/2019 21:00:34</publishTime>
+    </File>
+    <File Include="AutoMapper.Extensions.Microsoft.DependencyInjection.dll">
+      <publishTime>04/29/2019 20:31:02</publishTime>
+    </File>
+    <File Include="config.json">
+      <publishTime>07/18/2019 14:02:22</publishTime>
+    </File>
+    <File Include="dotnet-aspnet-codegenerator-design.dll">
+      <publishTime>03/02/2019 19:51:38</publishTime>
+    </File>
+    <File Include="Fizzler.dll">
+      <publishTime>01/31/2018 09:09:02</publishTime>
+    </File>
+    <File Include="Fizzler.Systems.HtmlAgilityPack.dll">
+      <publishTime>06/26/2018 07:23:16</publishTime>
+    </File>
+    <File Include="HtmlAgilityPack.dll">
+      <publishTime>05/31/2019 19:07:08</publishTime>
+    </File>
+    <File Include="libman.json">
+      <publishTime>07/18/2019 14:02:22</publishTime>
+    </File>
+    <File Include="Microsoft.CodeAnalysis.CSharp.Workspaces.dll">
+      <publishTime>04/30/2019 15:17:36</publishTime>
+    </File>
+    <File Include="Microsoft.CodeAnalysis.Workspaces.dll">
+      <publishTime>04/30/2019 15:17:38</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGeneration.Contracts.dll">
+      <publishTime>03/02/2019 19:51:20</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGeneration.Core.dll">
+      <publishTime>03/02/2019 19:51:30</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGeneration.dll">
+      <publishTime>03/02/2019 19:51:32</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGeneration.EntityFrameworkCore.dll">
+      <publishTime>03/02/2019 19:51:30</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGeneration.Templating.dll">
+      <publishTime>03/02/2019 19:51:26</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGeneration.Utils.dll">
+      <publishTime>03/02/2019 19:51:22</publishTime>
+    </File>
+    <File Include="Microsoft.VisualStudio.Web.CodeGenerators.Mvc.dll">
+      <publishTime>03/02/2019 19:51:34</publishTime>
+    </File>
+    <File Include="Microsoft.Win32.SystemEvents.dll">
+      <publishTime>05/15/2018 13:29:34</publishTime>
+    </File>
+    <File Include="MMALSharp.Common.dll">
+      <publishTime>01/24/2019 20:51:32</publishTime>
+    </File>
+    <File Include="MMALSharp.dll">
+      <publishTime>01/24/2019 20:51:36</publishTime>
+    </File>
+    <File Include="MMALSharp.Processing.dll">
+      <publishTime>01/24/2019 20:51:32</publishTime>
+    </File>
+    <File Include="nlog.config">
+      <publishTime>07/18/2019 14:02:22</publishTime>
+    </File>
+    <File Include="NLog.dll">
+      <publishTime>04/30/2019 19:48:22</publishTime>
+    </File>
+    <File Include="NLog.Extensions.Logging.dll">
+      <publishTime>04/30/2019 21:30:42</publishTime>
+    </File>
+    <File Include="NLog.Web.AspNetCore.dll">
+      <publishTime>05/06/2019 18:45:30</publishTime>
+    </File>
+    <File Include="NuGet.Frameworks.dll">
+      <publishTime>04/30/2019 15:17:38</publishTime>
+    </File>
+    <File Include="runtimes/unix/lib/netcoreapp2.0/System.Drawing.Common.dll">
+      <publishTime>09/18/2018 19:38:14</publishTime>
+    </File>
+    <File Include="runtimes/win/lib/netcoreapp2.0/Microsoft.Win32.SystemEvents.dll">
+      <publishTime>05/15/2018 13:29:34</publishTime>
+    </File>
+    <File Include="runtimes/win/lib/netcoreapp2.0/System.Drawing.Common.dll">
+      <publishTime>09/18/2018 19:38:14</publishTime>
+    </File>
+    <File Include="runtimes/win/lib/netstandard2.0/System.IO.Ports.dll">
+      <publishTime>05/15/2018 13:29:44</publishTime>
+    </File>
+    <File Include="Swashbuckle.AspNetCore.dll">
+      <publishTime>11/07/2018 10:25:10</publishTime>
+    </File>
+    <File Include="Swashbuckle.AspNetCore.Swagger.dll">
+      <publishTime>11/07/2018 10:25:06</publishTime>
+    </File>
+    <File Include="Swashbuckle.AspNetCore.SwaggerGen.dll">
+      <publishTime>11/07/2018 10:25:08</publishTime>
+    </File>
+    <File Include="Swashbuckle.AspNetCore.SwaggerUI.dll">
+      <publishTime>11/07/2018 10:25:06</publishTime>
+    </File>
+    <File Include="System.Composition.AttributedModel.dll">
+      <publishTime>04/30/2019 15:17:40</publishTime>
+    </File>
+    <File Include="System.Composition.Convention.dll">
+      <publishTime>04/30/2019 15:17:40</publishTime>
+    </File>
+    <File Include="System.Composition.Hosting.dll">
+      <publishTime>04/30/2019 15:17:40</publishTime>
+    </File>
+    <File Include="System.Composition.Runtime.dll">
+      <publishTime>04/30/2019 15:17:40</publishTime>
+    </File>
+    <File Include="System.Composition.TypedParts.dll">
+      <publishTime>04/30/2019 15:17:40</publishTime>
+    </File>
+    <File Include="System.Drawing.Common.dll">
+      <publishTime>09/18/2018 19:38:14</publishTime>
+    </File>
+    <File Include="System.IO.Ports.dll">
+      <publishTime>05/15/2018 13:29:44</publishTime>
+    </File>
+    <File Include="System.Xml.XPath.XmlDocument.dll">
+      <publishTime>11/05/2016 04:57:34</publishTime>
+    </File>
+    <File Include="web.config">
+      <publishTime>07/18/2019 14:03:54</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/0.jpg">
+      <publishTime>07/14/2019 05:05:41</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1.jpg">
+      <publishTime>07/14/2019 05:09:35</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563103865630.jpg">
+      <publishTime>07/14/2019 06:31:11</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563103875468.jpg">
+      <publishTime>07/14/2019 06:31:21</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563103892912.jpg">
+      <publishTime>07/14/2019 06:31:39</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563103916591.jpg">
+      <publishTime>07/14/2019 06:32:02</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563103938868.jpg">
+      <publishTime>07/14/2019 06:32:25</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563103965627.jpg">
+      <publishTime>07/14/2019 06:32:51</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104006236.jpg">
+      <publishTime>07/14/2019 06:33:32</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104091557.jpg">
+      <publishTime>07/14/2019 06:34:57</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104100434.jpg">
+      <publishTime>07/14/2019 06:35:06</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104111893.jpg">
+      <publishTime>07/14/2019 06:35:18</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104160636.jpg">
+      <publishTime>07/14/2019 06:36:16</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104180374.jpg">
+      <publishTime>07/14/2019 06:36:26</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104264123.jpg">
+      <publishTime>07/14/2019 06:37:50</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104273358.jpg">
+      <publishTime>07/14/2019 06:37:59</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/1563104282019.jpg">
+      <publishTime>07/14/2019 06:38:08</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/2.jpg">
+      <publishTime>07/14/2019 05:09:42</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/3.jpg">
+      <publishTime>07/14/2019 05:15:18</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/4.jpg">
+      <publishTime>07/14/2019 05:15:48</publishTime>
+    </File>
+    <File Include="wwwroot/photos/38/5.jpg">
+      <publishTime>07/14/2019 05:16:09</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563173841728.jpg">
+      <publishTime>07/15/2019 01:57:29</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563173946008.jpg">
+      <publishTime>07/15/2019 01:59:13</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563174003457.jpg">
+      <publishTime>07/15/2019 02:00:11</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563174080304.jpg">
+      <publishTime>07/15/2019 02:01:27</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563174091685.jpg">
+      <publishTime>07/15/2019 02:01:37</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563174325149.jpg">
+      <publishTime>07/15/2019 02:05:32</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563174851455.jpg">
+      <publishTime>07/15/2019 02:14:21</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563174979131.jpg">
+      <publishTime>07/15/2019 02:16:26</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563175014537.jpg">
+      <publishTime>07/15/2019 02:17:00</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563175022813.jpg">
+      <publishTime>07/15/2019 02:17:08</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563175912794.jpg">
+      <publishTime>07/15/2019 02:32:00</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563176078690.jpg">
+      <publishTime>07/15/2019 02:34:46</publishTime>
+    </File>
+    <File Include="wwwroot/photos/51/1563178079147.jpg">
+      <publishTime>07/15/2019 03:08:05</publishTime>
+    </File>
+  </ItemGroup>
 </Project>

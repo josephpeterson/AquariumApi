@@ -36,6 +36,7 @@ namespace AquariumApi.DeviceApi.Clients
 
             var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice), Encoding.UTF8, "application/json");
             HttpClient client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(1);
             var result = client.PostAsync(path, httpContent).Result;
             return JsonConvert.DeserializeObject<AquariumDevice>(result.Content.ReadAsStringAsync().Result);
         }
