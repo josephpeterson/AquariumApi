@@ -19,11 +19,11 @@ namespace AquariumApi.Models
         public AquariumPhoto Photo { get; set; }
         public int? PhotoId { get; set; }
         public DateTime Date { get; set; }
-        public decimal Ammonia { get; set; }
-        public decimal Nitrite { get; set; }
-        public decimal Nitrate { get; set; }
-        public decimal Ph { get; set; }
-        public int Temperature { get; set; }
+        public decimal? Ammonia { get; set; }
+        public decimal? Nitrite { get; set; }
+        public decimal? Nitrate { get; set; }
+        public decimal? Ph { get; set; }
+        public int? Temperature { get; set; }
 
 
     }

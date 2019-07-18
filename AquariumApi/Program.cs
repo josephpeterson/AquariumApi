@@ -13,15 +13,19 @@ namespace AquariumApi
 {
     public class Program
     {
+        public static IConfiguration Configuration { get; set; }
         public static void Main(string[] args)
         {
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile("config.json");
+            Configuration = builder.Build();
             CreateWebHostBuilder(args).Build().Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseKestrel()
-                .UseUrls("http://*:80")
+                .UseUrls($"http://*:{Configuration["Port"]}")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()

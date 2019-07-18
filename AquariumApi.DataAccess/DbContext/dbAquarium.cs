@@ -27,7 +27,6 @@ namespace AquariumApi.DataAccess
 
                 entity.ToTable("tblAquarium");
                 entity.HasKey(e => new { e.Id });
-                entity.HasOne(e => e.CameraConfiguration);
                 entity.HasMany(e => e.Fish);
                 entity.HasMany(e => e.Feedings);
             });
@@ -36,10 +35,6 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblSnapshot");
                 entity.HasKey(e => new { e.Id });
                 entity.HasOne(e => e.Photo).WithOne(e => e.Snapshot);
-            });
-            modelBuilder.Entity<CameraConfiguration>(entity =>
-            {
-                entity.ToTable("tblCameraConfiguration");
             });
             modelBuilder.Entity<Feeding>(entity =>
             {
@@ -69,11 +64,19 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(e => e.AquariumSnapshot);
                 entity.HasOne(e => e.FishPhoto);
             });
+
             modelBuilder.Entity<AquariumDevice>(entity =>
             {
                 entity.ToTable("tblDevice");
                 entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
+
             });
+            modelBuilder.Entity<CameraConfiguration>(entity =>
+            {
+                entity.ToTable("tblCameraConfiguration");
+                entity.HasOne(e => e.Device).WithOne(e => e.CameraConfiguration);
+            });
+
             modelBuilder.Entity<AquariumPhoto>(entity =>
             {
                 entity.ToTable("tblAquariumPhoto");

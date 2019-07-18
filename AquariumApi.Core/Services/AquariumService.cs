@@ -49,6 +49,7 @@ namespace AquariumApi.Core
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
         List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
+        AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
     }
     public class AquariumService : IAquariumService
     {
@@ -131,7 +132,7 @@ namespace AquariumApi.Core
 
             if (takePhoto)
             {
-                var aquariumPhoto = _deviceService.TakePhoto(deviceId,aquarium.CameraConfiguration);
+                var aquariumPhoto = _deviceService.TakePhoto(deviceId, aquarium.Device.CameraConfiguration);
                 aquariumPhoto.AquariumId = aquarium.Id;
                 aquariumPhoto = AddAquariumPhoto(aquariumPhoto);
                 snapshot.PhotoId = aquariumPhoto.Id.Value;
@@ -211,11 +212,17 @@ namespace AquariumApi.Core
 
         public AquariumDevice AddAquariumDevice(AquariumDevice device)
         {
-            return _aquariumDao.AddAquariumDevice(device);
+            var newDevice = _aquariumDao.AddAquariumDevice(device);
+            _deviceService.SetAquarium(newDevice.Id.Value, device.AquariumId.Value);
+            return newDevice;
         }
         public AquariumDevice GetAquariumDeviceById(int deviceId)
         {
             return _aquariumDao.GetAquariumDeviceById(deviceId);
+        }
+        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
+        {
+            return _aquariumDao.GetAquariumDeviceByIpAndKey(ipAddress, deviceKey);
         }
         public AquariumDevice DeleteAquariumDevice(int deviceId)
         {
@@ -223,9 +230,12 @@ namespace AquariumApi.Core
         }
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
-            _deviceService.SetAquarium(device.Id.Value, device.AquariumId.Value);
-            return _aquariumDao.UpdateAquariumDevice(device);
+            var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
+            _deviceService.SetAquarium(updatedDevice.Id.Value, device.AquariumId.Value);
+            return updatedDevice;
         }
+
+        //possibly delete this
         public void SetAquariumDevice(int aquariumId,int deviceId)
         {
             _aquariumDao.SetAquariumDevice(aquariumId, deviceId);

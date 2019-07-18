@@ -11,39 +11,51 @@ namespace AquariumApi.DeviceApi.Controllers
     [ApiController]
     public class HomeController : Controller
     {
-        private IHardwareService _hardwareService;
+        private IDeviceService _deviceService;
         private ILogger<HomeController> _logger;
-        private Aquarium _aquarium;
 
-        public HomeController(IHardwareService hardwareService, ILogger<HomeController> logger,Aquarium aquarium)
+        public HomeController(IDeviceService deviceService, ILogger<HomeController> logger)
         {
-            _hardwareService = hardwareService;
+            _deviceService = deviceService;
             _logger = logger;
-            _aquarium = aquarium;
         }
         [HttpGet]
         [Route("/v1/Scan")]
         public IActionResult ScanHardware()
         {
-            return new OkObjectResult(_hardwareService.ScanHardware());
+            try
+            {
+                _logger.LogInformation("GET /v1/Scan called");
+                _deviceService.CheckAvailableHardware();
+                return new OkObjectResult(_deviceService.GetDevice());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Scan endpoint caught ebxception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Ping")]
+        public IActionResult Ping([FromBody] AquariumDevice device)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Ping called");
+                _deviceService.SetDevice(device);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
         }
         [HttpGet]
         [Route("/v1/Ping")]
-        public IActionResult Ping()
+        public IActionResult CheckPing()
         {
-            return new OkResult();
-        }
-        [HttpPost]
-        [Route("/v1/Aquarium")]
-        public IActionResult SetAquarium([FromBody] Aquarium aquarium)
-        {
-            Console.WriteLine("setingsg the aquarikum");
-            _aquarium.Id = aquarium.Id;
-            _aquarium.Name = aquarium.Name;
-            _aquarium.Type = aquarium.Type;
-            _aquarium.Gallons = aquarium.Gallons;
-            _aquarium.StartDate = aquarium.StartDate;
-            _logger.LogWarning("Aquarium set");
+            _logger.LogInformation("GET /v1/Ping called");
             return new OkResult();
         }
     }

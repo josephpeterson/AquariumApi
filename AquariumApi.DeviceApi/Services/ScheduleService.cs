@@ -23,7 +23,6 @@ namespace AquariumApi.DeviceApi
         {
             _config = config;
             _logger = logger;
-            _aquarium = aquarium;
 
             var t = Task.Run(() =>
             {

@@ -108,5 +108,30 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+
+
+        //Ping recieved
+        [HttpPost]
+        [Route("/v1/Device/Ping")]
+        public IActionResult GetPingFromDevice([FromBody] AquariumDevice deviceRequest)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Device/Ping called");
+
+                var host = Request.Host.Host;
+
+                _logger.LogInformation($"\n\nHost: {host} \n {deviceRequest.PrivateKey}");
+
+                var device = _aquariumService.GetAquariumDeviceByIpAndKey(host, deviceRequest.PrivateKey);
+                _aquariumService.ApplyAquariumDeviceHardware(device.Id.Value, deviceRequest);
+                return new OkObjectResult(device);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Device/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }

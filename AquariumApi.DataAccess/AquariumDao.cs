@@ -49,6 +49,7 @@ namespace AquariumApi.DataAccess
         void DeleteAquariumPhoto(int photoId);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
+        AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
     }
 
     public class AquariumDao : IAquariumDao
@@ -76,10 +77,9 @@ namespace AquariumApi.DataAccess
 
             var aquarium = _dbAquariumContext.TblAquarium
                 .Where(aq => aq.Id == aquariumId)
-                .Include(aq => aq.CameraConfiguration)
                 .Include(aq => aq.Fish)
                 .Include(aq => aq.Feedings)
-                .Include(aq => aq.Device)
+                .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
                 .First();
             return aquarium;
         }
@@ -91,14 +91,10 @@ namespace AquariumApi.DataAccess
         }
         public Aquarium UpdateAquarium(Aquarium aquarium)
         {
-            var aqToUpdate = _dbAquariumContext.TblAquarium.Include(aq => aq.CameraConfiguration).SingleOrDefault(aq => aq.Id == aquarium.Id);
+            var aqToUpdate = _dbAquariumContext.TblAquarium.SingleOrDefault(aq => aq.Id == aquarium.Id);
             if (aqToUpdate == null)
                 throw new KeyNotFoundException();
 
-            if (aquarium.CameraConfiguration == null)
-                aquarium.CameraConfiguration = _mapper.Map<CameraConfiguration>(aqToUpdate.CameraConfiguration) ?? new CameraConfiguration();
-            else if(aqToUpdate.CameraConfiguration != null)
-                aquarium.CameraConfiguration.Id = aqToUpdate.CameraConfiguration.Id;
             aqToUpdate = _mapper.Map(aquarium, aqToUpdate);
 
             _dbAquariumContext.SaveChanges();
@@ -106,10 +102,10 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteAquarium(int aquariumId)
         {
-            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.CameraConfiguration).Include(aq => aq.Fish).First();
+            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.Device).Include(aq => aq.Fish).First();
             _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
-            if(aquarium.CameraConfiguration != null)
-                _dbAquariumContext.TblCameraConfiguration.Remove(aquarium.CameraConfiguration);
+            if(aquarium.Device != null)
+                _dbAquariumContext.TblDevice.Remove(aquarium.Device);
             _dbAquariumContext.TblAquarium.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
         }
@@ -362,6 +358,11 @@ namespace AquariumApi.DataAccess
                 File.Delete(photo.Filepath);
             _dbAquariumContext.TblAquariumPhoto.Remove(photo);
             _dbAquariumContext.SaveChanges();
+        }
+
+        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
+        {
+            return _dbAquariumContext.TblDevice.Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey).First();
         }
     }
 }

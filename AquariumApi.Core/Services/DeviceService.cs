@@ -58,12 +58,11 @@ namespace AquariumApi.Core
         public bool SetAquarium(int deviceId,int aquariumId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var aquarium = _aquariumDao.GetAquariumById(aquariumId);
-            var path = $"http://{device.Address}:{device.Port}/v1/Aquarium";
+            var path = $"http://{device.Address}:{device.Port}/v1/Ping";
             HttpClient client = new HttpClient();
             JsonSerializerSettings jss = new JsonSerializerSettings();
             jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            var httpContent = new StringContent(JsonConvert.SerializeObject(aquarium,jss), Encoding.UTF8, "application/json");
+            var httpContent = new StringContent(JsonConvert.SerializeObject(device, jss), Encoding.UTF8, "application/json");
             var result = client.PostAsync(path, httpContent).Result;
             if (result.IsSuccessStatusCode)
                 return true;

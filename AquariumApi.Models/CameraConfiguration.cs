@@ -25,6 +25,10 @@ namespace AquariumApi.Models
         public decimal RoiH { get; set; } = 0;
         public int Rotation { get; set; } = 180;
 
+        public int DeviceId { get; set; }
+        [ForeignKey("DeviceId")]
+        public AquariumDevice Device { get; set; }
+
         public string Output;
 
         public override string ToString()

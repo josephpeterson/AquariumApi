@@ -12,16 +12,14 @@ namespace AquariumApi.DeviceApi.Controllers
 {
     public class SnapshotController : Controller
     {
-        private IPhotoManager _photoManager;
+        private IDeviceService _deviceService;
         private ILogger<SnapshotController> _logger;
-        private ISerialService _serialService;
         private IScheduleService _scheduleService;
 
-        public SnapshotController(ILogger<SnapshotController> logger,IPhotoManager photoManager,ISerialService serialService, IScheduleService scheduleService)
+        public SnapshotController(ILogger<SnapshotController> logger,IDeviceService deviceService, IScheduleService scheduleService)
         {
-            _photoManager = photoManager;
+            _deviceService = deviceService;
             _logger = logger;
-            _serialService = serialService;
             _scheduleService = scheduleService;
         }
         [HttpGet]
@@ -31,15 +29,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogWarning($"POST /v1/Take called");
-                var snapshot = new AquariumSnapshot()
-                {
-                    Date = DateTime.Now,
-                    Temperature = (_serialService.CanRetrieveTemperature() ? _serialService.GetTemperatureC() : 0),
-                    Nitrate = (_serialService.CanRetrieveNitrate() ? _serialService.GetNitrate() : 0.00M),
-                    Nitrite = (_serialService.CanRetrieveNitrite() ? _serialService.GetNitrite() : 0.00M),
-                    Ph = (_serialService.CanRetrievePh() ? _serialService.GetPh() : 0.00M),
-                };
-                return new OkObjectResult(snapshot);
+                return new OkObjectResult(_deviceService.TakeSnapshot());
             }
             catch (Exception ex)
             {
@@ -58,13 +48,9 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 _logger.LogWarning($"POST /v1/TakePhoto called");
                 configuration.Output = "temp.jpg";
-                _photoManager.TakePhoto(configuration);
+                var photo = _deviceService.TakePhoto(configuration);
                 _logger.LogWarning("Photo successfully taken");
-                return new FileStreamResult(new FileStream(configuration.Output, FileMode.Open, FileAccess.Read),
-                    "application/octet-stream")
-                {
-                    FileDownloadName = configuration.Output
-                };
+                return photo;
             }
             catch (Exception ex)
             {

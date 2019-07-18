@@ -4,3 +4,8 @@ sudo apt-get install curl libunwind8 gettext
 curl -sSL -o dotnet.tar.gz https://dotnetcli.blob.core.windows.net/dotnet/Runtime/release/2.0.0/dotnet-runtime-latest-linux-arm.tar.gz
 sudo mkdir -p /opt/dotnet && sudo tar zxf dotnet.tar.gz -C /opt/dotnet
 sudo ln -s /opt/dotnet/dotnet /usr/local/bin
+
+#Running DeviceApi on boot
+sudo cp launch.sh /etc/init.d/c_start_aquarium_deviceApi
+sudo chmod 755 /etc/init.d/c_start_aquarium_deviceApi
+sudo update-rc.d c_start_aquarium_deviceApi defaults
