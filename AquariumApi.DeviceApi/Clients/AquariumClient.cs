@@ -1,4 +1,5 @@
 ﻿using AquariumApi.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -14,7 +15,7 @@ namespace AquariumApi.DeviceApi.Clients
 {
     public interface IAquariumClient
     {
-        AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, AquariumPhoto photo);
+        AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo);
         AquariumDevice GetDeviceInformation(AquariumDevice aquariumDevice);
     }
     public class AquariumClient: IAquariumClient
@@ -36,12 +37,14 @@ namespace AquariumApi.DeviceApi.Clients
 
             var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice), Encoding.UTF8, "application/json");
             HttpClient client = new HttpClient();
-            client.Timeout = TimeSpan.FromMinutes(1);
+            client.Timeout = TimeSpan.FromMinutes(5);
             var result = client.PostAsync(path, httpContent).Result;
+            if (!result.IsSuccessStatusCode)
+                throw new Exception("Service does not have this device key on record.");
             return JsonConvert.DeserializeObject<AquariumDevice>(result.Content.ReadAsStringAsync().Result);
         }
 
-        public AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, AquariumPhoto photo)
+        public AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo)
         {
             throw new NotImplementedException();
         }

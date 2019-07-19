@@ -11,8 +11,8 @@ namespace AquariumApi.Models
     public class AquariumDevice
     {
         [Required]
-        public int? Id { get; set; }
-        public int? AquariumId { get; set; }
+        public int Id { get; set; }
+        public int AquariumId { get; set; }
         [ForeignKey("AquariumId")]
         public Aquarium Aquarium { get; set; }
 

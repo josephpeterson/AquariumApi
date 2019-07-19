@@ -11,7 +11,7 @@ namespace AquariumApi.DeviceApi
     {
         int GetTemperatureC();
         AquariumDevice ScanHardware();
-        void TakePhoto(CameraConfiguration config);
+        byte[] TakePhoto(CameraConfiguration config);
     }
     public class HardwareService : IHardwareService
     {
@@ -56,13 +56,15 @@ namespace AquariumApi.DeviceApi
                 return false;
             }
         }
-        public void TakePhoto(CameraConfiguration config)
+        public byte[] TakePhoto(CameraConfiguration config)
         {
-            //Directory.CreateDirectory(Path.GetDirectoryName(config.Output));
+            config.Output = "temp.jpg";
+            //Path.GetDirectoryName(config.Output);
             if (File.Exists(config.Output))
                 File.Delete(config.Output);
             _logger.LogInformation($"Taking Photo: " + config);
             $"/usr/bin/raspistill {config}".Bash();
+            return System.IO.File.ReadAllBytes(config.Output);
         }
         public int GetTemperatureC()
         {

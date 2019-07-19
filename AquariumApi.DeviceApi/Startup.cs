@@ -41,17 +41,19 @@ namespace AquariumApi.DeviceApi
 
         private void DeviceBootstrap()
         {
-            _logger.LogInformation("Attempting to contact Aquarium Service...");
-            //Load cached Aquarium
             try
             {
                 _deviceService.PingAquariumService();
-                //_deviceService.CheckAvailableHardware(); should we do this here?
-                _logger.LogInformation("Device information retrieved from AquariumService.");
+                var device = _deviceService.GetDevice();
+                _logger.LogWarning("Device Information: "
+                    + $"\nAquarium Name: {device.Aquarium.Name}"
+                    + $"\nEnabled Photo: {device.EnabledPhoto}"
+                    + $"\nEnabled Temperature: {device.EnabledTemperature}"
+                    );
             }
-            catch
+            catch(Exception ex)
             {
-                _logger.LogError("Could not get device information from AquariumService");
+                _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
             }
         }
 

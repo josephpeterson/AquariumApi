@@ -39,19 +39,18 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Update")]
-        public IActionResult UpdateAquariumDevice(int deviceId,[FromBody] AquariumDevice device)
+        [Route("/v1/Device/Update")]
+        public IActionResult UpdateAquariumDevice([FromBody] AquariumDevice device)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Device/{deviceId}/Update called");
-                device.Id = deviceId;
+                _logger.LogInformation($"POST /v1/Device/Update called");
                 var updatedDevice = _aquariumService.UpdateAquariumDevice(device);
                 return new OkObjectResult(updatedDevice);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Device/{deviceId}/Update endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Device/Update endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -109,6 +108,23 @@ namespace AquariumApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/CameraConfiguration")]
+        public IActionResult UpdateCameraConfiguration(int deviceId,[FromBody] CameraConfiguration config)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/CameraConfiguration called");
+                var aquariumDevice = _aquariumService.UpdateDeviceCameraConfiguration(config);
+                return new OkObjectResult(aquariumDevice);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/CameraConfiguration endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+
 
         //Ping recieved
         [HttpPost]
@@ -121,10 +137,10 @@ namespace AquariumApi.Controllers
 
                 var host = HttpContext.Connection.RemoteIpAddress.ToString();
 
-                _logger.LogInformation($"\n\nHost: {host} \n {deviceRequest.PrivateKey}");
+                _logger.LogInformation($"\n\nHost: ({host}) \n '{deviceRequest.PrivateKey}'");
 
                 var device = _aquariumService.GetAquariumDeviceByIpAndKey(host, deviceRequest.PrivateKey);
-                _aquariumService.ApplyAquariumDeviceHardware(device.Id.Value, deviceRequest);
+                _aquariumService.ApplyAquariumDeviceHardware(device.Id, deviceRequest);
                 return new OkObjectResult(device);
             }
             catch (Exception ex)

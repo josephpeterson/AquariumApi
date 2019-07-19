@@ -8,14 +8,14 @@ namespace AquariumApi.Models
 {
     public class CameraConfiguration
     {
-        public int? Id { get; set; }
+        public int Id { get; set; }
         public int Height { get; set; } = 1080;
         public int Width { get; set; } = 1920;
         public int Sharpness { get; set; } = 0;
         public int Contrast { get; set; } = 0;
         public int Saturation { get; set; } = 0;
         public string ExposureMode { get; set; } = "auto";
-        public int Brightness { get; set; } = 0;
+        public int Brightness { get; set; } = 50;
         public int Iso { get; set; } = 100;
         public bool HFlip { get; set; } = false;
         public bool VFlip { get; set; } = false;

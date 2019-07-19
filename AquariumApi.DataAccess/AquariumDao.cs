@@ -81,6 +81,9 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Feedings)
                 .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
                 .First();
+
+            if (aquarium.Device != null && aquarium.Device.CameraConfiguration == null)
+                aquarium.Device.CameraConfiguration = new CameraConfiguration();
             return aquarium;
         }
         public Aquarium AddAquarium(Aquarium model)
@@ -98,7 +101,7 @@ namespace AquariumApi.DataAccess
             aqToUpdate = _mapper.Map(aquarium, aqToUpdate);
 
             _dbAquariumContext.SaveChanges();
-            return aqToUpdate;
+            return GetAquariumById(aqToUpdate.Id);
         }
         public void DeleteAquarium(int aquariumId)
         {
@@ -285,11 +288,19 @@ namespace AquariumApi.DataAccess
         }
         public AquariumDevice GetAquariumDeviceById(int deviceId)
         {
-            return _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
+            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId)
+                .AsNoTracking()
+                .Include(e => e.CameraConfiguration)
+                .First();
+            if (device.CameraConfiguration == null)
+                device.CameraConfiguration = new CameraConfiguration();
+            return device;
         }
         public AquariumDevice DeleteAquariumDevice(int deviceId)
         {
-            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
+            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId)
+                .Include(e => e.CameraConfiguration)
+                .First();
             if (device == null)
                 throw new KeyNotFoundException();
             _dbAquariumContext.TblDevice.Remove(device);
@@ -298,19 +309,18 @@ namespace AquariumApi.DataAccess
         }
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
-            var deviceToUpdate = _dbAquariumContext.TblDevice.Where(s => s.Id == device.Id).First();
+            var deviceToUpdate = _dbAquariumContext.TblDevice.Where(s => s.Id == device.Id)
+                .Include(e => e.CameraConfiguration)
+                .First();
             if (deviceToUpdate == null)
                 throw new KeyNotFoundException();
 
-            deviceToUpdate.Name = device.Name;
-            deviceToUpdate.Type = device.Type;
-            deviceToUpdate.Port = device.Port;
-            deviceToUpdate.Address = device.Address;
-            deviceToUpdate.AquariumId = device.AquariumId;
+            if (deviceToUpdate.CameraConfiguration != null && device.CameraConfiguration != null)
+                _dbAquariumContext.TblCameraConfiguration.Remove(deviceToUpdate.CameraConfiguration);
 
-            _dbAquariumContext.TblDevice.Update(deviceToUpdate);
+             _mapper.Map(device, deviceToUpdate);
             _dbAquariumContext.SaveChanges();
-            return deviceToUpdate;
+            return GetAquariumDeviceById(deviceToUpdate.Id);
         }
         public void SetAquariumDevice(int aquariumId, int deviceId)
         {
@@ -362,7 +372,10 @@ namespace AquariumApi.DataAccess
 
         public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
         {
-            return _dbAquariumContext.TblDevice.Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey).First();
+            return _dbAquariumContext.TblDevice.Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
+                .Include(e => e.Aquarium)
+                .First();
         }
+
     }
 }

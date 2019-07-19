@@ -16,7 +16,7 @@ namespace AquariumApi.DeviceApi
     public interface IDeviceService
     {
         AquariumSnapshot TakeSnapshot();
-        FileStreamResult TakePhoto(CameraConfiguration configuration);
+        byte[] TakePhoto(CameraConfiguration configuration);
 
         void PingAquariumService();
         void CheckAvailableHardware();
@@ -49,9 +49,9 @@ namespace AquariumApi.DeviceApi
         }
 
 
-        public FileStreamResult TakePhoto(CameraConfiguration configuration)
+        public byte[] TakePhoto(CameraConfiguration configuration)
         {
-            throw new NotImplementedException();
+            return _hardwareService.TakePhoto(configuration);
         }
 
         public AquariumSnapshot TakeSnapshot()
@@ -70,6 +70,8 @@ namespace AquariumApi.DeviceApi
             {
                 PrivateKey = _config["DeviceKey"]
             };
+            Console.WriteLine("Attempting to contact Aquarium Service...");
+            Console.WriteLine($"Device Key: '{Device.PrivateKey}'");
             CheckAvailableHardware();
             var actualDevice = _aquariumClient.GetDeviceInformation(Device);
             _logger.LogInformation("Device information found for aquarium \"" + actualDevice.Aquarium.Name + "\"");

@@ -19,7 +19,7 @@ namespace AquariumApi.Core
         AquariumDevice ScanHardware(int deviceId);
         bool Ping(int deviceId);
         AquariumSnapshot TakeSnapshot(int deviceId);
-        AquariumPhoto TakePhoto(int deviceId,CameraConfiguration configuration);
+        AquariumPhoto TakePhoto(int deviceId);
         bool SetAquarium(int deviceId, int aquariumId);
     }
     public class DeviceService : IDeviceService
@@ -76,32 +76,38 @@ namespace AquariumApi.Core
             HttpClient client = new HttpClient();
             var data = client.GetStringAsync(path).Result;
             var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data);
-            snapshot.AquariumId = device.AquariumId.Value;
+            snapshot.AquariumId = device.AquariumId;
             return snapshot;
         }
-        public AquariumPhoto TakePhoto(int deviceId,CameraConfiguration configuration)
+        public AquariumPhoto TakePhoto(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var photos = _aquariumDao.GetAquariumPhotos(device.AquariumId.Value);
+            var photos = _aquariumDao.GetAquariumPhotos(device.AquariumId);
             var path = $"http://{device.Address}:{device.Port}/v1/Snapshot/TakePhoto";
             var downloadPath = String.Format(_config["PhotoFilePath"], device.AquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
 
             _logger.LogInformation($"Retrieving photo snapshot... [{downloadPath}]");
             using (var client2 = new HttpClient())
             {
-                var httpContent = new StringContent(JsonConvert.SerializeObject(configuration), Encoding.UTF8, "application/json");
+                JsonSerializerSettings jss = new JsonSerializerSettings();
+                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                var config = device.CameraConfiguration;
+                config.Device = null;
+                var httpContent = new StringContent(JsonConvert.SerializeObject(config, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not take photo");
                 Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
                 using (Stream output = File.OpenWrite(downloadPath))
                     result.Content.ReadAsStreamAsync().Result.CopyTo(output);
             }
             if (!File.Exists(downloadPath))
-                throw new KeyNotFoundException();
+                throw new Exception("Could not take photo");
             _logger.LogInformation($"Snapshot photo was saved to location: {downloadPath}");
             var photo = new AquariumPhoto()
             {
                 Date = new DateTime(),
-                AquariumId = device.AquariumId.Value,
+                AquariumId = device.AquariumId,
                 Filepath = downloadPath
             };
             return photo;

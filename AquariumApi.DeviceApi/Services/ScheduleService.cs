@@ -1,4 +1,5 @@
-﻿using AquariumApi.Models;
+﻿using AquariumApi.DeviceApi.Clients;
+using AquariumApi.Models;
 using Bifrost.IO.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -17,12 +18,15 @@ namespace AquariumApi.DeviceApi
     {
         private IConfiguration _config;
         private ILogger<ScheduleService> _logger;
-        private Aquarium _aquarium;
+        private IDeviceService _deviceService;
+        private AquariumClient _aquariumClient;
 
-        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,Aquarium aquarium)
+        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IDeviceService deviceService,AquariumClient aquariumClient)
         {
             _config = config;
             _logger = logger;
+            _deviceService = deviceService;
+            _aquariumClient = aquariumClient;
 
             var t = Task.Run(() =>
             {
@@ -30,29 +34,19 @@ namespace AquariumApi.DeviceApi
                 while(true)
                 {
                     ticks++;
-                    tellApiToTakeSnapshot();
+                    TakeSnapshot();
                     Thread.Sleep(15 * 60000);
                 }
             });
         }
 
-
-        //Lazy way
-        public void tellApiToTakeSnapshot()
+        private void TakeSnapshot()
         {
             _logger.LogWarning("Taking snapshot...");
-
-            var path = $"http://ec2-18-220-143-66.us-east-2.compute.amazonaws.com:8080/v1/Snapshot/{_aquarium.Id}/Take";
-
-            Console.WriteLine("Aquarium: " + _aquarium.Name);
-
-            return;
-            /*
-            HttpClient client = new HttpClient();
-            var data = client.GetStringAsync(path).Result;
-            var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data);
-            snapshot.AquariumId = device.AquariumId.Value;
-            */
+            var device = _deviceService.GetDevice();
+            var snapshot = _deviceService.TakeSnapshot();
+            var photo = _deviceService.TakePhoto(device.CameraConfiguration);
+            _aquariumClient.SendAquariumSnapshot(snapshot, photo);
         }
     }
 }

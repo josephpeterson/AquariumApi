@@ -50,6 +50,7 @@ namespace AquariumApi.Core
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
         List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
+        AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
     }
     public class AquariumService : IAquariumService
     {
@@ -85,6 +86,14 @@ namespace AquariumApi.Core
         public void DeleteAquarium(int aquariumId)
         {
             _aquariumDao.DeleteAquarium(aquariumId);
+        }
+
+        /* Device Camera configuration */
+        public AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config)
+        {
+            var deviceToUpdate = _aquariumDao.GetAquariumDeviceById(config.DeviceId);
+            deviceToUpdate.CameraConfiguration = config;
+            return _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
         }
 
 
@@ -126,13 +135,13 @@ namespace AquariumApi.Core
         public AquariumSnapshot TakeSnapshot(int aquariumId, bool takePhoto)
         {
             Aquarium aquarium = _aquariumDao.GetAquariumById(aquariumId);
-            var deviceId = aquarium.Device.Id.Value;
+            var deviceId = aquarium.Device.Id;
 
             AquariumSnapshot snapshot = _deviceService.TakeSnapshot(deviceId);
 
             if (takePhoto)
             {
-                var aquariumPhoto = _deviceService.TakePhoto(deviceId, aquarium.Device.CameraConfiguration);
+                var aquariumPhoto = _deviceService.TakePhoto(deviceId);
                 aquariumPhoto.AquariumId = aquarium.Id;
                 aquariumPhoto = AddAquariumPhoto(aquariumPhoto);
                 snapshot.PhotoId = aquariumPhoto.Id.Value;
@@ -213,7 +222,7 @@ namespace AquariumApi.Core
         public AquariumDevice AddAquariumDevice(AquariumDevice device)
         {
             var newDevice = _aquariumDao.AddAquariumDevice(device);
-            _deviceService.SetAquarium(newDevice.Id.Value, device.AquariumId.Value);
+            //_deviceService.SetAquarium(newDevice.Id, device.AquariumId);
             return newDevice;
         }
         public AquariumDevice GetAquariumDeviceById(int deviceId)
@@ -231,7 +240,7 @@ namespace AquariumApi.Core
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
             var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
-            _deviceService.SetAquarium(updatedDevice.Id.Value, device.AquariumId.Value);
+            //_deviceService.SetAquarium(updatedDevice.Id.Value, device.AquariumId.Value);
             return updatedDevice;
         }
 
