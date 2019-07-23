@@ -92,7 +92,7 @@ namespace AquariumApi.Core
                 JsonSerializerSettings jss = new JsonSerializerSettings();
                 jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 var config = device.CameraConfiguration;
-                config.Device = null;
+                //config.Device = null;
                 var httpContent = new StringContent(JsonConvert.SerializeObject(config, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)

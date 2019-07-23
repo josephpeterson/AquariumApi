@@ -27,6 +27,7 @@ namespace AquariumApi.Models
 
         public DateTime Date { get; set; }
         public string HealthStatus { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Length { get; set; }
 
     }

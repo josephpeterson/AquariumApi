@@ -15,6 +15,7 @@ namespace AquariumApi.Models
         public int FishId { get; set; }
         public string FoodBrand { get; set; }
         public string FoodProduct { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
         public string Notes { get; set; }
         public DateTime Date { get; set; }

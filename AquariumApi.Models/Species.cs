@@ -21,10 +21,15 @@ namespace AquariumApi.Models
         public string SecondaryColor { get; set; }
         public string CareLevel { get; set; }
         public string Thumbnail { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? MinimumGallons { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? PhMin { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? PhMax { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? MaxSize { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? Price { get; set; }
 
         //Aggregate fields

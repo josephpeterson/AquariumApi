@@ -69,12 +69,13 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblDevice");
                 entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
+                entity.HasOne(e => e.CameraConfiguration);
 
             });
             modelBuilder.Entity<CameraConfiguration>(entity =>
             {
                 entity.ToTable("tblCameraConfiguration");
-                entity.HasOne(e => e.Device).WithOne(e => e.CameraConfiguration);
+                //entity.HasOne(e => e.Device).WithOne(e => e.CameraConfiguration);
             });
 
             modelBuilder.Entity<AquariumPhoto>(entity =>

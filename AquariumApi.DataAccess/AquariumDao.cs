@@ -69,13 +69,13 @@ namespace AquariumApi.DataAccess
         /* Aquarium */
         public List<Aquarium> GetAquariums()
         {
-            return _dbAquariumContext.TblAquarium.Include(aq => aq.Device).AsNoTracking().ToList();
+            return _dbAquariumContext.TblAquarium.AsNoTracking()
+                .Include(aq => aq.Device)
+                .ToList();
         }
         public Aquarium GetAquariumById(int aquariumId)
         {
-            var a = _dbAquariumContext.TblFish.Where(f => f.AquariumId == aquariumId).ToList();
-
-            var aquarium = _dbAquariumContext.TblAquarium
+            var aquarium = _dbAquariumContext.TblAquarium.AsNoTracking()
                 .Where(aq => aq.Id == aquariumId)
                 .Include(aq => aq.Fish)
                 .Include(aq => aq.Feedings)
@@ -283,13 +283,15 @@ namespace AquariumApi.DataAccess
         public AquariumDevice AddAquariumDevice(AquariumDevice device)
         {
             _dbAquariumContext.TblDevice.Add(device);
+            if (device.CameraConfiguration == null) device.CameraConfiguration = new CameraConfiguration();
+            _dbAquariumContext.TblCameraConfiguration.Add(device.CameraConfiguration);
             _dbAquariumContext.SaveChanges();
             return device;
         }
         public AquariumDevice GetAquariumDeviceById(int deviceId)
         {
-            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId)
-                .AsNoTracking()
+            var device = _dbAquariumContext.TblDevice.AsNoTracking()
+                .Where(s => s.Id == deviceId)
                 .Include(e => e.CameraConfiguration)
                 .First();
             if (device.CameraConfiguration == null)
@@ -298,27 +300,31 @@ namespace AquariumApi.DataAccess
         }
         public AquariumDevice DeleteAquariumDevice(int deviceId)
         {
-            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId)
+            var device = _dbAquariumContext.TblDevice
                 .Include(e => e.CameraConfiguration)
-                .First();
+                .SingleOrDefault(d => d.Id == deviceId);
             if (device == null)
                 throw new KeyNotFoundException();
             _dbAquariumContext.TblDevice.Remove(device);
+            if (device.CameraConfiguration != null)
+                _dbAquariumContext.TblCameraConfiguration.Remove(device.CameraConfiguration);
             _dbAquariumContext.SaveChanges();
             return device;
         }
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
-            var deviceToUpdate = _dbAquariumContext.TblDevice.Where(s => s.Id == device.Id)
-                .Include(e => e.CameraConfiguration)
-                .First();
-            if (deviceToUpdate == null)
+            var deviceToUpdate = _dbAquariumContext.TblDevice
+                .Include(d => d.CameraConfiguration)
+                .SingleOrDefault(s => s.Id == device.Id);
+            if(deviceToUpdate == null)
                 throw new KeyNotFoundException();
 
-            if (deviceToUpdate.CameraConfiguration != null && device.CameraConfiguration != null)
-                _dbAquariumContext.TblCameraConfiguration.Remove(deviceToUpdate.CameraConfiguration);
-
              _mapper.Map(device, deviceToUpdate);
+
+            //Also map modules
+            if(device.CameraConfiguration != null)
+                _mapper.Map(device.CameraConfiguration, deviceToUpdate.CameraConfiguration);
+
             _dbAquariumContext.SaveChanges();
             return GetAquariumDeviceById(deviceToUpdate.Id);
         }
@@ -349,11 +355,15 @@ namespace AquariumApi.DataAccess
 
         public AquariumPhoto GetAquariumPhotoById(int photoId)
         {
-            return _dbAquariumContext.TblAquariumPhoto.Where(p => p.Id == photoId).First();
+            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
+                .Where(p => p.Id == photoId)
+                .First();
         }
         public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
         {
-            return _dbAquariumContext.TblAquariumPhoto.Where(p => p.AquariumId == aquariumId).ToList();
+            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
+                .Where(p => p.AquariumId == aquariumId)
+                .ToList();
         }
         public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
         {
@@ -372,7 +382,9 @@ namespace AquariumApi.DataAccess
 
         public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
         {
-            return _dbAquariumContext.TblDevice.Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
+            if (ipAddress == "::1") ipAddress = "localhost";
+            return _dbAquariumContext.TblDevice.AsNoTracking()
+                .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
                 .Include(e => e.Aquarium)
                 .First();
         }

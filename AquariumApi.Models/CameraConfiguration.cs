@@ -19,15 +19,15 @@ namespace AquariumApi.Models
         public int Iso { get; set; } = 100;
         public bool HFlip { get; set; } = false;
         public bool VFlip { get; set; } = false;
+        [Column(TypeName = "decimal(18,2)")]
         public decimal RoiX { get; set; } = 0;
+        [Column(TypeName = "decimal(18,2)")]
         public decimal RoiY { get; set; } = 0;
+        [Column(TypeName = "decimal(18,2)")]
         public decimal RoiW { get; set; } = 0;
+        [Column(TypeName = "decimal(18,2)")]
         public decimal RoiH { get; set; } = 0;
         public int Rotation { get; set; } = 180;
-
-        public int DeviceId { get; set; }
-        [ForeignKey("DeviceId")]
-        public AquariumDevice Device { get; set; }
 
         public string Output;
 
