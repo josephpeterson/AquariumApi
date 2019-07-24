@@ -22,6 +22,8 @@ namespace AquariumApi.DeviceApi
     public class Startup
     {
         private IDeviceService _deviceService;
+        private IScheduleService _scheduleService;
+
         public IConfigurationRoot Configuration { get; }
         private ILogger<Startup> _logger;
 
@@ -35,12 +37,10 @@ namespace AquariumApi.DeviceApi
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
 
-            //Pi.Init<BootstrapWiringPi>();
-
         }
 
         private void DeviceBootstrap()
-        {
+        {   
             try
             {
                 _deviceService.PingAquariumService();
@@ -50,10 +50,22 @@ namespace AquariumApi.DeviceApi
                     + $"\nEnabled Photo: {device.EnabledPhoto}"
                     + $"\nEnabled Temperature: {device.EnabledTemperature}"
                     );
+
+                //Start schedule service
+                _scheduleService.Start();
             }
             catch(Exception ex)
             {
                 _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
+            }
+
+            try
+            {
+                //Pi.Init<BootstrapWiringPi>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Could not enable wiring: { ex.Message } Details: { ex.ToString() }");
             }
         }
 
@@ -79,16 +91,18 @@ namespace AquariumApi.DeviceApi
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddTransient<IHardwareService, HardwareService>();
             services.AddTransient<ISerialService, SerialService>();
+            services.AddTransient<IAquariumClient, AquariumClient>();
             services.AddSingleton<IDeviceService, DeviceService>();
             services.AddSingleton<IScheduleService, ScheduleService>();
-            services.AddSingleton<IAquariumClient, AquariumClient>();
+
         }
 
-        
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IDeviceService deviceService, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IDeviceService deviceService, ILogger<Startup> logger,IScheduleService scheduleService)
         {
             _deviceService = deviceService;
+            _scheduleService = scheduleService;
             _logger = logger;
 
             if (env.IsDevelopment())

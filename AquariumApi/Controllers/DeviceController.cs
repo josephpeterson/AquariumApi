@@ -166,5 +166,24 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+
+
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Device/{deviceId}/Snapshot")]
+        public IActionResult UploadSnapshot(int deviceId,IFormFile snapshotImage,AquariumSnapshot snapshot)
+        {
+            try
+            {
+
+                _logger.LogInformation("POST /v1/Device/Snapshot called");
+                AquariumSnapshot s = _deviceService.AddSnapshot(deviceId,snapshot,snapshotImage);
+                return new OkObjectResult(s);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/v1/Device/Snapshot: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
     }
 }

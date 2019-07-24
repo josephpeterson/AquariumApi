@@ -23,4 +23,11 @@ namespace AquariumApi.Models
         public ICollection<Feeding> Feedings { get; set; }
         public ICollection<AquariumSnapshot> Snapshots { get; set; }
     }
+
+    public class AquariumOverviewResponse : Aquarium
+    {
+        public int FishCount { get; set; }
+        public int FeedingCount { get; set; }
+        public bool HasDevice { get; set; }
+    }
 }

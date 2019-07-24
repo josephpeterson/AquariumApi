@@ -22,6 +22,7 @@ namespace AquariumApi.DeviceApi
         void CheckAvailableHardware();
         AquariumDevice GetDevice();
         void SetDevice(AquariumDevice device);
+        AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo);
     }
     public class DeviceService : IDeviceService
     {
@@ -89,6 +90,11 @@ namespace AquariumApi.DeviceApi
             Device.EnabledPh = thisDevice.EnabledPh;
             Device.EnabledPhoto = thisDevice.EnabledPhoto;
             Device.EnabledTemperature = thisDevice.EnabledTemperature;
+        }
+
+        public AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo)
+        {
+            return _aquariumClient.SendAquariumSnapshot(Device.Id, snapshot, photo);
         }
     }
 }

@@ -15,14 +15,14 @@ namespace AquariumApi.DeviceApi.Clients
 {
     public interface IAquariumClient
     {
-        AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo);
+        AquariumSnapshot SendAquariumSnapshot(int deviceId,AquariumSnapshot snapshot, byte[] photo);
         AquariumDevice GetDeviceInformation(AquariumDevice aquariumDevice);
     }
     public class AquariumClient: IAquariumClient
     {
         private ILogger<IAquariumClient> _logger;
         private IConfiguration _config;
-        private IDeviceService _deviceService;
+        private AquariumDevice _device;
 
         public AquariumClient(ILogger<IAquariumClient> logger, IConfiguration config)
         {
@@ -41,12 +41,28 @@ namespace AquariumApi.DeviceApi.Clients
             var result = client.PostAsync(path, httpContent).Result;
             if (!result.IsSuccessStatusCode)
                 throw new Exception("Service does not have this device key on record.");
-            return JsonConvert.DeserializeObject<AquariumDevice>(result.Content.ReadAsStringAsync().Result);
+            var device = JsonConvert.DeserializeObject<AquariumDevice>(result.Content.ReadAsStringAsync().Result);
+            return device;
         }
 
-        public AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo)
+        public AquariumSnapshot SendAquariumSnapshot(int deviceId,AquariumSnapshot snapshot, byte[] photo)
         {
-            throw new NotImplementedException();
+            var path = $"{_config["AquariumServiceUrl"]}/Device/{deviceId}/Snapshot";
+            _logger.LogInformation("Sending snapshot: " + path);
+
+
+            MultipartFormDataContent multiContent = new MultipartFormDataContent();
+
+            multiContent.Add(new ByteArrayContent(photo), "snapshotImage", DateTime.Now.ToString());
+
+            //var httpContent = new StringContent(JsonConvert.SerializeObject(snapshot), Encoding.UTF8, "application/json");
+            multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)),"Snapshot");
+            HttpClient client = new HttpClient();
+            var result = client.PostAsync(path, multiContent).Result;
+            if (!result.IsSuccessStatusCode)
+                throw new Exception("Could not upload aquarium snapshot");
+            var actualSnapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(result.Content.ReadAsStringAsync().Result);
+            return actualSnapshot;
         }
 
         /*

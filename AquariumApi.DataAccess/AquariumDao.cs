@@ -50,6 +50,7 @@ namespace AquariumApi.DataAccess
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
+        List<AquariumOverviewResponse> GetAquariumOverviews();
     }
 
     public class AquariumDao : IAquariumDao
@@ -72,6 +73,17 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblAquarium.AsNoTracking()
                 .Include(aq => aq.Device)
                 .ToList();
+        }
+        public List<AquariumOverviewResponse> GetAquariumOverviews()
+        {
+            var aquariums = from d in _dbAquariumContext.TblAquarium
+                    select new AquariumOverviewResponse
+                    {
+                        FishCount = d.Fish.Count(),
+                        FeedingCount = d.Feedings.Count(),
+                        HasDevice = (d.Device != null),
+                    };
+            return aquariums.ToList();
         }
         public Aquarium GetAquariumById(int aquariumId)
         {
@@ -143,7 +155,9 @@ namespace AquariumApi.DataAccess
         }
         public AquariumSnapshot DeleteSnapshot(int snapshotId)
         {
-            var snapshot = GetSnapshotById(snapshotId);
+            var snapshot = _dbAquariumContext.TblSnapshot.SingleOrDefault(e => e.Id == snapshotId);
+            if (snapshot == null)
+                throw new KeyNotFoundException();
             _dbAquariumContext.TblSnapshot.Remove(snapshot);
             _dbAquariumContext.SaveChanges();
             if (snapshot.PhotoId != null)
@@ -386,6 +400,7 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblDevice.AsNoTracking()
                 .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
                 .Include(e => e.Aquarium)
+                .Include(e => e.CameraConfiguration)
                 .First();
         }
 
