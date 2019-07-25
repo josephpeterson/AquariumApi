@@ -168,20 +168,21 @@ namespace AquariumApi.Controllers
         }
 
 
+        //todo get rid of this
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Device/{deviceId}/Snapshot")]
         public IActionResult UploadSnapshot(int deviceId,IFormFile snapshotImage,AquariumSnapshot snapshot)
         {
             try
             {
-
-                _logger.LogInformation("POST /v1/Device/Snapshot called");
-                AquariumSnapshot s = _deviceService.AddSnapshot(deviceId,snapshot,snapshotImage);
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Snapshot called");
+                var device = _aquariumService.GetAquariumDeviceById(deviceId);
+                AquariumSnapshot s = _aquariumService.AddSnapshot(device.AquariumId, snapshot,snapshotImage);
                 return new OkObjectResult(s);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/v1/Device/Snapshot: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Device/{deviceId}/Snapshot: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

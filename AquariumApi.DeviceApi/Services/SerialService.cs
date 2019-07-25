@@ -94,7 +94,10 @@ namespace AquariumApi.DeviceApi
 
         public int GetTemperatureC()
         {
-            return TemperatureC.Value;
+            //Error?
+            if(TemperatureC.HasValue)
+                return TemperatureC.Value;
+            return 0;
         }
         public decimal GetNitrate()
         {

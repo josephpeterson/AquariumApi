@@ -22,7 +22,6 @@ namespace AquariumApi.Core
         AquariumSnapshot TakeSnapshot(int deviceId);
         AquariumPhoto TakePhoto(int deviceId);
         bool SetAquarium(int deviceId, int aquariumId);
-        AquariumSnapshot AddSnapshot(int deviceId,AquariumSnapshot snapshot,IFormFile snapshotImage);
     }
     public class DeviceService : IDeviceService
     {
@@ -113,33 +112,6 @@ namespace AquariumApi.Core
                 Filepath = downloadPath
             };
             return photo;
-        }
-
-        public AquariumSnapshot AddSnapshot(int deviceId,AquariumSnapshot snapshot,IFormFile snapshotImage)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            AquariumPhoto photo = null;
-
-            if (snapshotImage != null)
-            {
-                var downloadPath = String.Format(_config["PhotoFilePath"], device.AquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
-                Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
-                using (Stream output = File.OpenWrite(downloadPath))
-                    snapshotImage.CopyTo(output);
-                if (!File.Exists(downloadPath))
-                    throw new Exception("Could not save photo from request");
-                _logger.LogInformation($"Snapshot photo was saved to location: {downloadPath}");
-                photo = new AquariumPhoto()
-                {
-                    Date = new DateTime(),
-                    AquariumId = device.AquariumId,
-                    Filepath = downloadPath
-                };
-            }
-            snapshot.AquariumId = device.AquariumId;
-            var actualPhoto = _aquariumDao.AddAquariumPhoto(photo);
-            snapshot.PhotoId = actualPhoto.Id;
-            return _aquariumDao.AddSnapshot(snapshot);
         }
     }
 }

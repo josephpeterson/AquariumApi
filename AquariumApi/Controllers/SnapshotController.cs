@@ -17,7 +17,7 @@ namespace AquariumApi.Controllers
         private readonly IConfiguration _config;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public SnapshotController(IConfiguration config, IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        public SnapshotController(IConfiguration config, IAquariumService aquariumService, IDeviceService deviceService, ILogger<SnapshotController> logger)
         {
             _config = config;
             _aquariumService = aquariumService;
@@ -127,5 +127,27 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Snapshot/{aquariumId}/Create")]
+        public IActionResult UploadSnapshot(int aquariumId, IFormFile snapshotImage,AquariumSnapshot snapshot)
+        {
+            try
+            {
+
+                _logger.LogInformation($"POST /v1/Snapshot/{aquariumId}/Create called");
+                AquariumSnapshot s = _aquariumService.AddSnapshot(aquariumId, snapshot, snapshotImage);
+                return new OkObjectResult(snapshot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/v1/Device/Snapshot: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+    }
+    public class AquariumSnapshotRequest
+    {
+        public AquariumSnapshot Snapshot { get; set; }
+        public IFormFile SnapshotImage { get; set; }
     }
 }

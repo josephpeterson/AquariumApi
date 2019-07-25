@@ -1,5 +1,6 @@
 ﻿using AquariumApi.DataAccess;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -51,6 +52,7 @@ namespace AquariumApi.Core
         List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
         AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
+        AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
     }
     public class AquariumService : IAquariumService
     {
@@ -253,6 +255,32 @@ namespace AquariumApi.Core
         public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
         {
             return _aquariumDao.ApplyAquariumDeviceHardware(deviceId, updatedDevice);
+        }
+        public AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage)
+        {
+            var device = _aquariumDao.GetAquariumById(aquariumId);
+            AquariumPhoto photo = null;
+
+            if (snapshotImage != null)
+            {
+                var downloadPath = String.Format(_config["PhotoFilePath"], aquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
+                Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
+                using (Stream output = File.OpenWrite(downloadPath))
+                    snapshotImage.CopyTo(output);
+                if (!File.Exists(downloadPath))
+                    throw new Exception("Could not save photo from request");
+                _logger.LogInformation($"Snapshot photo was saved to location: {downloadPath}");
+                photo = new AquariumPhoto()
+                {
+                    Date = new DateTime(),
+                    AquariumId = aquariumId,
+                    Filepath = downloadPath
+                };
+                var actualPhoto = _aquariumDao.AddAquariumPhoto(photo);
+                snapshot.PhotoId = actualPhoto.Id;
+            }
+            snapshot.AquariumId = aquariumId;
+            return _aquariumDao.AddSnapshot(snapshot);
         }
     }
 }
