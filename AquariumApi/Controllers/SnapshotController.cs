@@ -135,6 +135,7 @@ namespace AquariumApi.Controllers
             {
 
                 _logger.LogInformation($"POST /v1/Snapshot/{aquariumId}/Create called");
+                snapshot.ManualEntry = true;
                 AquariumSnapshot s = _aquariumService.AddSnapshot(aquariumId, snapshot, snapshotImage);
                 return new OkObjectResult(snapshot);
             }
@@ -144,10 +145,5 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
-    }
-    public class AquariumSnapshotRequest
-    {
-        public AquariumSnapshot Snapshot { get; set; }
-        public IFormFile SnapshotImage { get; set; }
     }
 }

@@ -62,6 +62,7 @@ namespace AquariumApi.DeviceApi.Clients
             if (!result.IsSuccessStatusCode)
                 throw new Exception("Could not upload aquarium snapshot");
             var actualSnapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(result.Content.ReadAsStringAsync().Result);
+            _logger.LogInformation($"Snapshot saved successfully (SnapshotId: {actualSnapshot.Id})");
             return actualSnapshot;
         }
 

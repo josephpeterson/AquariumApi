@@ -29,6 +29,8 @@ namespace AquariumApi.Models
         public decimal? Ph { get; set; }
         public int? Temperature { get; set; }
 
+        public bool? ManualEntry { get; set; } = false;
+
 
     }
 }
