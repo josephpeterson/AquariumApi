@@ -23,6 +23,11 @@ namespace AquariumApi.DataAccess
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AquariumUser>(entity =>
+            {
+                entity.ToTable("tblAccount");
+                entity.HasMany(e => e.Aquariums);
+            });
             modelBuilder.Entity<Aquarium>(entity =>
             {
 
@@ -83,11 +88,6 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblAquariumPhoto");
                 entity.HasOne(e => e.Aquarium);
-            });
-
-            modelBuilder.Entity<AquariumUser>(entity =>
-            {
-                entity.ToTable("tblAccount");
             });
         }
     }

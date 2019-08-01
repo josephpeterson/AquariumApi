@@ -32,7 +32,7 @@ namespace AquariumApi.Controllers
             {
                 _logger.LogInformation($"POST /v1/Auth/Login called");
                 var token = _accountService.LoginUser(user.Email,user.Password);
-                return new OkObjectResult(token);
+                return new OkObjectResult(new { Token = token});
             }
             catch (Exception ex)
             {

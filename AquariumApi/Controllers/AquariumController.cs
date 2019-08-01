@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
@@ -30,7 +31,9 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation("GET /v1/Aquariums called");
-                var aquariums = _aquariumService.GetAllAquariums();
+                int id = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+                var aquariums = _aquariumService.GetAllAquariums().Where(aq => aq.OwnerId == id);
                 return new OkObjectResult(aquariums);
             }
             catch (Exception ex)
@@ -70,6 +73,10 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation("POST /v1/Aquarium/Add called");
+
+                //Static properties
+                int id = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                aquarium.OwnerId = id;
                 var newAquarium = _aquariumService.AddAquarium(aquarium);
                 return CreatedAtAction(nameof(GetAquariumById),new { id = newAquarium.Id }, newAquarium);
             }
