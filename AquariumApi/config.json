@@ -3,6 +3,11 @@
   "Database": {
     "dbAquarium": "Data Source=dbaquarium.cryph2qahkpk.us-east-2.rds.amazonaws.com;Database=dbAquarium;MultipleActiveResultSets=true;User ID=aquarium; Password=devaquarium;"
   },
+  "Jwt":  {
+    "Secret": "sdadjk233244gg443aldaksj",
+    "Issuer": "http://localhost:5000",
+    "Audience": "http://localhost:5000"
+  },
   "PhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "DashboardLogFilePath": "./AquariumApi.log"
 }

@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AquariumApi.Controllers
 {
+    [Authorize]
     public class AquariumController : Controller
     {
         public readonly IAquariumService _aquariumService;

@@ -27,6 +27,7 @@ namespace AquariumApi.DataAccess
         List<Species> GetAllSpecies();
         Species UpdateSpecies(Species species);
         void DeleteSpecies(int speciesId);
+        Species GetSpeciesById(int speciesId);
 
         Fish AddFish(Fish fish);
         Fish GetFishById(int fishId);
@@ -38,19 +39,26 @@ namespace AquariumApi.DataAccess
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
-        Species GetSpeciesById(int speciesId);
+
         void SetAquariumDevice(int aquariumId,int deviceId);
         AquariumDevice AddAquariumDevice(AquariumDevice device);
         AquariumDevice UpdateAquariumDevice(AquariumDevice device);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
+
         List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
         void DeleteAquariumPhoto(int photoId);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
+
         List<AquariumOverviewResponse> GetAquariumOverviews();
+
+
+        AquariumUser GetAccountByLogin(string email, string password);
+        AquariumUser GetAccountById(int userId);
+        List<AquariumUser> GetAllAccounts();
     }
 
     public class AquariumDao : IAquariumDao
@@ -404,5 +412,23 @@ namespace AquariumApi.DataAccess
                 .First();
         }
 
+        public AquariumUser GetAccountByLogin(string email, string password)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                 .Where(p => p.Email == email && p.Password == password)
+                 .First();
+        }
+
+        public AquariumUser GetAccountById(int userId)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Id == userId)
+                .First();
+        }
+
+        public List<AquariumUser> GetAllAccounts()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

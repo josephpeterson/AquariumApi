@@ -1,15 +1,19 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using AquariumApi.Core;
 using AquariumApi.Core.Services;
 using AquariumApi.DataAccess;
 using AquariumApi.DataAccess.AutoMapper;
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -39,11 +43,42 @@ namespace AquariumApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Aquarium API", Version = "v1" });
+
+                var security = new Dictionary<string, IEnumerable<string>>
+                {
+                    {"Bearer", new string[] { }},
+                };
+                c.AddSecurityDefinition("Bearer", new ApiKeyScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = "header",
+                    Type = "apiKey"
+                });
+                c.AddSecurityRequirement(security);
             });
+
 
             services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
             RegisterServices(services);
+
+            //Authorization
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+
+                    ValidIssuer = Configuration["Jwt:Issuer"],
+                    ValidAudience = Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Secret"]))
+                };
+            });
 
 
             services.AddMvc()
@@ -64,6 +99,8 @@ namespace AquariumApi
             {
                 app.UseHsts();
             }
+
+            app.UseAuthentication();
 
 
             // global cors policy
@@ -111,6 +148,7 @@ namespace AquariumApi
             services.AddTransient<IAquariumService, AquariumService>();
             services.AddTransient<IWebScraperService, WebScraperService>();
             services.AddTransient<IDeviceService, DeviceService>();
+            services.AddTransient<IAccountService, AccountService>();
             services.AddSingleton<IConfiguration>(Configuration);
         }
     }
