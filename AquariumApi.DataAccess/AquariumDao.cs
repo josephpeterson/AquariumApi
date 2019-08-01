@@ -37,6 +37,7 @@ namespace AquariumApi.DataAccess
         Feeding AddFeeding(Feeding feeding);
         Feeding GetFeedingById(int feedingId);
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
+        AquariumUser AddAccount(AquariumUser user);
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
 
@@ -59,6 +60,8 @@ namespace AquariumApi.DataAccess
         AquariumUser GetAccountByLogin(string email, string password);
         AquariumUser GetAccountById(int userId);
         List<AquariumUser> GetAllAccounts();
+        AquariumUser GetUserByUsername(string username);
+        AquariumUser GetUserByEmail(string email);
     }
 
     public class AquariumDao : IAquariumDao
@@ -302,6 +305,7 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
 
+        /* Aquarium Device */
         public AquariumDevice AddAquariumDevice(AquariumDevice device)
         {
             _dbAquariumContext.TblDevice.Add(device);
@@ -319,6 +323,15 @@ namespace AquariumApi.DataAccess
             if (device.CameraConfiguration == null)
                 device.CameraConfiguration = new CameraConfiguration();
             return device;
+        }
+        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
+        {
+            if (ipAddress == "::1") ipAddress = "localhost";
+            return _dbAquariumContext.TblDevice.AsNoTracking()
+                .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
+                .Include(e => e.Aquarium)
+                .Include(e => e.CameraConfiguration)
+                .First();
         }
         public AquariumDevice DeleteAquariumDevice(int deviceId)
         {
@@ -363,7 +376,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblDevice.Update(device);
             _dbAquariumContext.SaveChanges();
         }
-
         public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
         {
             var d = GetAquariumDeviceById(deviceId);
@@ -375,6 +387,7 @@ namespace AquariumApi.DataAccess
             return UpdateAquariumDevice(d);
         }
 
+        /* Aquarium Photos */
         public AquariumPhoto GetAquariumPhotoById(int photoId)
         {
             return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
@@ -402,20 +415,13 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
 
-        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
-        {
-            if (ipAddress == "::1") ipAddress = "localhost";
-            return _dbAquariumContext.TblDevice.AsNoTracking()
-                .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
-                .Include(e => e.Aquarium)
-                .Include(e => e.CameraConfiguration)
-                .First();
-        }
 
+        /* Aquarium Accounts */
         public AquariumUser GetAccountByLogin(string email, string password)
         {
             return _dbAquariumContext.TblAccounts.AsNoTracking()
-                 .Where(p => p.Email == email && p.Password == password)
+                 .Where(p => (p.Email == email || p.Username == email) 
+                 && p.Password == password)
                  .First();
         }
 
@@ -423,12 +429,40 @@ namespace AquariumApi.DataAccess
         {
             return _dbAquariumContext.TblAccounts.AsNoTracking()
                 .Where(p => p.Id == userId)
-                .First();
+                .SingleOrDefault();
         }
 
         public List<AquariumUser> GetAllAccounts()
         {
-            throw new System.NotImplementedException();
+            return _dbAquariumContext.TblAccounts.AsNoTracking().ToList();
+        }
+
+        public AquariumUser GetUserByUsername(string username)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Username == username)
+                .SingleOrDefault();
+        }
+
+        public AquariumUser GetUserByEmail(string email)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Email == email)
+                .SingleOrDefault();
+        }
+
+        public AquariumUser AddAccount(AquariumUser user)
+        {
+            //Unique values
+            var email = user.Email;
+            var username = user.Username;
+
+            if (_dbAquariumContext.TblAccounts.AsNoTracking().Where(e => e.Email == email || e.Username == username).Any())
+                throw new System.Exception("Username/Email already in use");
+
+            _dbAquariumContext.TblAccounts.Add(user);
+            _dbAquariumContext.SaveChanges();
+            return user;
         }
     }
 }

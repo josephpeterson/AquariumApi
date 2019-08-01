@@ -20,14 +20,12 @@ namespace AquariumApi.Core
         AquariumUser AddUser(AquariumUser user);
         List<AquariumUser> GetAllUsers();
         AquariumUser GetUserById(int id);
+        AquariumUser GetUserByUsername(string username);
+        AquariumUser GetUserByEmail(string email);
         AquariumUser UpdateUser(AquariumUser user);
         void DeleteUser(int userId);
-
-
         string LoginUser(string email, string password);
     }
-
-
     public class AccountService : IAccountService
     {
         private IConfiguration _configuration;
@@ -40,31 +38,35 @@ namespace AquariumApi.Core
         }
         public AquariumUser AddUser(AquariumUser user)
         {
-            throw new NotImplementedException();
+            user.Role = "User";
+            return _aquariumDao.AddAccount(user);
         }
-
-        public void DeleteUser(int userId)
-        {
-            throw new NotImplementedException();
-        }
-
         public List<AquariumUser> GetAllUsers()
         {
             return _aquariumDao.GetAllAccounts();
         }
-
         public AquariumUser GetUserById(int userId)
         {
             return _aquariumDao.GetAccountById(userId);
         }
+        public AquariumUser GetUserByEmail(string email)
+        {
+            return _aquariumDao.GetUserByEmail(email);
+        }
+        public AquariumUser GetUserByUsername(string username)
+        {
+            return _aquariumDao.GetUserByUsername(username);
 
-
+        }
         public AquariumUser UpdateUser(AquariumUser user)
         {
             throw new NotImplementedException();
         }
-
-        public string LoginUser(string email,string password)
+        public void DeleteUser(int userId)
+        {
+            throw new NotImplementedException();
+        }
+        public string LoginUser(string email, string password)
         {
             AquariumUser user = _aquariumDao.GetAccountByLogin(email, password);
 

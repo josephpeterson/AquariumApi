@@ -40,5 +40,36 @@ namespace AquariumApi.Controllers
                 return Unauthorized();
             }
         }
+        [HttpPost]
+        [Route("/v1/Auth/Signup")]
+        public IActionResult Signup([FromBody]SignupModel signupRequest)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Auth/Signup called");
+
+                //Form validation
+                if (signupRequest.Password != signupRequest.Password2)
+                    return BadRequest();
+
+                var user = new AquariumUser();
+                user.Email = signupRequest.Email;
+                user.Password = signupRequest.Password;
+                user.SeniorityDate = new DateTime();
+
+                _accountService.AddUser(user);
+
+                return Login(new LoginModel
+                {
+                    Email = user.Email,
+                    Password = user.Password
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Auth/Signup endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
     }
 }
