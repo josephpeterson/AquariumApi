@@ -55,8 +55,7 @@ namespace AquariumApi.Controllers
                 var user = new AquariumUser();
                 user.Email = signupRequest.Email;
                 user.Password = signupRequest.Password;
-                user.SeniorityDate = new DateTime();
-
+                user.SeniorityDate = DateTime.Now;
                 _accountService.AddUser(user);
 
                 return Login(new LoginModel
