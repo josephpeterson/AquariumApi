@@ -52,10 +52,12 @@ namespace AquariumApi.Controllers
                 if (signupRequest.Password != signupRequest.Password2)
                     return BadRequest();
 
-                var user = new AquariumUser();
-                user.Email = signupRequest.Email;
-                user.Password = signupRequest.Password;
-                user.SeniorityDate = DateTime.Now;
+                var user = new AquariumUser()
+                {
+                    Email = signupRequest.Email,
+                    Password = signupRequest.Password,
+                    Username = signupRequest.Username,
+                };
                 _accountService.AddUser(user);
 
                 return Login(new LoginModel
