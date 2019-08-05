@@ -119,21 +119,22 @@ namespace AquariumApi.Core
             if (!File.Exists(photo.Filepath))
                 throw new KeyNotFoundException();
             //Resize image
-            using (var img = (Image)new Bitmap(photo.Filepath))
+            var path = photo.Filepath;
+            using (var img = (Image)new Bitmap(path))
             {
-                var folder = Path.GetDirectoryName(photo.Filepath) + "/medium";
+                var destination = Path.GetDirectoryName(path) + "/medium/" + Path.GetFileName(path);
                 var w = Convert.ToInt16(img.Width * 0.5);
                 var h = Convert.ToInt16(img.Height * 0.5);
                 var downsized = PhotoResize.ResizeImage(img, w, h);
-                downsized.Save(folder);
+                downsized.Save(destination);
             }
             using (var img = (Image)new Bitmap(photo.Filepath))
             {
-                var folder = Path.GetDirectoryName(photo.Filepath) + "/thumbnail";
+                var destination = Path.GetDirectoryName(path) + "/thumbnail/" + Path.GetFileName(path);
                 var w = Convert.ToInt16(img.Width * 0.25);
                 var h = Convert.ToInt16(img.Height * 0.25);
                 var downsized = PhotoResize.ResizeImage(img, w, h);
-                downsized.Save(folder);
+                downsized.Save(destination);
             }
 
 
