@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -120,21 +121,23 @@ namespace AquariumApi.Core
                 throw new KeyNotFoundException();
             //Resize image
             var path = photo.Filepath;
-            using (var img = (Image)new Bitmap(path))
+            using (var img = Image.FromFile(path))
             {
-                var destination = Path.GetDirectoryName(path) + "/medium/" + Path.GetFileName(path);
+                var destination = Path.GetDirectoryName(path) + "/medium/";
+                Directory.CreateDirectory(destination);
                 var w = Convert.ToInt16(img.Width * 0.5);
                 var h = Convert.ToInt16(img.Height * 0.5);
                 var downsized = PhotoResize.ResizeImage(img, w, h);
-                downsized.Save(destination);
+                downsized.Save(destination + Path.GetFileName(path), ImageFormat.Jpeg);
             }
-            using (var img = (Image)new Bitmap(photo.Filepath))
+            using (var img = Image.FromFile(path))
             {
-                var destination = Path.GetDirectoryName(path) + "/thumbnail/" + Path.GetFileName(path);
+                var destination = Path.GetDirectoryName(path) + "/thumbnail/";
+                Directory.CreateDirectory(destination);
                 var w = Convert.ToInt16(img.Width * 0.25);
                 var h = Convert.ToInt16(img.Height * 0.25);
                 var downsized = PhotoResize.ResizeImage(img, w, h);
-                downsized.Save(destination);
+                downsized.Save(destination + Path.GetFileName(path), ImageFormat.Jpeg);
             }
 
 

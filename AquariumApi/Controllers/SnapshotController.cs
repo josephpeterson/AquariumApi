@@ -59,13 +59,27 @@ namespace AquariumApi.Controllers
 
         }
         [HttpGet]
-        [Route("/v1/Snapshot/Photo/{photoId}")]
-        public IActionResult GetSnapshotPhoto(int photoId)
+        [Route("/v1/Snapshot/Photo/{photoId}/{size}")]
+        public IActionResult GetSnapshotPhoto(int photoId,string size = "")
         {
             try
             {
                 AquariumPhoto data = _aquariumService.GetAquariumPhotoById(photoId);
-                var b = System.IO.File.ReadAllBytes(data.Filepath);
+
+                byte[] b;
+                if(size == "medium")
+                {
+                    var destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
+                    b = System.IO.File.ReadAllBytes(destination);
+                }
+                else if (size == "small")
+                {
+                    var destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
+                    b = System.IO.File.ReadAllBytes(destination);
+                }
+                else
+                 b = System.IO.File.ReadAllBytes(data.Filepath);
+
                 return File(b, "image/jpeg");
             }
             catch (Exception ex)
