@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -117,6 +118,26 @@ namespace AquariumApi.Core
         {
             if (!File.Exists(photo.Filepath))
                 throw new KeyNotFoundException();
+            //Resize image
+            using (var img = (Image)new Bitmap(photo.Filepath))
+            {
+                var folder = Path.GetDirectoryName(photo.Filepath) + "/medium";
+                var w = Convert.ToInt16(img.Width * 0.5);
+                var h = Convert.ToInt16(img.Height * 0.5);
+                var downsized = PhotoResize.ResizeImage(img, w, h);
+                downsized.Save(folder);
+            }
+            using (var img = (Image)new Bitmap(photo.Filepath))
+            {
+                var folder = Path.GetDirectoryName(photo.Filepath) + "/thumbnail";
+                var w = Convert.ToInt16(img.Width * 0.25);
+                var h = Convert.ToInt16(img.Height * 0.25);
+                var downsized = PhotoResize.ResizeImage(img, w, h);
+                downsized.Save(folder);
+            }
+
+
+
             return _aquariumDao.AddAquariumPhoto(photo);
         }
 
@@ -276,7 +297,7 @@ namespace AquariumApi.Core
                     AquariumId = aquariumId,
                     Filepath = downloadPath
                 };
-                var actualPhoto = _aquariumDao.AddAquariumPhoto(photo);
+                var actualPhoto = AddAquariumPhoto(photo);
                 snapshot.PhotoId = actualPhoto.Id;
             }
             snapshot.AquariumId = aquariumId;
