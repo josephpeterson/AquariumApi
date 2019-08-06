@@ -51,9 +51,14 @@ namespace AquariumApi.DeviceApi.Clients
             _logger.LogInformation("Sending snapshot: " + path);
 
 
+            snapshot.Date = DateTime.UtcNow;
+            var j = JsonConvert.SerializeObject(snapshot);
+
+            _logger.LogDebug(j);
+
             MultipartFormDataContent multiContent = new MultipartFormDataContent();
 
-            multiContent.Add(new ByteArrayContent(photo), "snapshotImage", DateTime.Now.ToString());
+            multiContent.Add(new ByteArrayContent(photo), "snapshotImage", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString());
 
             //var httpContent = new StringContent(JsonConvert.SerializeObject(snapshot), Encoding.UTF8, "application/json");
             multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)),"Snapshot");

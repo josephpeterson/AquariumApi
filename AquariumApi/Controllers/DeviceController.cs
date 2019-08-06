@@ -175,6 +175,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                snapshot.Date = DateTime.Now;
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Snapshot called");
                 var device = _aquariumService.GetAquariumDeviceById(deviceId);
                 AquariumSnapshot s = _aquariumService.AddSnapshot(device.AquariumId, snapshot,snapshotImage);

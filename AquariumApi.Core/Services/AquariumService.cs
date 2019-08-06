@@ -113,7 +113,9 @@ namespace AquariumApi.Core
         }
         public AquariumPhoto GetAquariumPhotoById(int photoId)
         {
-            return _aquariumDao.GetAquariumPhotoById(photoId);
+            AquariumPhoto aquariumPhoto = _aquariumDao.GetAquariumPhotoById(photoId);
+            ExpandPhotoSizesIfNeeded(aquariumPhoto);
+            return aquariumPhoto;
         }
         public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
         {
@@ -121,28 +123,41 @@ namespace AquariumApi.Core
                 throw new KeyNotFoundException();
             //Resize image
             var path = photo.Filepath;
+            ExpandPhotoSizesIfNeeded(photo);
+            return _aquariumDao.AddAquariumPhoto(photo);
+        }
+        private void ExpandPhotoSizesIfNeeded(AquariumPhoto photo)
+        {
+            var path = photo.Filepath;
+            if (path == null)
+                return;
+
             using (var img = Image.FromFile(path))
             {
                 var destination = Path.GetDirectoryName(path) + "/medium/";
                 Directory.CreateDirectory(destination);
-                var w = Convert.ToInt16(img.Width * 0.5);
-                var h = Convert.ToInt16(img.Height * 0.5);
-                var downsized = PhotoResize.ResizeImage(img, w, h);
-                downsized.Save(destination + Path.GetFileName(path), ImageFormat.Jpeg);
+                string filepath = destination + Path.GetFileName(path);
+                if (!File.Exists(filepath))
+                {
+                    var w = Convert.ToInt16(img.Width * 0.5);
+                    var h = Convert.ToInt16(img.Height * 0.5);
+                    var downsized = PhotoResize.ResizeImage(img, w, h);
+                    downsized.Save(filepath, ImageFormat.Jpeg);
+                }
             }
             using (var img = Image.FromFile(path))
             {
                 var destination = Path.GetDirectoryName(path) + "/thumbnail/";
                 Directory.CreateDirectory(destination);
-                var w = Convert.ToInt16(img.Width * 0.25);
-                var h = Convert.ToInt16(img.Height * 0.25);
-                var downsized = PhotoResize.ResizeImage(img, w, h);
-                downsized.Save(destination + Path.GetFileName(path), ImageFormat.Jpeg);
+                string filepath = destination + Path.GetFileName(path);
+                if (!File.Exists(filepath))
+                {
+                    var w = Convert.ToInt16(img.Width * 0.25);
+                    var h = Convert.ToInt16(img.Height * 0.25);
+                    var downsized = PhotoResize.ResizeImage(img, w, h);
+                    downsized.Save(filepath, ImageFormat.Jpeg);
+                }
             }
-
-
-
-            return _aquariumDao.AddAquariumPhoto(photo);
         }
 
         /* Snapshots */
