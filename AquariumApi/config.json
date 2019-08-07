@@ -1,7 +1,7 @@
 ﻿{
   "Port": 5000,
   "Database": {
-    "dbAquarium": "Data Source=dbaquarium.cryph2qahkpk.us-east-2.rds.amazonaws.com;Database=dbAquarium;MultipleActiveResultSets=true;User ID=aquarium; Password=devaquarium;"
+    "dbAquarium": "Data Source=dbaquarium.database.windows.net; Database=dbAquariumDev; MultipleActiveResultSets=true; User ID=Aquarium; Password=testpassword1.;"
   },
   "Jwt":  {
     "Secret": "sdadjk233244gg443aldaksj",
