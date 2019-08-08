@@ -1,9 +1,9 @@
 ﻿{
   "Port": 5000,
   "Database": {
-    "dbAquarium": "Data Source=dbaquarium.database.windows.net; Database=dbAquariumDev; MultipleActiveResultSets=true; User ID=$(DatabaseUsername); Password=testpassword1.;"
+    "dbAquarium": "Data Source=dbaquarium.cryph2qahkpk.us-east-2.rds.amazonaws.com;Database=dbAquarium;MultipleActiveResultSets=true;User ID=aquarium; Password=devaquarium;"
   },
-  "Jwt": {
+  "Jwt":  {
     "Secret": "sdadjk233244gg443aldaksj",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000"
