@@ -86,7 +86,7 @@ namespace AquariumApi.Core
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(5),
+                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:LengthMins"])),
                 signingCredentials: signinCredentials
             );
             return new JwtSecurityTokenHandler().WriteToken(tokeOptions);

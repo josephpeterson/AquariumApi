@@ -6,7 +6,8 @@
   "Jwt":  {
     "Secret": "sdadjk233244gg443aldaksj",
     "Issuer": "http://localhost:5000",
-    "Audience": "http://localhost:5000"
+    "Audience": "http://localhost:5000",
+    "LengthMins": 10
   },
   "PhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "DashboardLogFilePath": "./AquariumApi.log"
