@@ -298,21 +298,18 @@ namespace AquariumApi.Core
         }
         public AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage)
         {
-            var device = _aquariumDao.GetAquariumById(aquariumId);
-            AquariumPhoto photo = null;
-
             if (snapshotImage != null)
             {
-                var downloadPath = String.Format(_config["PhotoFilePath"], aquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
+                var downloadPath = String.Format(_config["PhotoFilePath"], aquariumId, snapshot.Date.Millisecond);
                 Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
                 using (Stream output = File.OpenWrite(downloadPath))
                     snapshotImage.CopyTo(output);
                 if (!File.Exists(downloadPath))
                     throw new Exception("Could not save photo from request");
                 _logger.LogInformation($"Snapshot photo was saved to location: {downloadPath}");
-                photo = new AquariumPhoto()
+                var photo = new AquariumPhoto()
                 {
-                    Date = new DateTime(),
+                    Date = snapshot.Date,
                     AquariumId = aquariumId,
                     Filepath = downloadPath
                 };
