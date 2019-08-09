@@ -179,12 +179,13 @@ namespace AquariumApi.Core
             Aquarium aquarium = _aquariumDao.GetAquariumById(aquariumId);
             var deviceId = aquarium.Device.Id;
 
-            AquariumSnapshot snapshot = _deviceService.TakeSnapshot(deviceId);
+            AquariumSnapshot snapshot = _deviceService.TakeSnapshot(deviceId); //todo tell device to take with image
 
             if (takePhoto)
             {
                 var aquariumPhoto = _deviceService.TakePhoto(deviceId);
                 aquariumPhoto.AquariumId = aquarium.Id;
+                aquariumPhoto.Date = snapshot.Date;
                 aquariumPhoto = AddAquariumPhoto(aquariumPhoto);
                 snapshot.PhotoId = aquariumPhoto.Id.Value;
             }
