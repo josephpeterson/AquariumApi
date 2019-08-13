@@ -328,6 +328,7 @@ namespace AquariumApi.Core
             {
                 Date = new DateTime(),
                 AquariumId = aq,
+                FishId = fishId,
                 Filepath = downloadPath
             };
             return _aquariumDao.AddFishPhoto(fishPhoto);
