@@ -1,5 +1,7 @@
 ﻿using AquariumApi.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2.HPack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -35,12 +37,21 @@ namespace AquariumApi.DeviceApi.Clients
             var path = $"{_config["AquariumServiceUrl"]}/Device/Ping";
             _logger.LogInformation("Service Url: " + path);
 
+            _logger.LogInformation("\n");
+            _logger.LogInformation("\n");
+            _logger.LogInformation("\n");
+            _logger.LogInformation(JsonConvert.SerializeObject(aquariumDevice));
             var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice), Encoding.UTF8, "application/json");
             HttpClient client = new HttpClient();
             client.Timeout = TimeSpan.FromMinutes(5);
             var result = client.PostAsync(path, httpContent).Result;
             if (!result.IsSuccessStatusCode)
-                throw new Exception("Service does not have this device key on record.");
+            {
+                if(result.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    throw new Exception("Invalid request");
+                if (result.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    throw new Exception("Service does not have this device key on record. Please check your device key and IP combination");
+            }
             var device = JsonConvert.DeserializeObject<AquariumDevice>(result.Content.ReadAsStringAsync().Result);
             return device;
         }
