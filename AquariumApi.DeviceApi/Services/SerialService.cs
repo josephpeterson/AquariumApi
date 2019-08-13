@@ -38,18 +38,20 @@ namespace AquariumApi.DeviceApi
                 foreach (var port in ports)
                 {
                     Console.WriteLine($"Serial port name: {port}");
-                }
-
-                var serialPort = new SerialPort()
+                    var serialPort = new SerialPort()
                 {
-                    PortName = "/dev/ttyACM0",
+                    PortName = port,
                     BaudRate = 9600
                 };
+                    serialPort.Open();
+                    serialPort.DataReceived += SerialPort_DataReceived;
+                }
+
+                
 
                 // Subscribe to the DataReceived event.
                 // Now open the port.
-                serialPort.Open();
-                serialPort.DataReceived += SerialPort_DataReceived;
+                
             }
             catch(Exception ex)
             {
@@ -64,7 +66,7 @@ namespace AquariumApi.DeviceApi
             var serialdata = serialPort.ReadExisting();
 
             // Write to debug output.
-            //Console.Write(serialdata);
+            Console.Write(serialdata);
 
             TemperatureC = Convert.ToInt16(serialdata);
         }
