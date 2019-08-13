@@ -85,7 +85,8 @@ namespace AquariumApi.Core
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             var photos = _aquariumDao.GetAquariumPhotos(device.AquariumId);
             var path = $"http://{device.Address}:{device.Port}/v1/Snapshot/TakePhoto";
-            var downloadPath = String.Format(_config["PhotoFilePath"], device.AquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
+            var downloadPath = String.Format(_config["AquariumPhotoPath"], device.AquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
+
 
             _logger.LogInformation($"Retrieving photo snapshot... [{downloadPath}]");
             using (var client2 = new HttpClient())

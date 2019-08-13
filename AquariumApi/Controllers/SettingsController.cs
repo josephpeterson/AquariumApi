@@ -53,6 +53,24 @@ namespace AquariumApi.Controllers
                 return "No error log found";
             }
         }
+        [HttpGet]
+        [Route("/v1/Settings/Log/Delete")]
+        public IActionResult DeleteApplicationLog()
+        {
+            try
+            {
+                System.IO.File.Delete(_config["DashboardLogFilePath"]);
+                return new OkResult();
+            }
+            catch (FileNotFoundException)
+            {
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
 
     }
 }
