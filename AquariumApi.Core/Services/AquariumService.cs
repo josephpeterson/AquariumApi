@@ -55,6 +55,9 @@ namespace AquariumApi.Core
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
         AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
         AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
+        FishPhoto AddFishPhoto(int fishId,IFormFile photo);
+        FishPhoto GetFishPhotoById(int photoId);
+
     }
     public class AquariumService : IAquariumService
     {
@@ -114,7 +117,7 @@ namespace AquariumApi.Core
         public AquariumPhoto GetAquariumPhotoById(int photoId)
         {
             AquariumPhoto aquariumPhoto = _aquariumDao.GetAquariumPhotoById(photoId);
-            ExpandPhotoSizesIfNeeded(aquariumPhoto);
+            ExpandPhotoSizesIfNeeded(aquariumPhoto.Filepath);
             return aquariumPhoto;
         }
         public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
@@ -122,16 +125,13 @@ namespace AquariumApi.Core
             if (!File.Exists(photo.Filepath))
                 throw new KeyNotFoundException();
             //Resize image
-            var path = photo.Filepath;
-            ExpandPhotoSizesIfNeeded(photo);
+            ExpandPhotoSizesIfNeeded(photo.Filepath);
             return _aquariumDao.AddAquariumPhoto(photo);
         }
-        private void ExpandPhotoSizesIfNeeded(AquariumPhoto photo)
+        private void ExpandPhotoSizesIfNeeded(string path)
         {
-            var path = photo.Filepath;
             if (path == null)
                 return;
-
             using (var img = Image.FromFile(path))
             {
                 var destination = Path.GetDirectoryName(path) + "/medium/";
@@ -302,12 +302,9 @@ namespace AquariumApi.Core
             if (snapshotImage != null)
             {
                 var downloadPath = String.Format(_config["PhotoFilePath"], aquariumId, snapshot.Date.Millisecond);
-                Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
-                using (Stream output = File.OpenWrite(downloadPath))
-                    snapshotImage.CopyTo(output);
-                if (!File.Exists(downloadPath))
-                    throw new Exception("Could not save photo from request");
-                _logger.LogInformation($"Snapshot photo was saved to location: {downloadPath}");
+
+                StorePhoto(downloadPath,snapshotImage);
+
                 var photo = new AquariumPhoto()
                 {
                     Date = snapshot.Date,
@@ -320,5 +317,35 @@ namespace AquariumApi.Core
             snapshot.AquariumId = aquariumId;
             return _aquariumDao.AddSnapshot(snapshot);
         }
+        public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
+        {
+            var aq = GetFishById(fishId).AquariumId;
+            var downloadPath = String.Format(_config["PhotoFilePath"] + "/fish/", fishId, DateTime.Now.Millisecond);
+            StorePhoto(downloadPath, photo);
+            ExpandPhotoSizesIfNeeded(downloadPath);
+
+            var fishPhoto = new FishPhoto()
+            {
+                Date = new DateTime(),
+                AquariumId = aq,
+                Filepath = downloadPath
+            };
+            return _aquariumDao.AddFishPhoto(fishPhoto);
+        }
+        public FishPhoto GetFishPhotoById(int photoId)
+        {
+            FishPhoto fishPhoto = _aquariumDao.GetFishPhotoById(photoId);
+            ExpandPhotoSizesIfNeeded(fishPhoto.Filepath);
+            return fishPhoto;
+        }
+
+        private void StorePhoto(string downloadPath, IFormFile photoData) {
+            Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
+            using (Stream output = File.OpenWrite(downloadPath))
+                photoData.CopyTo(output);
+            if (!File.Exists(downloadPath))
+                throw new Exception("Could not save photo from request");
+            _logger.LogInformation($"Photo was saved to location: {downloadPath}");
+}
     }
 }

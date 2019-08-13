@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Core;
@@ -85,6 +86,56 @@ namespace AquariumApi.Controllers
                 _logger.LogError($"POST /v1/Fish/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
+        }
+
+
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Fish/{fishId}/UploadPhoto")]
+        public IActionResult UploadPhoto(int fishId, IFormFile photoData)
+        {
+            try
+            {
+
+                _logger.LogInformation($"POST /v1/Fish/{fishId}/UploadPhoto called");
+                FishPhoto fishPhoto = _aquariumService.AddFishPhoto(fishId, photoData);
+                return new OkObjectResult(fishPhoto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/{fishId}/UploadPhoto: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpGet]
+        [Route("/v1/Fish/Photo/{photoId}/{size}")]
+        public IActionResult GetSnapshotPhoto(int photoId, string size = "")
+        {
+            try
+            {
+                var data = _aquariumService.GetFishPhotoById(photoId);
+
+                byte[] b;
+                if (size == "medium")
+                {
+                    var destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
+                    b = System.IO.File.ReadAllBytes(destination);
+                }
+                else if (size == "small")
+                {
+                    var destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
+                    b = System.IO.File.ReadAllBytes(destination);
+                }
+                else
+                    b = System.IO.File.ReadAllBytes(data.Filepath);
+
+                return File(b, "image/jpeg");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Snapshot/Photo/{photoId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+
         }
     }
 }

@@ -33,6 +33,8 @@ namespace AquariumApi.DataAccess
         Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
         void DeleteFish(int fishId);
+        FishPhoto AddFishPhoto(FishPhoto photo);
+
 
         Feeding AddFeeding(Feeding feeding);
         Feeding GetFeedingById(int feedingId);
@@ -62,6 +64,7 @@ namespace AquariumApi.DataAccess
         List<AquariumUser> GetAllAccounts();
         AquariumUser GetUserByUsername(string username);
         AquariumUser GetUserByEmail(string email);
+        FishPhoto GetFishPhotoById(int photoId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -225,6 +228,7 @@ namespace AquariumApi.DataAccess
                 .Include(f => f.Species)
                 .Include(f => f.Aquarium)
                 .Include(f => f.Feedings)
+                .Include(f => f.Photos)
                 .Where(s => s.Id == fishId).First();
         }
         public Fish AddFish(Fish fish)
@@ -463,6 +467,20 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblAccounts.Add(user);
             _dbAquariumContext.SaveChanges();
             return user;
+        }
+
+        public FishPhoto AddFishPhoto(FishPhoto photo)
+        {
+            _dbAquariumContext.TblFishPhoto.Add(photo);
+            _dbAquariumContext.SaveChanges();
+            return photo;
+        }
+
+        public FishPhoto GetFishPhotoById(int photoId)
+        {
+            return _dbAquariumContext.TblFishPhoto.AsNoTracking()
+                .Where(p => p.Id == photoId)
+                .First();
         }
     }
 }

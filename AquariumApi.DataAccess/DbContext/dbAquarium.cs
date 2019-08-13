@@ -14,6 +14,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<Aquarium> TblAquarium { get; set; }
         public virtual DbSet<AquariumSnapshot> TblSnapshot { get; set; }
         public virtual DbSet<AquariumPhoto> TblAquariumPhoto { get; set; }
+        public virtual DbSet<FishPhoto> TblFishPhoto { get; set; }
         public virtual DbSet<CameraConfiguration> TblCameraConfiguration { get; set; }
         public virtual DbSet<Feeding> TblFeeding { get; set; }
         public virtual DbSet<Fish> TblFish { get; set; }
@@ -88,6 +89,12 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblAquariumPhoto");
                 entity.HasOne(e => e.Aquarium);
+            });
+            modelBuilder.Entity<FishPhoto>(entity =>
+            {
+                entity.ToTable("tblFishPhoto");
+                entity.HasOne(e => e.Aquarium);
+                entity.HasOne(e => e.Fish);
             });
         }
     }

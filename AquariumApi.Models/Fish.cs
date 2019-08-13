@@ -27,5 +27,7 @@ namespace AquariumApi.Models
         public ICollection<Feeding> Feedings { get; set; }
         public ICollection<FishPhoto> Photos { get; set; }
         public ICollection<FishSnapshot> Snapshots { get; set; }
+        [ForeignKey("ThumbnailPhotoId")]
+        public FishPhoto Thumbnail { get; set; }
     }
 }
