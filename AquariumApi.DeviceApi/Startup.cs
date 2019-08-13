@@ -39,13 +39,14 @@ namespace AquariumApi.DeviceApi
 
         }
 
-        private void DeviceBootstrap()
+        private async void DeviceBootstrap()
         {   
             try
             {
-                _deviceService.PingAquariumService();
-                var device = _deviceService.GetDevice();
-                _logger.LogWarning("Device Information: "
+                var device = await _deviceService.PingAquariumService();
+                _logger.LogInformation("[Connected to Aquarium Service]");
+
+                _logger.LogInformation("Device Information: "
                     + $"\nAquarium Name: {device.Aquarium.Name}"
                     + $"\nEnabled Photo: {device.EnabledPhoto}"
                     + $"\nEnabled Temperature: {device.EnabledTemperature}"

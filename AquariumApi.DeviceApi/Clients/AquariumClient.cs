@@ -1,5 +1,7 @@
 ﻿using AquariumApi.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2.HPack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,7 +18,7 @@ namespace AquariumApi.DeviceApi.Clients
     public interface IAquariumClient
     {
         AquariumSnapshot SendAquariumSnapshot(int deviceId,AquariumSnapshot snapshot, byte[] photo);
-        AquariumDevice GetDeviceInformation(AquariumDevice aquariumDevice);
+        Task<AquariumDevice> GetDeviceInformation(AquariumDevice aquariumDevice);
     }
     public class AquariumClient: IAquariumClient
     {
@@ -30,18 +32,27 @@ namespace AquariumApi.DeviceApi.Clients
             _config = config;
         }
 
-        public AquariumDevice GetDeviceInformation(AquariumDevice aquariumDevice)
+        public async Task<AquariumDevice> GetDeviceInformation(AquariumDevice aquariumDevice)
         {
             var path = $"{_config["AquariumServiceUrl"]}/Device/Ping";
             _logger.LogInformation("Service Url: " + path);
 
-            var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice), Encoding.UTF8, "application/json");
+            _logger.LogInformation("\n");
+            _logger.LogInformation("\n");
+            _logger.LogInformation("\n");
+            _logger.LogInformation(JsonConvert.SerializeObject(aquariumDevice));
             HttpClient client = new HttpClient();
             client.Timeout = TimeSpan.FromMinutes(5);
-            var result = client.PostAsync(path, httpContent).Result;
+            var result = await client.PostAsJsonAsync(path,aquariumDevice);
             if (!result.IsSuccessStatusCode)
-                throw new Exception("Service does not have this device key on record.");
-            var device = JsonConvert.DeserializeObject<AquariumDevice>(result.Content.ReadAsStringAsync().Result);
+            {
+                if(result.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    throw new Exception("Invalid request");
+                if (result.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    throw new Exception("Service does not have this device key on record. Please check your device key and IP combination");
+            }
+            var res = await result.Content.ReadAsStringAsync();
+            var device = JsonConvert.DeserializeObject<AquariumDevice>(res);
             return device;
         }
 

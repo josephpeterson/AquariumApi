@@ -32,10 +32,10 @@ namespace AquariumApi.DeviceApi
         {
             return new AquariumDevice()
             {
+                EnabledPhoto = CanTakePhoto(),
                 EnabledTemperature = _serialService.CanRetrieveTemperature(),
                 EnabledNitrate = _serialService.CanRetrieveNitrate(),
                 EnabledPh = _serialService.CanRetrievePh(),
-                EnabledPhoto = CanTakePhoto(),
             };
         }
 

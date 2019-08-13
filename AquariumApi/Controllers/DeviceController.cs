@@ -146,7 +146,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Device/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
         [HttpGet]

@@ -18,7 +18,7 @@ namespace AquariumApi.DeviceApi
         AquariumSnapshot TakeSnapshot();
         byte[] TakePhoto(CameraConfiguration configuration);
 
-        void PingAquariumService();
+        Task<AquariumDevice> PingAquariumService();
         void CheckAvailableHardware();
         AquariumDevice GetDevice();
         void SetDevice(AquariumDevice device);
@@ -65,7 +65,7 @@ namespace AquariumApi.DeviceApi
             return snapshot;
         }
 
-        public void PingAquariumService()
+        public async Task<AquariumDevice> PingAquariumService()
         {
             Device = new AquariumDevice()
             {
@@ -74,9 +74,10 @@ namespace AquariumApi.DeviceApi
             Console.WriteLine("Attempting to contact Aquarium Service...");
             Console.WriteLine($"Device Key: '{Device.PrivateKey}'");
             CheckAvailableHardware();
-            var actualDevice = _aquariumClient.GetDeviceInformation(Device);
+            var actualDevice = await _aquariumClient.GetDeviceInformation(Device);
             _logger.LogInformation("Device information found for aquarium \"" + actualDevice.Aquarium.Name + "\"");
             SetDevice(actualDevice);
+            return actualDevice;
         }
 
         public void CheckAvailableHardware()
