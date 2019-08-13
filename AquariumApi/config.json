@@ -9,6 +9,7 @@
     "Audience": "http://localhost:5000",
     "LengthMins": 10
   },
-  "PhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
+  "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
+  "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",
   "DashboardLogFilePath": "./AquariumApi.log"
 }

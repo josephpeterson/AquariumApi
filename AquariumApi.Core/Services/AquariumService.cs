@@ -301,7 +301,7 @@ namespace AquariumApi.Core
         {
             if (snapshotImage != null)
             {
-                var downloadPath = String.Format(_config["PhotoFilePath"], aquariumId, snapshot.Date.Millisecond);
+                var downloadPath = String.Format(_config["AquariumPhotoFilePath"], aquariumId, snapshot.Date.Millisecond);
 
                 StorePhoto(downloadPath,snapshotImage);
 
@@ -320,7 +320,7 @@ namespace AquariumApi.Core
         public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
         {
             var aq = GetFishById(fishId).AquariumId;
-            var downloadPath = String.Format(_config["PhotoFilePath"] + "/fish/", fishId, DateTime.Now.Millisecond);
+            var downloadPath = String.Format(_config["FishPhotoFilePath"], fishId, DateTime.Now.Millisecond);
             StorePhoto(downloadPath, photo);
             ExpandPhotoSizesIfNeeded(downloadPath);
 
