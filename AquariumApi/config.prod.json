@@ -9,6 +9,10 @@
     "Audience": "http://localhost:5000",
     "LengthMins": 60
   },
+  "Photos": {
+    "Path": "./photos",
+    "Sizes": [ 0.25, 0.5 ]
+  },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",
   "DashboardLogFilePath": "./AquariumApi.log"

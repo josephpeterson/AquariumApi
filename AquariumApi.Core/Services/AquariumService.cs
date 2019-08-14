@@ -118,7 +118,10 @@ namespace AquariumApi.Core
         }
         public void DeleteSnapshot(int snapshotId)
         {
-            var snapshot = _aquariumDao.DeleteSnapshot(snapshotId);
+            var snapshot = GetSnapshotById(snapshotId);
+            if (snapshot.PhotoId.HasValue)
+                DeleteAquariumPhoto(snapshot.PhotoId.Value);
+            _aquariumDao.DeleteSnapshot(snapshot.Id);
         }
 
         public AquariumSnapshot TakeSnapshot(int aquariumId, bool takePhoto)

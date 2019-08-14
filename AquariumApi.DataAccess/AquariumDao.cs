@@ -170,13 +170,9 @@ namespace AquariumApi.DataAccess
         }
         public AquariumSnapshot DeleteSnapshot(int snapshotId)
         {
-            var snapshot = _dbAquariumContext.TblSnapshot.SingleOrDefault(e => e.Id == snapshotId);
-            if (snapshot == null)
-                throw new KeyNotFoundException();
+            var snapshot = _dbAquariumContext.TblSnapshot.Single(e => e.Id == snapshotId);
             _dbAquariumContext.TblSnapshot.Remove(snapshot);
             _dbAquariumContext.SaveChanges();
-            if (snapshot.PhotoId != null)
-                DeleteAquariumPhoto(snapshot.PhotoId.Value);
             return snapshot;
         }
 

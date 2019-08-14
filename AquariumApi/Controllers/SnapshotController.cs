@@ -17,11 +17,14 @@ namespace AquariumApi.Controllers
         private readonly IConfiguration _config;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public SnapshotController(IConfiguration config, IAquariumService aquariumService, IDeviceService deviceService, ILogger<SnapshotController> logger)
+        private readonly IPhotoManager _photoManager;
+
+        public SnapshotController(IConfiguration config, IAquariumService aquariumService, IDeviceService deviceService, ILogger<SnapshotController> logger,IPhotoManager photoManager)
         {
             _config = config;
             _aquariumService = aquariumService;
             _logger = logger;
+            _photoManager = photoManager;
         }
         [HttpGet]
         [Route("/v1/Snapshot/{id}/All")]
@@ -65,22 +68,14 @@ namespace AquariumApi.Controllers
             try
             {
                 AquariumPhoto data = _aquariumService.GetAquariumPhotoById(photoId);
+                var available = _photoManager.GetImageSizes(data.Filepath);
+                var photo = available.GetValueOrDefault(size);
+                if(System.IO.File.Exists(photo))
+                    return File(System.IO.File.ReadAllBytes(photo), "image/jpeg");
+                else if (System.IO.File.Exists(data.Filepath))
+                    return File(System.IO.File.ReadAllBytes(data.Filepath), "image/jpeg");
 
-                byte[] b;
-                if(size == "medium")
-                {
-                    var destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
-                    b = System.IO.File.ReadAllBytes(destination);
-                }
-                else if (size == "small")
-                {
-                    var destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
-                    b = System.IO.File.ReadAllBytes(destination);
-                }
-                else
-                 b = System.IO.File.ReadAllBytes(data.Filepath);
-
-                return File(b, "image/jpeg");
+                return NotFound();
             }
             catch (Exception ex)
             {

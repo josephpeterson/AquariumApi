@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -13,6 +14,7 @@ namespace AquariumApi.Core
     {
         void DeletePhoto(string path);
         void Expand(string path);
+        Dictionary<string, string> GetImageSizes(string path);
         AquariumPhoto StoreAquariumPhoto(int aquariumId, Stream file);
         FishPhoto StoreFishPhoto(int fishId, Stream file);
     }
@@ -27,7 +29,7 @@ namespace AquariumApi.Core
         public AquariumPhoto StoreAquariumPhoto(int aquariumId,Stream file)
         {
             var now = DateTime.Now;
-            var path = $"{_config["Path"]}/aquarium/{aquariumId}/" + now.Millisecond + ".jpg";
+            var path = $"{_config["Photos:Path"]}/aquarium/{aquariumId}/" + now.Ticks + ".jpg";
             StorePhoto(path, file);
             return new AquariumPhoto()
             {
@@ -39,7 +41,7 @@ namespace AquariumApi.Core
         public FishPhoto StoreFishPhoto(int fishId,Stream file)
         {
             var now = DateTime.Now;
-            var path = $"{_config["Path"]}/fish/{fishId}/" + now.Millisecond + ".jpg";
+            var path = $"{_config["Photos:Path"]}/fish/{fishId}/" + now.Ticks + ".jpg";
             StorePhoto(path, file);
             return new FishPhoto()
             {
@@ -61,33 +63,47 @@ namespace AquariumApi.Core
         {
             var basePath = Path.GetDirectoryName(path);
             var filename = Path.GetFileName(path);
-            var sizes = _config.GetSection("Photos:Sizes");
-            foreach (var pair in sizes.AsEnumerable())
+            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
+            foreach(var s in sizes)
             {
-                var destination = basePath + "/" + pair.Key + "/" + filename;
+                var destination = Path.GetDirectoryName(path) + "/x" + Convert.ToInt16(s * 100) + "/" + filename;
                 if (File.Exists(destination))
                     File.Delete(destination);
             }
+            if (File.Exists(path))
+                File.Delete(path);
         }
         public void Expand(string path)
         {
-            var sizes = _config.GetSection("Photos:Sizes");
-            foreach(var pair in sizes.AsEnumerable())
+            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
+            foreach(var s in sizes)
             {
-                var scale = Convert.ToDecimal(pair.Value);
-                var destination = Path.GetDirectoryName(path) + "/" + pair.Key;
+                var destination = Path.GetDirectoryName(path) + "/x" + Convert.ToInt16(s*100) + "/";
                 using (var img = Image.FromFile(path))
                 {
                     Directory.CreateDirectory(destination);
                     string filepath = destination + Path.GetFileName(path);
-                    var w = Convert.ToInt16(img.Width * scale);
-                    var h = Convert.ToInt16(img.Height * scale);
+                    var w = Convert.ToInt16(img.Width * s);
+                    var h = Convert.ToInt16(img.Height * s);
                     var downsized = ResizeImage(img, w, h);
                     downsized.Save(filepath, ImageFormat.Jpeg);
                 }
             }
         }
 
+        public Dictionary<string, string> GetImageSizes(string path)
+        {
+            var result = new Dictionary<string, string>();
+            var filename = Path.GetFileName(path);
+            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
+            foreach (var s in sizes)
+            {
+                var destination = Path.GetDirectoryName(path) + "/x" + Convert.ToInt16(s * 100) + "/" + filename;
+                if (File.Exists(destination))
+                    result.Add(s.ToString(), destination);
+            }
+            return result;
+        }
         private static Bitmap ResizeImage(Image image, int width, int height)
         {
             var destRect = new Rectangle(0, 0, width, height);

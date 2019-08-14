@@ -10,11 +10,8 @@
     "LengthMins": 10
   },
   "Photos": {
-    "Path": "wwwroot/photos/{0}/{1}.jpg",
-    "Sizes": {
-      "thumbnail": 0.25,
-      "medium": 0.5
-    }
+    "Path": "./photos",
+    "Sizes": [ 0.25, 0.5 ]
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",
