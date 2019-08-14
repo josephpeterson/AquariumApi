@@ -52,6 +52,7 @@ namespace AquariumApi.DataAccess
 
         List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
         void DeleteAquariumPhoto(int photoId);
+        void DeleteFishPhoto(int photoId);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
@@ -413,9 +414,13 @@ namespace AquariumApi.DataAccess
         public void DeleteAquariumPhoto(int photoId)
         {
             var photo = GetAquariumPhotoById(photoId);
-            if (File.Exists(photo.Filepath))
-                File.Delete(photo.Filepath);
             _dbAquariumContext.TblAquariumPhoto.Remove(photo);
+            _dbAquariumContext.SaveChanges();
+        }
+        public void DeleteFishPhoto(int photoId)
+        {
+            var photo = GetFishPhotoById(photoId);
+            _dbAquariumContext.TblFishPhoto.Remove(photo);
             _dbAquariumContext.SaveChanges();
         }
 

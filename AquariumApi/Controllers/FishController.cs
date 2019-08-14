@@ -137,5 +137,21 @@ namespace AquariumApi.Controllers
             }
 
         }
+        [HttpPost,Route("/v1/Fish/Photo/Delete")]
+        public IActionResult DeleteFishPhoto([FromBody] int fishPhotoId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Fish/Photo/Delete called");
+                _aquariumService.DeleteFishPhoto(fishPhotoId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/Photo/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+
     }
 }

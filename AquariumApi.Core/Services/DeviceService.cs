@@ -20,7 +20,7 @@ namespace AquariumApi.Core
         AquariumDevice ScanHardware(int deviceId);
         bool Ping(int deviceId);
         AquariumSnapshot TakeSnapshot(int deviceId);
-        AquariumPhoto TakePhoto(int deviceId);
+        Stream TakePhoto(int deviceId);
         bool SetAquarium(int deviceId, int aquariumId);
     }
     public class DeviceService : IDeviceService
@@ -80,15 +80,12 @@ namespace AquariumApi.Core
             snapshot.AquariumId = device.AquariumId;
             return snapshot;
         }
-        public AquariumPhoto TakePhoto(int deviceId)
+        public Stream TakePhoto(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var photos = _aquariumDao.GetAquariumPhotos(device.AquariumId);
             var path = $"http://{device.Address}:{device.Port}/v1/Snapshot/TakePhoto";
-            var downloadPath = String.Format(_config["AquariumPhotoFilePath"], device.AquariumId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
 
-
-            _logger.LogInformation($"Retrieving photo snapshot... [{downloadPath}]");
+            _logger.LogInformation($"Taking photo on device...");
             using (var client2 = new HttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
@@ -99,20 +96,8 @@ namespace AquariumApi.Core
                 var result = client2.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)
                     throw new Exception("Could not take photo");
-                Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
-                using (Stream output = File.OpenWrite(downloadPath))
-                    result.Content.ReadAsStreamAsync().Result.CopyTo(output);
+                return result.Content.ReadAsStreamAsync().Result;
             }
-            if (!File.Exists(downloadPath))
-                throw new Exception("Could not take photo");
-            _logger.LogInformation($"Snapshot photo was saved to location: {downloadPath}");
-            var photo = new AquariumPhoto()
-            {
-                Date = new DateTime(),
-                AquariumId = device.AquariumId,
-                Filepath = downloadPath
-            };
-            return photo;
         }
     }
 }

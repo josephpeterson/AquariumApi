@@ -3,11 +3,18 @@
   "Database": {
     "dbAquarium": "Data Source=dbaquarium.database.windows.net; Database=dbAquariumDev; MultipleActiveResultSets=true; User ID=Aquarium; Password=testpassword1.;"
   },
-  "Jwt":  {
+  "Jwt": {
     "Secret": "sdadjk233244gg443aldaksj",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
     "LengthMins": 10
+  },
+  "Photos": {
+    "Path": "wwwroot/photos/{0}/{1}.jpg",
+    "Sizes": {
+      "thumbnail": 0.25,
+      "medium": 0.5
+    }
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",

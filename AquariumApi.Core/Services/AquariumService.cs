@@ -35,6 +35,7 @@ namespace AquariumApi.Core
         Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
         void DeleteFish(int fishId);
+        void DeleteFishPhoto(int photoId);
 
         Feeding AddFeeding(Feeding feeding);
         Feeding GetFeedingById(int feedingId);
@@ -64,14 +65,16 @@ namespace AquariumApi.Core
         private readonly IAquariumDao _aquariumDao;
         private readonly ILogger<AquariumService> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
 
-        public AquariumService(IConfiguration config,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger)
+        public AquariumService(IConfiguration config,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
         {
             _config = config;
             _aquariumDao = aquariumDao;
             _logger = logger;
             _deviceService = deviceService;
+            _photoManager = photoManager;
         }
 
         public List<Aquarium> GetAllAquariums()
@@ -104,62 +107,6 @@ namespace AquariumApi.Core
         }
 
 
-        /* Aquarium Photos */
-        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
-        {
-            return _aquariumDao.GetAquariumPhotos(aquariumId).Where(s => s.AquariumId == aquariumId).ToList();
-        }
-
-        public void DeleteAquariumPhoto(int photoId)
-        {
-            _aquariumDao.DeleteAquariumPhoto(photoId);
-        }
-        public AquariumPhoto GetAquariumPhotoById(int photoId)
-        {
-            AquariumPhoto aquariumPhoto = _aquariumDao.GetAquariumPhotoById(photoId);
-            ExpandPhotoSizesIfNeeded(aquariumPhoto.Filepath);
-            return aquariumPhoto;
-        }
-        public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
-        {
-            if (!File.Exists(photo.Filepath))
-                throw new KeyNotFoundException();
-            //Resize image
-            ExpandPhotoSizesIfNeeded(photo.Filepath);
-            return _aquariumDao.AddAquariumPhoto(photo);
-        }
-        private void ExpandPhotoSizesIfNeeded(string path)
-        {
-            if (path == null)
-                return;
-            using (var img = Image.FromFile(path))
-            {
-                var destination = Path.GetDirectoryName(path) + "/medium/";
-                Directory.CreateDirectory(destination);
-                string filepath = destination + Path.GetFileName(path);
-                if (!File.Exists(filepath))
-                {
-                    var w = Convert.ToInt16(img.Width * 0.5);
-                    var h = Convert.ToInt16(img.Height * 0.5);
-                    var downsized = PhotoResize.ResizeImage(img, w, h);
-                    downsized.Save(filepath, ImageFormat.Jpeg);
-                }
-            }
-            using (var img = Image.FromFile(path))
-            {
-                var destination = Path.GetDirectoryName(path) + "/thumbnail/";
-                Directory.CreateDirectory(destination);
-                string filepath = destination + Path.GetFileName(path);
-                if (!File.Exists(filepath))
-                {
-                    var w = Convert.ToInt16(img.Width * 0.25);
-                    var h = Convert.ToInt16(img.Height * 0.25);
-                    var downsized = PhotoResize.ResizeImage(img, w, h);
-                    downsized.Save(filepath, ImageFormat.Jpeg);
-                }
-            }
-        }
-
         /* Snapshots */
         public List<AquariumSnapshot> GetSnapshots(int aquariumId)
         {
@@ -183,11 +130,10 @@ namespace AquariumApi.Core
 
             if (takePhoto)
             {
-                var aquariumPhoto = _deviceService.TakePhoto(deviceId);
-                aquariumPhoto.AquariumId = aquarium.Id;
-                aquariumPhoto.Date = snapshot.Date;
-                aquariumPhoto = AddAquariumPhoto(aquariumPhoto);
-                snapshot.PhotoId = aquariumPhoto.Id.Value;
+                var photoData = _deviceService.TakePhoto(deviceId);
+                var photo = _photoManager.StoreAquariumPhoto(aquariumId, photoData);
+                var actualPhoto = AddAquariumPhoto(photo);
+                snapshot.PhotoId = actualPhoto.Id;
             }
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
             return newSnapshot;
@@ -301,52 +247,55 @@ namespace AquariumApi.Core
         {
             if (snapshotImage != null)
             {
-                var downloadPath = String.Format(_config["AquariumPhotoFilePath"], aquariumId, snapshot.Date.Millisecond);
-
-                StorePhoto(downloadPath,snapshotImage);
-
-                var photo = new AquariumPhoto()
-                {
-                    Date = snapshot.Date,
-                    AquariumId = aquariumId,
-                    Filepath = downloadPath
-                };
+                var photo = _photoManager.StoreAquariumPhoto(aquariumId, snapshotImage.OpenReadStream());
                 var actualPhoto = AddAquariumPhoto(photo);
                 snapshot.PhotoId = actualPhoto.Id;
             }
             snapshot.AquariumId = aquariumId;
             return _aquariumDao.AddSnapshot(snapshot);
         }
+
+        /* Photos */
+        /* Aquarium Photos */
+        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
+        {
+            return _aquariumDao.GetAquariumPhotos(aquariumId).Where(s => s.AquariumId == aquariumId).ToList();
+        }
+
+        public AquariumPhoto GetAquariumPhotoById(int photoId)
+        {
+            AquariumPhoto aquariumPhoto = _aquariumDao.GetAquariumPhotoById(photoId);
+            return aquariumPhoto;
+        }
+        public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
+        {
+            if (!File.Exists(photo.Filepath))
+                throw new KeyNotFoundException();
+            return _aquariumDao.AddAquariumPhoto(photo);
+        }
         public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
         {
             var aq = GetFishById(fishId).AquariumId;
-            var downloadPath = String.Format(_config["FishPhotoFilePath"], fishId, DateTime.Now.Millisecond);
-            StorePhoto(downloadPath, photo);
-            ExpandPhotoSizesIfNeeded(downloadPath);
-
-            var fishPhoto = new FishPhoto()
-            {
-                Date = new DateTime(),
-                AquariumId = aq,
-                FishId = fishId,
-                Filepath = downloadPath
-            };
+            var fishPhoto = _photoManager.StoreFishPhoto(fishId,photo.OpenReadStream());
             return _aquariumDao.AddFishPhoto(fishPhoto);
         }
         public FishPhoto GetFishPhotoById(int photoId)
         {
             FishPhoto fishPhoto = _aquariumDao.GetFishPhotoById(photoId);
-            ExpandPhotoSizesIfNeeded(fishPhoto.Filepath);
             return fishPhoto;
         }
 
-        private void StorePhoto(string downloadPath, IFormFile photoData) {
-            Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
-            using (Stream output = File.OpenWrite(downloadPath))
-                photoData.CopyTo(output);
-            if (!File.Exists(downloadPath))
-                throw new Exception("Could not save photo from request");
-            _logger.LogInformation($"Photo was saved to location: {downloadPath}");
-}
+        public void DeleteAquariumPhoto(int photoId)
+        {
+            var photo = GetAquariumPhotoById(photoId);
+            _photoManager.DeletePhoto(photo.Filepath);
+            _aquariumDao.DeleteAquariumPhoto(photoId);
+        }
+        public void DeleteFishPhoto(int photoId)
+        {
+            FishPhoto photo = GetFishPhotoById(photoId);
+            _photoManager.DeletePhoto(photo.Filepath);
+            _aquariumDao.DeleteFishPhoto(photoId);
+        }
     }
 }
