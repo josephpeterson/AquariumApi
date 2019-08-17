@@ -234,7 +234,7 @@ namespace AquariumApi.DataAccess
             fish.Aquarium = null; //todo separate this into a request/response models
             _dbAquariumContext.TblFish.Add(fish);
             _dbAquariumContext.SaveChanges();
-            return fish;
+            return GetFishById(fish.Id.Value);
         }
         public Fish UpdateFish(Fish fish)
         {
