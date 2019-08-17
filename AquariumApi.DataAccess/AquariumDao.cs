@@ -226,6 +226,7 @@ namespace AquariumApi.DataAccess
                 .Include(f => f.Aquarium)
                 .Include(f => f.Feedings)
                 .Include(f => f.Photos)
+                .Include(f => f.Thumbnail)
                 .Where(s => s.Id == fishId).First();
         }
         public Fish AddFish(Fish fish)
@@ -238,19 +239,14 @@ namespace AquariumApi.DataAccess
         }
         public Fish UpdateFish(Fish fish)
         {
-            var fishToUpdate = _dbAquariumContext.TblFish.Where(s => s.Id == fish.Id).First();
+            var fishToUpdate = GetFishById(fish.Id);
             if (fishToUpdate == null)
                 throw new KeyNotFoundException();
 
-            fishToUpdate.Name = fish.Name;
-            fishToUpdate.Date = fish.Date;
-            fishToUpdate.Gender = fish.Gender;
-            fishToUpdate.Description = fish.Description;
-            fishToUpdate.SpeciesId = fish.SpeciesId;
-            //fishToUpdate.AquariumId = fish.AquariumId; //todo automapper
+            _mapper.Map(fish, fishToUpdate);
             _dbAquariumContext.TblFish.Update(fishToUpdate);
             _dbAquariumContext.SaveChanges();
-            return fish;
+            return GetFishById(fishToUpdate.Id);
         }
         public void DeleteFish(int fishId)
         {

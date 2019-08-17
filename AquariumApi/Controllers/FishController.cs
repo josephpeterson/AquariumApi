@@ -120,44 +120,13 @@ namespace AquariumApi.Controllers
 
                 _logger.LogInformation($"POST /v1/Fish/{fishId}/UploadPhoto called");
                 FishPhoto fishPhoto = _aquariumService.AddFishPhoto(fishId, photoData);
-                return new OkObjectResult(fishPhoto);
+                return CreatedAtAction(nameof(GetFishById), fishPhoto);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Fish/{fishId}/UploadPhoto: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
-        }
-        [HttpGet]
-        [Route("/v1/Fish/Photo/{photoId}/{size}")]
-        public IActionResult GetSnapshotPhoto(int photoId, string size = "")
-        {
-            try
-            {
-                var data = _aquariumService.GetFishPhotoById(photoId);
-
-                byte[] b;
-                if (size == "medium")
-                {
-                    var destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
-                    b = System.IO.File.ReadAllBytes(destination);
-                }
-                else if (size == "small")
-                {
-                    var destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
-                    b = System.IO.File.ReadAllBytes(destination);
-                }
-                else
-                    b = System.IO.File.ReadAllBytes(data.Filepath);
-
-                return File(b, "image/jpeg");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Snapshot/Photo/{photoId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-
         }
         [HttpPost,Route("/v1/Fish/Photo/Delete")]
         public IActionResult DeleteFishPhoto([FromBody] int fishPhotoId)
