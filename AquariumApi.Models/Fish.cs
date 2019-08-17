@@ -10,7 +10,7 @@ namespace AquariumApi.Models
     {
         [Required]
         [Key]
-        public int? Id { get; set; }
+        public int Id { get; set; }
         public int AquariumId { get; set; }
         public int SpeciesId { get; set; }
         public string Gender { get; set; }

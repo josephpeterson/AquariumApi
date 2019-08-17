@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AquariumApi.Controllers
 {
+    [Authorize]
     public class FishController : Controller
     {
         public readonly IAquariumService _aquariumService;
@@ -45,6 +48,11 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                //Check if this is our aquarium
+                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                if (_aquariumService.GetFishById(fish.Id).Aquarium.OwnerId != userId)
+                    return Unauthorized();
+
                 _logger.LogInformation("POST /v1/Fish/Add called");
                 var newFish = _aquariumService.AddFish(fish);
                 return CreatedAtAction(nameof(GetFishById),newFish);
@@ -61,6 +69,11 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                //Check if this is our fish
+                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                if (_aquariumService.GetFishById(fish.Id).Aquarium.OwnerId != userId)
+                    return Unauthorized();
+
                 _logger.LogInformation("POST /v1/Fish/Update called");
                 var updatedFish = _aquariumService.UpdateFish(fish);
                 return new OkObjectResult(updatedFish);
@@ -77,6 +90,11 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                //Check if this is our fish
+                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                if (_aquariumService.GetFishById(fishId).Aquarium.OwnerId != userId)
+                    return Unauthorized();
+
                 _logger.LogInformation("POST /v1/Fish/Delete called");
                 _aquariumService.DeleteFish(fishId);
                 return new OkResult();
@@ -95,6 +113,10 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                //Check if this is our fish
+                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                if (_aquariumService.GetFishById(fishId).Aquarium.OwnerId != userId)
+                    return Unauthorized();
 
                 _logger.LogInformation($"POST /v1/Fish/{fishId}/UploadPhoto called");
                 FishPhoto fishPhoto = _aquariumService.AddFishPhoto(fishId, photoData);

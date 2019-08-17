@@ -173,6 +173,11 @@ namespace AquariumApi.Core
         }
         public Fish AddFish(Fish fish)
         {
+            fish.Name = fish.Name.Trim();
+            fish.Description = fish.Description.Trim();
+            if (string.IsNullOrEmpty(fish.Name))
+                throw new InvalidDataException();
+
             return _aquariumDao.AddFish(fish);
         }
         public Fish UpdateFish(Fish fish)
@@ -279,7 +284,7 @@ namespace AquariumApi.Core
         public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
         {
             var aq = GetFishById(fishId).AquariumId;
-            var fishPhoto = _photoManager.StoreFishPhoto(fishId,photo.OpenReadStream());
+            var fishPhoto = _photoManager.StoreFishPhoto(fishId, aq,photo.OpenReadStream());
             return _aquariumDao.AddFishPhoto(fishPhoto);
         }
         public FishPhoto GetFishPhotoById(int photoId)

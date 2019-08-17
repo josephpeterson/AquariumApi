@@ -16,7 +16,7 @@ namespace AquariumApi.Core
         void Expand(string path);
         Dictionary<string, string> GetImageSizes(string path);
         AquariumPhoto StoreAquariumPhoto(int aquariumId, Stream file);
-        FishPhoto StoreFishPhoto(int fishId, Stream file);
+        FishPhoto StoreFishPhoto(int fishId,int aquariumId,Stream file);
     }
     public class PhotoManager: IPhotoManager
     {
@@ -38,7 +38,7 @@ namespace AquariumApi.Core
                 Filepath = path
             };
         }
-        public FishPhoto StoreFishPhoto(int fishId,Stream file)
+        public FishPhoto StoreFishPhoto(int fishId,int aquariumId,Stream file)
         {
             var now = DateTime.Now;
             var path = $"{_config["Photos:Path"]}/fish/{fishId}/" + now.Ticks + ".jpg";
@@ -47,7 +47,8 @@ namespace AquariumApi.Core
             {
                 Date = now,
                 FishId = fishId,
-                Filepath = path
+                Filepath = path,
+                AquariumId = aquariumId
             };
         }
         private void StorePhoto(string path, Stream file)
