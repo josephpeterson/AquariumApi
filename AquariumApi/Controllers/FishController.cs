@@ -50,7 +50,7 @@ namespace AquariumApi.Controllers
             {
                 //Check if this is our aquarium
                 int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                if (_aquariumService.GetFishById(fish.Id).Aquarium.OwnerId != userId)
+                if (_aquariumService.GetAquariumById(fish.AquariumId).OwnerId != userId)
                     return Unauthorized();
 
                 _logger.LogInformation("POST /v1/Fish/Add called");
@@ -59,7 +59,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Species/Add caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Fish/Add caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

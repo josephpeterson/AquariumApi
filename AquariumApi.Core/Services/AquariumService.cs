@@ -174,7 +174,9 @@ namespace AquariumApi.Core
         public Fish AddFish(Fish fish)
         {
             fish.Name = fish.Name.Trim();
-            fish.Description = fish.Description.Trim();
+
+            fish.Description = fish.Description?.Trim();
+
             if (string.IsNullOrEmpty(fish.Name))
                 throw new InvalidDataException();
 
