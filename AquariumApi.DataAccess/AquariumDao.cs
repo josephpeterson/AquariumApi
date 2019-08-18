@@ -105,6 +105,7 @@ namespace AquariumApi.DataAccess
             var aquarium = _dbAquariumContext.TblAquarium.AsNoTracking()
                 .Where(aq => aq.Id == aquariumId)
                 .Include(aq => aq.Fish).ThenInclude(d => d.Species)
+                .Include(aq => aq.Fish).ThenInclude(d => d.Thumbnail)
                 .Include(aq => aq.Feedings)
                 .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
                 .First();
