@@ -168,15 +168,15 @@ namespace AquariumApi.Controllers
         }
 
 
-        //todo get rid of this
+        //Recieve snapshot from device
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Device/{deviceId}/Snapshot")]
         public IActionResult UploadSnapshot(int deviceId,IFormFile snapshotImage,AquariumSnapshot snapshot)
         {
             try
             {
-                snapshot.Date = DateTime.Now;
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Snapshot called");
+                _logger.LogInformation($"Test: {snapshot.Date.ToString()}");
                 var device = _aquariumService.GetAquariumDeviceById(deviceId);
                 AquariumSnapshot s = _aquariumService.AddSnapshot(device.AquariumId, snapshot,snapshotImage);
                 return new OkObjectResult(s);
