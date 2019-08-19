@@ -34,6 +34,7 @@ namespace AquariumApi.Core
         Fish AddFish(Fish fish);
         Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
+        BugReport SubmitBugReport(BugReport report);
         void DeleteFish(int fishId);
         void DeleteFishPhoto(int photoId);
 
@@ -306,6 +307,12 @@ namespace AquariumApi.Core
             FishPhoto photo = GetFishPhotoById(photoId);
             _photoManager.DeletePhoto(photo.Filepath);
             _aquariumDao.DeleteFishPhoto(photoId);
+        }
+
+        public BugReport SubmitBugReport(BugReport report)
+        {
+            report.Date = new DateTime();
+            return _aquariumDao.AddBugReport(report);
         }
     }
 }

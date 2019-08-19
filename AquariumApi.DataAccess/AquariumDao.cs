@@ -66,6 +66,8 @@ namespace AquariumApi.DataAccess
         AquariumUser GetUserByUsername(string username);
         AquariumUser GetUserByEmail(string email);
         FishPhoto GetFishPhotoById(int photoId);
+        BugReport AddBugReport(BugReport report);
+        List<BugReport> GetAllBugs();
     }
 
     public class AquariumDao : IAquariumDao
@@ -479,6 +481,19 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblFishPhoto.AsNoTracking()
                 .Where(p => p.Id == photoId)
                 .First();
+        }
+
+        public BugReport AddBugReport(BugReport report)
+        {
+            _dbAquariumContext.TblBugReports.Add(report);
+            _dbAquariumContext.SaveChanges();
+            return report;
+        }
+
+        public List<BugReport> GetAllBugs()
+        {
+            var bugs = _dbAquariumContext.TblBugReports.ToList();
+            return bugs;
         }
     }
 }

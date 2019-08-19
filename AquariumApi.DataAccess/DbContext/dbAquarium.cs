@@ -21,6 +21,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<Species> TblSpecies { get; set; }
         public virtual DbSet<AquariumDevice> TblDevice { get; set; }
         public virtual DbSet<AquariumUser> TblAccounts { get; set; }
+        public virtual DbSet<BugReport> TblBugReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -95,6 +96,10 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblFishPhoto");
                 entity.HasOne(e => e.Aquarium);
                 entity.HasOne(e => e.Fish);
+            });
+            modelBuilder.Entity<BugReport>(entity =>
+            {
+                entity.ToTable("tblBugReports");
             });
         }
     }
