@@ -2,5 +2,5 @@
   "Port": 80,
   "DeviceKey": "testtankdevicekey",
   "AquariumCachePath": "aquarium.json",
-  "AquariumServiceUrl": "http://localhost:5000/v1"
+  "AquariumServiceUrl": "http://aquarium-api-dev.azurewebsites.net/v1"
 }

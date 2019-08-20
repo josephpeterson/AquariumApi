@@ -63,9 +63,14 @@ namespace AquariumApi.DeviceApi.Clients
 
 
             snapshot.Date = DateTime.UtcNow;
-            var j = JsonConvert.SerializeObject(snapshot);
+            var j = JsonConvert.SerializeObject(snapshot, new JsonSerializerSettings
+            {
+                DateFormatHandling = DateFormatHandling.MicrosoftDateFormat
+            });
 
-            _logger.LogDebug(j);
+            _logger.LogInformation("\n\n\n\n\n\n\n\n");
+            _logger.LogInformation(j);
+
 
             MultipartFormDataContent multiContent = new MultipartFormDataContent();
 
