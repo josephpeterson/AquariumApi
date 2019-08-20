@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -18,6 +20,8 @@ namespace AquariumApi.Models
         [ForeignKey("PhotoId")]
         public AquariumPhoto Photo { get; set; }
         public int? PhotoId { get; set; }
+        [JsonProperty]
+        [JsonConverter(typeof(IsoDateTimeConverter))]
         public DateTime Date { get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Ammonia { get; set; }
