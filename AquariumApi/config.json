@@ -1,11 +1,13 @@
 ﻿{
   "Port": 5000,
-  "Database--dbAquarium":  "",
-  "Jwt--Secret": "notsafesecret",
+  "Database": {
+    "dbAquarium": ""
+  },
   "Jwt": {
+    "Secret": "notsafesecret",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
-    "LengthMins": 60
+    "LengthMins": 10
   },
   "Photos": {
     "Path": "./photos",

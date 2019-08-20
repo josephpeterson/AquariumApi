@@ -76,7 +76,7 @@ namespace AquariumApi
 
                     ValidIssuer = Configuration["Jwt:Issuer"],
                     ValidAudience = Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt--Secret"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Secret"]))
                 };
             });
 
@@ -141,7 +141,7 @@ namespace AquariumApi
         private void RegisterServices(IServiceCollection services)
         {
             services.AddDbContext<DbAquariumContext>(options => options
-                .UseSqlServer(Configuration["Database--dbAquarium"])
+                .UseSqlServer(Configuration["Database:dbAquarium"])
                 .EnableSensitiveDataLogging());
             //.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll));
             services.AddTransient<IAquariumDao, AquariumDao>();
