@@ -1,10 +1,10 @@
 ﻿{
   "Port": 5000,
   "Database": {
-    "dbAquarium": "Data Source=dbaquarium.database.windows.net; Database=dbAquariumDev; MultipleActiveResultSets=true; User ID=Aquarium; Password=testpassword1.;"
+    "dbAquarium": ""
   },
   "Jwt": {
-    "Secret": "sdadjk233244gg443aldaksj",
+    "Secret": "notsafesecret",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
     "LengthMins": 10
