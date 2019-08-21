@@ -39,6 +39,7 @@ namespace AquariumApi.Core
         void DeleteFishPhoto(int photoId);
 
         Feeding AddFeeding(Feeding feeding);
+        AquariumUser GetAccountDetailed(int id, int id1);
         Feeding GetFeedingById(int feedingId);
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
         Feeding UpdateFeeding(Feeding feeding);
@@ -319,6 +320,12 @@ namespace AquariumApi.Core
         public List<BugReport> GetAllBugs()
         {
             return _aquariumDao.GetAllBugs();
+        }
+
+        public AquariumUser GetAccountDetailed(int senderId,int targetId)
+        {
+            //todo determine relationship, what details can they view
+            return _aquariumDao.GetAccountById(targetId);
         }
     }
 }
