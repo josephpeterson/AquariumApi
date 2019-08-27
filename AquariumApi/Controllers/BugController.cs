@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AquariumApi.Controllers
 {
+    [Authorize]
     public class BugController : Controller
     {
         public readonly IAquariumService _aquariumService;
@@ -30,6 +31,9 @@ namespace AquariumApi.Controllers
         [HttpPost,Route("/v1/Bug/Submit")]
         public IActionResult SubmitBugReport(BugReport report)
         {
+            //Static information
+            report.ImpactedUserId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
             try
             {
                 _logger.LogInformation($"POST /v1/Bug/Submit called");
