@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure;
@@ -17,6 +18,7 @@ namespace AquariumApi.Core.Services
 
         public async Task UploadToBlobStorageAsync()
         {
+            /*
             string storageConnection = CloudConfigurationManager.GetSetting("BlobStorageConnectionString");
             CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(storageConnection);
 
@@ -25,6 +27,9 @@ namespace AquariumApi.Core.Services
             //create a container CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference("appcontainer");
 
             //create a container if it is not already exists
+
+            CloudBlobClient cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
+            CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference("appcontainer");
 
             if (await cloudBlobContainer.CreateIfNotExistsAsync())
             {
@@ -40,6 +45,7 @@ namespace AquariumApi.Core.Services
             CloudBlockBlob cloudBlockBlob = cloudBlobContainer.GetBlockBlobReference(imageName); cloudBlockBlob.Properties.ContentType = imageToUpload.ContentType;
 
             await cloudBlockBlob.UploadFromStreamAsync(imageToUpload.InputStream);
+            */
         }
     }
 }
