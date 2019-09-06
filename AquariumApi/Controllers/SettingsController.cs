@@ -23,54 +23,5 @@ namespace AquariumApi.Controllers
             _aquariumService = aquariumService;
             _logger = logger;
         }
-        [HttpGet]
-        [Route("/v1/Settings/{id}")]
-        [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult GetSettings(int id)
-        {
-            try
-            {
-                var data = _aquariumService.GetSnapshots(id);
-                return new OkObjectResult(data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Snapshot/{id}/All endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
-
-        [HttpGet]
-        [Route("/v1/Settings/Log")]
-        public string GetApplicationLog()
-        {
-            try
-            {
-                return System.IO.File.ReadAllText(_config["DashboardLogFilePath"]);
-            }
-            catch(FileNotFoundException) {
-                return "No error log found";
-            }
-        }
-        [HttpGet]
-        [Route("/v1/Settings/Log/Delete")]
-        public IActionResult DeleteApplicationLog()
-        {
-            try
-            {
-                System.IO.File.Delete(_config["DashboardLogFilePath"]);
-                return new OkResult();
-            }
-            catch (FileNotFoundException)
-            {
-                return new OkResult();
-            }
-            catch
-            {
-                return new BadRequestResult();
-            }
-        }
-
     }
 }
