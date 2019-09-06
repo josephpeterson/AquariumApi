@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AquariumApi.Controllers
 {
-    [Authorize(Roles = "Administrator,Developer")]
+    [Authorize(Roles = "Administrator")]
     [Route("/v1/admin")]
     public class AdministrativeController : Controller
     {
