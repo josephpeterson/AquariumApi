@@ -68,5 +68,23 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpGet]
+        [Route("/v1/Account/Current")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult GetCurrentUser()
+        {
+            try
+            {
+                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+                var data = _aquariumService.GetAccountDetailed(userId, userId);
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Account/Current endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }

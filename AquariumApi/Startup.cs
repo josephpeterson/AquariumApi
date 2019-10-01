@@ -146,6 +146,7 @@ namespace AquariumApi
             //.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll));
             services.AddTransient<IAquariumDao, AquariumDao>();
             services.AddTransient<IAquariumService, AquariumService>();
+            services.AddTransient<IAdministrativeService, AdministrativeService>();
             services.AddTransient<IWebScraperService, WebScraperService>();
             services.AddTransient<IDeviceService, DeviceService>();
             services.AddTransient<IAccountService, AccountService>();
