@@ -69,10 +69,12 @@ namespace AquariumApi.Core
         private readonly IDeviceService _deviceService;
         private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
+        private readonly IAzureService _azureService;
 
-        public AquariumService(IConfiguration config,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
+        public AquariumService(IConfiguration config,IAzureService azureService,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
         {
             _config = config;
+            _azureService = azureService;
             _aquariumDao = aquariumDao;
             _logger = logger;
             _deviceService = deviceService;
@@ -259,9 +261,15 @@ namespace AquariumApi.Core
         {
             if (snapshotImage != null)
             {
-                var photo = _photoManager.StoreAquariumPhoto(aquariumId, snapshotImage.OpenReadStream());
-                var actualPhoto = AddAquariumPhoto(photo);
-                snapshot.PhotoId = actualPhoto.Id;
+                var stream = snapshotImage.OpenReadStream();
+                using (var ms = new MemoryStream())
+                {
+                    snapshotImage.CopyTo(ms);
+                    var buffer = ms.ToArray();
+                    var photo = _photoManager.StoreAquariumPhoto(aquariumId, buffer);
+                    var actualPhoto = AddAquariumPhoto(photo);
+                    snapshot.PhotoId = actualPhoto.Id;
+                }
             }
             snapshot.AquariumId = aquariumId;
             return _aquariumDao.AddSnapshot(snapshot);
@@ -281,8 +289,6 @@ namespace AquariumApi.Core
         }
         public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
         {
-            if (!File.Exists(photo.Filepath))
-                throw new KeyNotFoundException();
             return _aquariumDao.AddAquariumPhoto(photo);
         }
         public FishPhoto AddFishPhoto(int fishId, IFormFile photo)

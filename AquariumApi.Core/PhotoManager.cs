@@ -8,20 +8,21 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AquariumApi.Core
 {
     public interface IPhotoManager
     {
         void DeletePhoto(string path);
-        void Expand(string path);
         Dictionary<string, string> GetImageSizes(string path);
-        AquariumPhoto StoreAquariumPhoto(int aquariumId, Stream file);
+        AquariumPhoto StoreAquariumPhoto(int aquariumId, byte[] buffer);
         FishPhoto StoreFishPhoto(int fishId,int aquariumId,Stream file);
+        byte[] GetPhoto(string path);
     }
     public class PhotoManager: IPhotoManager
     {
-        private IAzureService _azureService;
+        private readonly IAzureService _azureService;
         private IConfiguration _config;
 
         public PhotoManager(IConfiguration config,IAzureService azureService)
@@ -29,11 +30,15 @@ namespace AquariumApi.Core
             _azureService = azureService;
             _config = config;
         }
-        public AquariumPhoto StoreAquariumPhoto(int aquariumId,Stream file)
+        public AquariumPhoto StoreAquariumPhoto(int aquariumId,byte[] buffer)
         {
             var now = DateTime.Now;
             var path = $"{_config["Photos:Path"]}/aquarium/{aquariumId}/" + now.Ticks + ".jpg";
-            StorePhoto(path, file);
+
+            var exists = StorePhoto(path, buffer).Result;
+            if (!exists)
+                throw new FileNotFoundException();
+
             return new AquariumPhoto()
             {
                 Date = now,
@@ -41,11 +46,11 @@ namespace AquariumApi.Core
                 Filepath = path
             };
         }
-        public FishPhoto StoreFishPhoto(int fishId,int aquariumId,Stream file)
+        public FishPhoto StoreFishPhoto(int fishId, int aquariumId, Stream file)
         {
             var now = DateTime.Now;
             var path = $"{_config["Photos:Path"]}/fish/{fishId}/" + now.Ticks + ".jpg";
-            StorePhoto(path, file);
+            //StorePhoto(path, file);
             return new FishPhoto()
             {
                 Date = now,
@@ -54,30 +59,32 @@ namespace AquariumApi.Core
                 AquariumId = aquariumId
             };
         }
-        private void StorePhoto(string path, Stream file)
+        public async Task<bool> StorePhoto(string path, byte[] buffer)
         {
-            _azureService.UploadFileToStorage(ReadFully(file), path);
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-
-            using (Stream output = File.OpenWrite(path))
-                file.CopyTo(output);
-            if (!File.Exists(path))
-                throw new Exception("Could not save photo from request");
-            Expand(path);
-        }
-
-        public static byte[] ReadFully(Stream input)
-        {
-            byte[] buffer = new byte[16 * 1024];
-            using (MemoryStream ms = new MemoryStream())
+            await _azureService.UploadFileToStorage(buffer, path);
+            //StorePhotoLocally(file, path);
+            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
+            foreach (var s in sizes)
             {
-                int read;
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                var destination = Path.GetDirectoryName(path) + "/" + s + "/";
+
+                using (var ms = new MemoryStream(buffer))
                 {
-                    ms.Write(buffer, 0, read);
+                    using (var img = Image.FromStream(ms))
+                    {
+                        Directory.CreateDirectory(destination);
+                        string filepath = destination + Path.GetFileName(path);
+                        var w = Convert.ToInt16(img.Width * s);
+                        var h = Convert.ToInt16(img.Height * s);
+                        var downsized = ResizeImage(img, w, h);
+                        var newImage = new MemoryStream();
+                        downsized.Save(newImage, ImageFormat.Jpeg);
+                        await _azureService.UploadFileToStorage(newImage.ToArray(), filepath);
+                    }
                 }
-                return ms.ToArray();
+
             }
+            return  _azureService.Exists(path);
         }
 
         public void DeletePhoto(string path)
@@ -85,33 +92,20 @@ namespace AquariumApi.Core
             var basePath = Path.GetDirectoryName(path);
             var filename = Path.GetFileName(path);
             var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
-            foreach(var s in sizes)
+            foreach (var s in sizes)
             {
-                var destination = Path.GetDirectoryName(path) + "/x" + Convert.ToInt16(s * 100) + "/" + filename;
-                if (File.Exists(destination))
-                    File.Delete(destination);
+                var destination = Path.GetDirectoryName(path) + "/x" + s + "/" + filename;
+                _azureService.DeleteFileFromStorage(destination);
             }
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        public void Expand(string path)
-        {
-            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
-            foreach(var s in sizes)
-            {
-                var destination = Path.GetDirectoryName(path) + "/x" + Convert.ToInt16(s*100) + "/";
-                using (var img = Image.FromFile(path))
-                {
-                    Directory.CreateDirectory(destination);
-                    string filepath = destination + Path.GetFileName(path);
-                    var w = Convert.ToInt16(img.Width * s);
-                    var h = Convert.ToInt16(img.Height * s);
-                    var downsized = ResizeImage(img, w, h);
-                    downsized.Save(filepath, ImageFormat.Jpeg);
-                }
-            }
+            _azureService.DeleteFileFromStorage(path);
         }
 
+        public byte[] GetPhoto(string path)
+        {
+            return _azureService.GetFileFromStorage(path).Result;
+        }
+
+        //deprecated, needs to be updated to support azure
         public Dictionary<string, string> GetImageSizes(string path)
         {
             var result = new Dictionary<string, string>();
@@ -149,5 +143,28 @@ namespace AquariumApi.Core
 
             return destImage;
         }
+        private void StorePhotoLocally(Stream file, string path)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            using (Stream output = File.OpenWrite(path))
+                file.CopyTo(output);
+            if (!File.Exists(path))
+                throw new Exception("Could not save photo from request");
+        }
+        public void DeletePhotoLocally(string path)
+        {
+            var basePath = Path.GetDirectoryName(path);
+            var filename = Path.GetFileName(path);
+            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
+            foreach (var s in sizes)
+            {
+                var destination = Path.GetDirectoryName(path) + "/x" + Convert.ToInt16(s * 100) + "/" + filename;
+                if (File.Exists(destination))
+                    File.Delete(destination);
+            }
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+
     }
 }

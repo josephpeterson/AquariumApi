@@ -68,14 +68,10 @@ namespace AquariumApi.Controllers
             try
             {
                 AquariumPhoto data = _aquariumService.GetAquariumPhotoById(photoId);
-                var available = _photoManager.GetImageSizes(data.Filepath);
-                var photo = available.GetValueOrDefault(size);
-                if(System.IO.File.Exists(photo))
-                    return File(System.IO.File.ReadAllBytes(photo), "image/jpeg");
-                else if (System.IO.File.Exists(data.Filepath))
-                    return File(System.IO.File.ReadAllBytes(data.Filepath), "image/jpeg");
 
-                return NotFound();
+                var destination = Path.GetDirectoryName(data.Filepath) + $"/{size}/" + Path.GetFileName(data.Filepath);
+                var b = _photoManager.GetPhoto(destination);
+                return File(b, "image/jpeg");
             }
             catch (Exception ex)
             {

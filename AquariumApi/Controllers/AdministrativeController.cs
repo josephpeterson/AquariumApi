@@ -100,7 +100,7 @@ namespace AquariumApi.Controllers
             try
             {
                 var data = System.IO.File.ReadAllBytes("config.json");
-                _azureService.UploadFileToStorage(data,"test.json");
+                //_azureService.UploadFileToStorage(data,"test.json");
                 return Ok();
             }
             catch (Exception ex)

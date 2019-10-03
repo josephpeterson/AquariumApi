@@ -20,7 +20,7 @@ namespace AquariumApi.Core
         AquariumDevice ScanHardware(int deviceId);
         bool Ping(int deviceId);
         AquariumSnapshot TakeSnapshot(int deviceId);
-        Stream TakePhoto(int deviceId);
+        byte[] TakePhoto(int deviceId);
         bool SetAquarium(int deviceId, int aquariumId);
     }
     public class DeviceService : IDeviceService
@@ -80,7 +80,7 @@ namespace AquariumApi.Core
             snapshot.AquariumId = device.AquariumId;
             return snapshot;
         }
-        public Stream TakePhoto(int deviceId)
+        public byte[] TakePhoto(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             var path = $"http://{device.Address}:{device.Port}/v1/Snapshot/TakePhoto";
@@ -96,7 +96,7 @@ namespace AquariumApi.Core
                 var result = client2.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)
                     throw new Exception("Could not take photo");
-                return result.Content.ReadAsStreamAsync().Result;
+                return result.Content.ReadAsByteArrayAsync().Result;
             }
         }
     }

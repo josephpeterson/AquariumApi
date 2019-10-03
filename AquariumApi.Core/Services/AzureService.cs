@@ -23,6 +23,10 @@ namespace AquariumApi.Core
     public interface IAzureService
     {
         Task UploadFileToStorage(byte[] buffer, string fileName);
+        Task<bool> DeleteFileFromStorage(string path);
+        Task<byte[]> GetFileFromStorage(string path);
+        bool Exists(string path);
+
     }
     public class AzureService : IAzureService
     {
@@ -37,28 +41,56 @@ namespace AquariumApi.Core
 
         public async Task UploadFileToStorage(byte[] buffer, string path)
         {
-            string accountName = _configuration["Azure:AccountUsername"];
-            string accountKey = _configuration["Azure:AccountKey"];
-            string shareName = _configuration["Azure:AquariumPhotosShare"];
-
-            StorageCredentials storageCredentials = new StorageCredentials(accountName,accountKey);
-            CloudStorageAccount storageAccount = new CloudStorageAccount(storageCredentials, true);
-
-            var share = storageAccount.CreateCloudFileClient().GetShareReference(shareName);
-            await share.CreateIfNotExistsAsync();
+            var share = await GetFileShare();
 
             //Expand paths to share
-            var directories = path.Split("/").ToList();
+            var directories = path.Replace("./","").Split("/").ToList();
             var fileName = directories.Last();
             directories.Remove(fileName);
 
             var currentDir = share.GetRootDirectoryReference();
-            directories.ForEach(d =>
+            foreach(var dir in directories)
             {
-                currentDir = currentDir.GetDirectoryReference(d);
-                currentDir.CreateIfNotExistsAsync();
-            });
+                currentDir = currentDir.GetDirectoryReference(dir);
+                await currentDir.CreateIfNotExistsAsync();
+            }
             await currentDir.GetFileReference(fileName).UploadFromByteArrayAsync(buffer,0,buffer.Length);
+        }
+        public async Task<bool> DeleteFileFromStorage(string path)
+        {
+            var share = await GetFileShare();
+            var currentDir = share.GetRootDirectoryReference();
+            return await currentDir.GetFileReference(path).DeleteIfExistsAsync();
+        }
+        public async Task<byte[]> GetFileFromStorage(string path)
+        {
+            var share = await GetFileShare();
+            var currentDir = share.GetRootDirectoryReference();
+            using (var ms = new MemoryStream())
+            {
+                await currentDir.GetFileReference(path.Replace("./","")).DownloadToStreamAsync(ms);
+                return ms.ToArray();
+            }
+        }
+        public bool Exists(string path)
+        {
+            var share = GetFileShare().Result;
+            var currentDir = share.GetRootDirectoryReference();
+            return currentDir.GetFileReference(path).ExistsAsync().Result;
+       }
+
+        private async Task<CloudFileShare> GetFileShare()
+        {
+            string accountName = _configuration["Azure:AccountUsername"];
+            string accountKey = _configuration["Azure:AccountKey"];
+            string shareName = _configuration["Azure:AquariumPhotosShare"];
+
+            StorageCredentials storageCredentials = new StorageCredentials(accountName, accountKey);
+            CloudStorageAccount storageAccount = new CloudStorageAccount(storageCredentials, true);
+
+            var share = storageAccount.CreateCloudFileClient().GetShareReference(shareName);
+            await share.CreateIfNotExistsAsync();
+            return share;
         }
     }
 }

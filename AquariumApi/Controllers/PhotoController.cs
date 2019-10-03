@@ -18,10 +18,12 @@ namespace AquariumApi.Controllers
     public class PhotoController : Controller
     {
         public readonly IAquariumService _aquariumService;
+        private readonly IPhotoManager _photoManager;
         public readonly ILogger<PhotoController> _logger;
-        public PhotoController(IAquariumService aquariumService, ILogger<PhotoController> logger)
+        public PhotoController(IAquariumService aquariumService, ILogger<PhotoController> logger,IPhotoManager photoManager)
         {
             _aquariumService = aquariumService;
+            _photoManager = photoManager;
             _logger = logger;
         }
 
@@ -33,19 +35,14 @@ namespace AquariumApi.Controllers
             {
                 var data = _aquariumService.GetFishPhotoById(photoId);
 
-                byte[] b;
+
+                string destination = data.Filepath;
                 if (size == "medium")
-                {
-                    var destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
-                    b = System.IO.File.ReadAllBytes(destination);
-                }
+                    destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
                 else if (size == "small")
-                {
-                    var destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
-                    b = System.IO.File.ReadAllBytes(destination);
-                }
-                else
-                    b = System.IO.File.ReadAllBytes(data.Filepath);
+                    destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
+               
+                var b = _photoManager.GetPhoto(destination);
 
                 return File(b, "image/jpeg");
             }
