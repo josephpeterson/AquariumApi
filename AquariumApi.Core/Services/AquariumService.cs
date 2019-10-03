@@ -50,7 +50,6 @@ namespace AquariumApi.Core
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         AquariumDevice UpdateAquariumDevice(AquariumDevice deviceId);
-        List<BugReport> GetAllBugs();
         void SetAquariumDevice(int aquariumId,int deviceId);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
         AquariumPhoto GetAquariumPhotoById(int photoId);
@@ -316,11 +315,6 @@ namespace AquariumApi.Core
             report.Date = DateTime.Now;
             report.Status = "Submitted";
             return _aquariumDao.AddBugReport(report);
-        }
-
-        public List<BugReport> GetAllBugs()
-        {
-            return _aquariumDao.GetAllBugs();
         }
 
         public AquariumUser GetAccountDetailed(int senderId,int targetId)

@@ -46,20 +46,5 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet, Route("/v1/Bugs"),Authorize(Roles = "Administrator,Developer")]
-        public IActionResult GetAllBugs()
-        {
-            try
-            {
-                _logger.LogInformation($"POST /v1/Bugs called");
-                List<BugReport> bugs = _aquariumService.GetAllBugs();
-                return new OkObjectResult(bugs);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
     }
 }

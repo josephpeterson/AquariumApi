@@ -21,12 +21,15 @@ namespace AquariumApi.Controllers
         public readonly IAquariumService _aquariumService;
         private readonly IAdministrativeService _administrativeService;
         public readonly ILogger<SnapshotController> _logger;
-        public AdministrativeController(IConfiguration config, IAquariumService aquariumService, IAdministrativeService administrativeService, ILogger<SnapshotController> logger)
+        private readonly IAzureService _azureService;
+
+        public AdministrativeController(IConfiguration config, IAquariumService aquariumService, IAdministrativeService administrativeService, ILogger<SnapshotController> logger,IAzureService azureService)
         {
             _config = config;
             _aquariumService = aquariumService;
             _administrativeService = administrativeService;
             _logger = logger;
+            _azureService = azureService;
         }
         [HttpGet]
         [Route("Log")]
@@ -83,6 +86,24 @@ namespace AquariumApi.Controllers
                 return new OkObjectResult(reports);
             }
             catch(Exception ex)
+            {
+                _logger.LogError($"GET /v1/Admin/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
+
+        [HttpGet]
+        [Route("Test")]
+        public IActionResult TestMethod()
+        {
+            try
+            {
+                var data = System.IO.File.ReadAllBytes("config.json");
+                _azureService.UploadFileToStorage(data,"test.json");
+                return Ok();
+            }
+            catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Admin/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();

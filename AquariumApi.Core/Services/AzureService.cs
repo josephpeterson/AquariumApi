@@ -22,7 +22,7 @@ namespace AquariumApi.Core
 {
     public interface IAzureService
     {
-
+        Task UploadFileToStorage(byte[] buffer, string fileName);
     }
     public class AzureService : IAzureService
     {
@@ -35,30 +35,30 @@ namespace AquariumApi.Core
             _aquariumDao = aquariumDao;
         }
 
-        public async Task<bool> UploadFileToStorage(Stream fileStream, string fileName)
+        public async Task UploadFileToStorage(byte[] buffer, string path)
         {
-            string AccountName = _configuration["Azure:AccountName"];
-            string AccountKey = _configuration["Azure:AccountKey"];
-            string BlobContainer = _configuration["Azure:BlobContainer"];
-            // Create storagecredentials object by reading the values from the configuration (appsettings.json)
-            StorageCredentials storageCredentials = new StorageCredentials(AccountName,AccountKey);
+            string accountName = _configuration["Azure:AccountUsername"];
+            string accountKey = _configuration["Azure:AccountKey"];
+            string shareName = _configuration["Azure:AquariumPhotosShare"];
 
-            // Create cloudstorage account by passing the storagecredentials
+            StorageCredentials storageCredentials = new StorageCredentials(accountName,accountKey);
             CloudStorageAccount storageAccount = new CloudStorageAccount(storageCredentials, true);
 
-            // Create the blob client.
-            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            var share = storageAccount.CreateCloudFileClient().GetShareReference(shareName);
+            await share.CreateIfNotExistsAsync();
 
-            // Get reference to the blob container by passing the name by reading the value from the configuration (appsettings.json)
-            CloudBlobContainer container = blobClient.GetContainerReference(BlobContainer);
+            //Expand paths to share
+            var directories = path.Split("/").ToList();
+            var fileName = directories.Last();
+            directories.Remove(fileName);
 
-            // Get the reference to the block blob from the container
-            CloudBlockBlob blockBlob = container.GetBlockBlobReference(fileName);
-
-            // Upload the file
-            await blockBlob.UploadFromStreamAsync(fileStream);
-
-            return await Task.FromResult(true);
+            var currentDir = share.GetRootDirectoryReference();
+            directories.ForEach(d =>
+            {
+                currentDir = currentDir.GetDirectoryReference(d);
+                currentDir.CreateIfNotExistsAsync();
+            });
+            await currentDir.GetFileReference(fileName).UploadFromByteArrayAsync(buffer,0,buffer.Length);
         }
     }
 }

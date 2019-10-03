@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 
 namespace AquariumApi.Core
 {
@@ -20,10 +21,12 @@ namespace AquariumApi.Core
     }
     public class PhotoManager: IPhotoManager
     {
+        private IAzureService _azureService;
         private IConfiguration _config;
 
-        public PhotoManager(IConfiguration config)
+        public PhotoManager(IConfiguration config,IAzureService azureService)
         {
+            _azureService = azureService;
             _config = config;
         }
         public AquariumPhoto StoreAquariumPhoto(int aquariumId,Stream file)
@@ -53,13 +56,30 @@ namespace AquariumApi.Core
         }
         private void StorePhoto(string path, Stream file)
         {
+            _azureService.UploadFileToStorage(ReadFully(file), path);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
+
             using (Stream output = File.OpenWrite(path))
                 file.CopyTo(output);
             if (!File.Exists(path))
                 throw new Exception("Could not save photo from request");
             Expand(path);
         }
+
+        public static byte[] ReadFully(Stream input)
+        {
+            byte[] buffer = new byte[16 * 1024];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int read;
+                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                return ms.ToArray();
+            }
+        }
+
         public void DeletePhoto(string path)
         {
             var basePath = Path.GetDirectoryName(path);
