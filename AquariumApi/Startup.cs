@@ -150,6 +150,7 @@ namespace AquariumApi
             services.AddTransient<IWebScraperService, WebScraperService>();
             services.AddTransient<IDeviceService, DeviceService>();
             services.AddTransient<IAccountService, AccountService>();
+            services.AddTransient<IAzureService, AzureService>();
             services.AddTransient<IPhotoManager, PhotoManager>();
             services.AddSingleton<IConfiguration>(Configuration);
         }
