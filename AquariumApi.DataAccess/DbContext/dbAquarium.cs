@@ -100,6 +100,7 @@ namespace AquariumApi.DataAccess
             modelBuilder.Entity<BugReport>(entity =>
             {
                 entity.ToTable("tblBugReports");
+                entity.HasOne(e => e.ImpactedUser);
             });
         }
     }

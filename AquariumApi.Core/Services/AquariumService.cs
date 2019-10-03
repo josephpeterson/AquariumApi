@@ -313,7 +313,8 @@ namespace AquariumApi.Core
 
         public BugReport SubmitBugReport(BugReport report)
         {
-            report.Date = new DateTime();
+            report.Date = DateTime.Now;
+            report.Status = "Submitted";
             return _aquariumDao.AddBugReport(report);
         }
 

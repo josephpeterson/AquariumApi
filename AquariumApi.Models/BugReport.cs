@@ -15,9 +15,12 @@ namespace AquariumApi.Models
         public int ImpactedUserId { get; set; }
         public string Body { get; set; }
         public string Title { get; set; }
-        public int UrlLocation { get; set; }
+        public string UrlLocation { get; set; }
         public string Type { get; set; }
         public string LogFile { get; set; }
         public DateTime Date { get; set; }
+
+        [ForeignKey("ImpactedUserId")]
+        public virtual AquariumUser ImpactedUser {get; set;}
     }
 }

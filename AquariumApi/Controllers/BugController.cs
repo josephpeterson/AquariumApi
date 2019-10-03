@@ -29,7 +29,7 @@ namespace AquariumApi.Controllers
             _logger = logger;
         }
         [HttpPost,Route("/v1/Bug/Submit")]
-        public IActionResult SubmitBugReport(BugReport report)
+        public IActionResult SubmitBugReport([FromBody] BugReport report)
         {
             //Static information
             report.ImpactedUserId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);

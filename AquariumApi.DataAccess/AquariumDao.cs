@@ -492,7 +492,9 @@ namespace AquariumApi.DataAccess
 
         public List<BugReport> GetAllBugs()
         {
-            var bugs = _dbAquariumContext.TblBugReports.ToList();
+            var bugs = _dbAquariumContext.TblBugReports.AsNoTracking()
+                .Include(r => r.ImpactedUser)
+                .ToList();
             return bugs;
         }
     }

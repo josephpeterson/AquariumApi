@@ -82,9 +82,10 @@ namespace AquariumApi.Controllers
                 var reports = _administrativeService.GetBugReports();
                 return new OkObjectResult(reports);
             }
-            catch
+            catch(Exception ex)
             {
-                return new BadRequestResult();
+                _logger.LogError($"GET /v1/Admin/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
 
