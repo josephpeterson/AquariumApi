@@ -63,6 +63,7 @@ namespace AquariumApi.Core
         {
             await _azureService.UploadFileToStorage(buffer, path);
             //StorePhotoLocally(file, path);
+            /*
             var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
             foreach (var s in sizes)
             {
@@ -84,6 +85,7 @@ namespace AquariumApi.Core
                 }
 
             }
+            */           
             return  _azureService.Exists(path);
         }
 
