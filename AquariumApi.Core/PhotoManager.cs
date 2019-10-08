@@ -62,6 +62,10 @@ namespace AquariumApi.Core
         public async Task<bool> StorePhoto(string path, byte[] buffer)
         {
             await _azureService.UploadFileToStorage(buffer, path);
+            if(Convert.ToBoolean(_config["Photos:ExpandSizes"]))
+            {
+                ExpandPhotoSizes(buffer, path);
+            }
             //StorePhotoLocally(file, path);
             /*
             var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
@@ -87,6 +91,30 @@ namespace AquariumApi.Core
             }
             */           
             return  _azureService.Exists(path);
+        }
+        public async void ExpandPhotoSizes(byte[] buffer,string path)
+        {
+            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
+            foreach (var s in sizes)
+            {
+                var destination = Path.GetDirectoryName(path) + "/" + s + "/";
+
+                using (var ms = new MemoryStream(buffer))
+                {
+                    using (var img = Image.FromStream(ms))
+                    {
+                        Directory.CreateDirectory(destination);
+                        string filepath = destination + Path.GetFileName(path);
+                        var w = Convert.ToInt16(img.Width * s);
+                        var h = Convert.ToInt16(img.Height * s);
+                        var downsized = ResizeImage(img, w, h);
+                        var newImage = new MemoryStream();
+                        downsized.Save(newImage, ImageFormat.Jpeg);
+                        await _azureService.UploadFileToStorage(newImage.ToArray(), filepath);
+                    }
+                }
+
+            }
         }
 
         public void DeletePhoto(string path)

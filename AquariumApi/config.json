@@ -10,6 +10,7 @@
     "LengthMins": 10
   },
   "Photos": {
+    "ExpandSizes": true,
     "Path": "./photos",
     "Sizes": [ 0.25, 0.5 ]
   },

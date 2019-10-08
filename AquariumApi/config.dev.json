@@ -14,8 +14,8 @@
     "Sizes": [ 0.25, 0.5 ]
   },
   "Azure": {
-    "AccountUsername": "",
-    "AccountKey": "",
+    "AccountUsername": "aquariumstorage",
+    "AccountKey": "/4oZz2BFSxmoQAqXmLl3+6y7z7n3jBtv6+qxqOjPLhafKhCZT5XTqv1NCCSULlH7Tah3aas6Rbj9Uzududm+tw==",
     "AquariumPhotosShare": "aquarium-photos"
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
