@@ -10,12 +10,13 @@
     "LengthMins": 60
   },
   "Photos": {
+    "ExpandSizes": true,
     "Path": "./photos",
     "Sizes": [ 0.25, 0.5 ]
   },
   "Azure": {
-    "AccountUsername": "aquariumstorage",
-    "AccountKey": "/4oZz2BFSxmoQAqXmLl3+6y7z7n3jBtv6+qxqOjPLhafKhCZT5XTqv1NCCSULlH7Tah3aas6Rbj9Uzududm+tw==",
+    "AccountUsername": "",
+    "AccountKey": "",
     "AquariumPhotosShare": "aquarium-photos"
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
