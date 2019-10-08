@@ -44,9 +44,9 @@ namespace AquariumApi.Core
             var share = await GetFileShare();
 
             //Expand paths to share
-            var directories = path.Replace("./","").Split("/").ToList();
-            var fileName = directories.Last();
-            directories.Remove(fileName);
+            var directories = Path.GetDirectoryName(path).Split("\\").ToList();
+            var fileName = Path.GetFileName(path);
+            directories.Remove(".");
 
             var currentDir = share.GetRootDirectoryReference();
             foreach(var dir in directories)

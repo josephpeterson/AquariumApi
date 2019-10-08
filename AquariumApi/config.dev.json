@@ -13,6 +13,11 @@
     "Path": "./photos",
     "Sizes": [ 0.25, 0.5 ]
   },
+  "Azure": {
+    "AccountUsername": "",
+    "AccountKey": "",
+    "AquariumPhotosShare": "aquarium-photos"
+  },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",
   "DashboardLogFilePath": "./AquariumApi.log"
