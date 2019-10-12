@@ -23,6 +23,8 @@ namespace AquariumApi.Models
 
         [NotMapped]
         public virtual ICollection<Fish> Fish { get; set; }
+        [NotMapped]
+        public virtual ICollection<Activity> Activity { get; set; }
         //[NotMapped]
         public string Thumbnail { get; set; }
     }

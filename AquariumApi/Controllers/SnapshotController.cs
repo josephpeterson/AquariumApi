@@ -16,13 +16,15 @@ namespace AquariumApi.Controllers
     {
         private readonly IConfiguration _config;
         public readonly IAquariumService _aquariumService;
+        private readonly IActivityService _activityService;
         public readonly ILogger<SnapshotController> _logger;
         private readonly IPhotoManager _photoManager;
 
-        public SnapshotController(IConfiguration config, IAquariumService aquariumService, IDeviceService deviceService, ILogger<SnapshotController> logger,IPhotoManager photoManager)
+        public SnapshotController(IConfiguration config, IActivityService activityService, IAquariumService aquariumService, IDeviceService deviceService, ILogger<SnapshotController> logger,IPhotoManager photoManager)
         {
             _config = config;
             _aquariumService = aquariumService;
+            _activityService = activityService;
             _logger = logger;
             _photoManager = photoManager;
         }
@@ -142,6 +144,15 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation($"POST /v1/Snapshot/{aquariumId}/Create called");
                 snapshot.ManualEntry = true;
                 AquariumSnapshot s = _aquariumService.AddSnapshot(aquariumId, snapshot, snapshotImage);
+
+                //Activity Writer
+                var uid = _aquariumService.GetAquariumById(aquariumId).OwnerId;
+                _activityService.RegisterActivity(new CreateAquariumTestResultsActivity()
+                {
+                    AccountId = uid,
+                    SnapshotId = snapshot.Id
+                });
+
                 return new OkObjectResult(snapshot);
             }
             catch (Exception ex)

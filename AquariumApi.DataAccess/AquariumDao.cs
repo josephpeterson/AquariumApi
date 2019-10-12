@@ -27,6 +27,7 @@ namespace AquariumApi.DataAccess
         List<Species> GetAllSpecies();
         Species UpdateSpecies(Species species);
         void DeleteSpecies(int speciesId);
+        void RegisterActivity(Activity newActivity);
         Species GetSpeciesById(int speciesId);
 
         Fish AddFish(Fish fish);
@@ -69,6 +70,7 @@ namespace AquariumApi.DataAccess
         BugReport AddBugReport(BugReport report);
         List<BugReport> GetAllBugs();
         AquariumProfile GetProfileById(int targetId);
+        List<Activity> GetRecentAccountActivity(int accountId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -506,8 +508,20 @@ namespace AquariumApi.DataAccess
                 .Include(e => e.Aquariums).ThenInclude(e => e.Fish)
                 .Include(e => e.Account );
             var profile = results.First();
-            profile.Fish = profile.Aquariums.SelectMany(a => a.Fish).ToList();
             return profile;
+        }
+
+        public void RegisterActivity(Activity newActivity)
+        {
+            _dbAquariumContext.TblAccountActivity.Add(newActivity);
+            _dbAquariumContext.SaveChanges();
+        }
+        public List<Activity> GetRecentAccountActivity(int accountId)
+        {
+            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.AccountId == accountId)
+            .OrderByDescending(act => act.Timestamp)
+            .Take(100)
+            .ToList();
         }
     }
 }

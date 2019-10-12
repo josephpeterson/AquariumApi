@@ -71,11 +71,13 @@ namespace AquariumApi.Core
         private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
         private readonly IAzureService _azureService;
+        private readonly IActivityService _activityService;
 
-        public AquariumService(IConfiguration config,IAzureService azureService,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
+        public AquariumService(IConfiguration config,IAzureService azureService,IActivityService activityService,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
         {
             _config = config;
             _azureService = azureService;
+            _activityService = activityService;
             _aquariumDao = aquariumDao;
             _logger = logger;
             _deviceService = deviceService;
@@ -88,7 +90,15 @@ namespace AquariumApi.Core
         }
         public Aquarium AddAquarium(Aquarium aquarium)
         {
-            return _aquariumDao.AddAquarium(aquarium);
+            var newAquarium = _aquariumDao.AddAquarium(aquarium);
+
+            var activity = new CreateAquariumActivity()
+            {
+                AccountId = newAquarium.OwnerId,
+                AquariumId = newAquarium.Id
+            };
+            _activityService.RegisterActivity(activity);
+            return newAquarium;
         }
         public Aquarium UpdateAquarium(Aquarium aquarium)
         {
@@ -100,7 +110,15 @@ namespace AquariumApi.Core
         }
         public void DeleteAquarium(int aquariumId)
         {
+            var aq = _aquariumDao.GetAquariumById(aquariumId);
             _aquariumDao.DeleteAquarium(aquariumId);
+
+            var activity = new DeleteAquariumActivity()
+            {
+                AccountId = aq.OwnerId,
+                AquariumId = aquariumId
+            };
+            _activityService.RegisterActivity(activity);
         }
 
         /* Device Camera configuration */
@@ -332,7 +350,10 @@ namespace AquariumApi.Core
 
         public AquariumProfile GetProfileById(int profileId)
         {
-            return _aquariumDao.GetProfileById(profileId);
+            var profile = _aquariumDao.GetProfileById(profileId);
+            profile.Fish = profile.Aquariums.SelectMany(a => a.Fish).ToList();
+            profile.Activity = _activityService.GetRecentActivity(profileId);
+            return profile;
         }
     }
 }
