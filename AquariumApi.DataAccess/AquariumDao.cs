@@ -68,6 +68,7 @@ namespace AquariumApi.DataAccess
         FishPhoto GetFishPhotoById(int photoId);
         BugReport AddBugReport(BugReport report);
         List<BugReport> GetAllBugs();
+        AquariumProfile GetProfileById(int targetId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -496,6 +497,17 @@ namespace AquariumApi.DataAccess
                 .Include(r => r.ImpactedUser)
                 .ToList();
             return bugs;
+        }
+
+        public AquariumProfile GetProfileById(int targetId)
+        {
+            var results = _dbAquariumContext.TblAquariumProfiles.AsNoTracking()
+                .Where(r => r.Id == targetId)
+                .Include(e => e.Aquariums).ThenInclude(e => e.Fish)
+                .Include(e => e.Account );
+            var profile = results.First();
+            profile.Fish = profile.Aquariums.SelectMany(a => a.Fish).ToList();
+            return profile;
         }
     }
 }

@@ -40,6 +40,7 @@ namespace AquariumApi.Core
         {
             user.Role = "User";
             user.SeniorityDate = DateTime.Now;
+            user.Profile = new AquariumProfile();
             return _aquariumDao.AddAccount(user);
         }
         public List<AquariumUser> GetAllUsers()

@@ -7,7 +7,7 @@
     "Secret": "notsafesecretchangethis",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
-    "LengthMins": 10
+    "LengthMins": 90
   },
   "Photos": {
     "ExpandSizes": true,

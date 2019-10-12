@@ -34,6 +34,7 @@ namespace AquariumApi.Core
         Fish AddFish(Fish fish);
         Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
+        AquariumProfile GetProfileById(int profileId);
         BugReport SubmitBugReport(BugReport report);
         void DeleteFish(int fishId);
         void DeleteFishPhoto(int photoId);
@@ -327,6 +328,11 @@ namespace AquariumApi.Core
         {
             //todo determine relationship, what details can they view
             return _aquariumDao.GetAccountById(targetId);
+        }
+
+        public AquariumProfile GetProfileById(int profileId)
+        {
+            return _aquariumDao.GetProfileById(profileId);
         }
     }
 }

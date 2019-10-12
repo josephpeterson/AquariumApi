@@ -19,5 +19,6 @@ namespace AquariumApi.Models
 
         [ForeignKey("OwnerId")]
         public ICollection<Aquarium> Aquariums { get; set; }
+        public AquariumProfile Profile { get; set; }
     }
 }
