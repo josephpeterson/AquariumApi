@@ -61,7 +61,8 @@ namespace AquariumApi.Core
         AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
         FishPhoto AddFishPhoto(int fishId,IFormFile photo);
         FishPhoto GetFishPhotoById(int photoId);
-
+        AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
+        AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
     }
     public class AquariumService : IAquariumService
     {
@@ -72,12 +73,14 @@ namespace AquariumApi.Core
         private readonly IConfiguration _config;
         private readonly IAzureService _azureService;
         private readonly IActivityService _activityService;
+        private readonly IAccountService _accountService;
 
-        public AquariumService(IConfiguration config,IAzureService azureService,IActivityService activityService,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
+        public AquariumService(IConfiguration config,IAccountService accountService, IAzureService azureService,IActivityService activityService,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
         {
             _config = config;
             _azureService = azureService;
             _activityService = activityService;
+            _accountService = accountService;
             _aquariumDao = aquariumDao;
             _logger = logger;
             _deviceService = deviceService;
@@ -353,7 +356,18 @@ namespace AquariumApi.Core
             var profile = _aquariumDao.GetProfileById(profileId);
             profile.Fish = profile.Aquariums.SelectMany(a => a.Fish).ToList();
             profile.Activity = _activityService.GetRecentActivity(profileId);
+            profile.Relationship = _aquariumDao.GetAccountRelationship(_accountService.GetCurrentUserId(), profileId);
             return profile;
+        }
+
+        public AccountRelationship GetAccountRelationship(int aquariumId,int  targetId)
+        {
+            return _aquariumDao.GetAccountRelationship(aquariumId,targetId);
+        }
+        public AccountRelationship UpsertFollowUser(int aquariumId, int targetId)
+        {
+            return _aquariumDao.UpsertFollowUser(aquariumId, targetId);
+
         }
     }
 }

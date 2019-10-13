@@ -71,6 +71,9 @@ namespace AquariumApi.DataAccess
         List<BugReport> GetAllBugs();
         AquariumProfile GetProfileById(int targetId);
         List<Activity> GetRecentAccountActivity(int accountId);
+        Activity GetAccountActivity(int activityId);
+        AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
+        AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -159,7 +162,10 @@ namespace AquariumApi.DataAccess
         }
         public AquariumSnapshot GetSnapshotById(int id)
         {
-            return _dbAquariumContext.TblSnapshot.AsNoTracking().Include(s => s.Photo).Where(snap => snap.Id == id).First();
+            return _dbAquariumContext.TblSnapshot.AsNoTracking()
+                .Include(s => s.Photo)
+                .Include(s => s.Aquarium)
+                .Where(snap => snap.Id == id).First();
         }
         public List<AquariumSnapshot> DeleteSnapshotsByAquarium(int aquariumId)
         {
@@ -522,6 +528,30 @@ namespace AquariumApi.DataAccess
             .OrderByDescending(act => act.Timestamp)
             .Take(100)
             .ToList();
+        }
+        public Activity GetAccountActivity(int activityId)
+        {
+            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.Id == activityId).First();
+        }
+
+        public AccountRelationship GetAccountRelationship(int aquariumId, int targetId)
+        {
+            var relationship = _dbAquariumContext.TblAccountRelationship.Where(rel => rel.AccountId == aquariumId && rel.TargetId == targetId).FirstOrDefault();
+            if(relationship == null)
+            {
+                relationship = new AccountRelationship()
+                {
+                    AccountId = aquariumId,
+                    TargetId = targetId,
+                    Relationship = 0
+                };
+            }
+            return relationship; 
+        }
+        public AccountRelationship UpsertFollowUser(int aquariumId, int targetId)
+        {
+            var rel = _dbAquariumContext.TblAccountRelationship.Where(r => r.AccountId == aquariumId && r.TargetId == targetId).First();
+            return rel;
         }
     }
 }

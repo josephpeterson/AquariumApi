@@ -29,7 +29,7 @@ namespace AquariumApi.Controllers
 
         [HttpGet]
         [Route("/v1/Profile/{profileId}")]
-        public IActionResult GetSnapshotPhoto(int profileId)
+        public IActionResult GetAquariumProfile(int profileId)
         {
             try
             {
@@ -42,6 +42,27 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
 
+        }
+        [HttpPost]
+        [Route("/v1/Profile/Follow")]
+        public IActionResult UpsertFollowUser([FromBody]FollowRequest followRequest)
+        {
+            try
+            {
+                AccountRelationship data = _aquariumService.UpsertFollowUser(followRequest.AquariumId, followRequest.TargetId);
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Profile/Follow endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+
+        }
+        public class FollowRequest
+        {
+            public int AquariumId { get; set; }
+            public int TargetId { get; set; }
         }
     }
 }

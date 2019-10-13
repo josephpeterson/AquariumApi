@@ -25,16 +25,23 @@ namespace AquariumApi.Core
         AquariumUser UpdateUser(AquariumUser user);
         void DeleteUser(int userId);
         string LoginUser(string email, string password);
+        int GetCurrentUserId();
     }
     public class AccountService : IAccountService
     {
         private IConfiguration _configuration;
         private IAquariumDao _aquariumDao;
+        private readonly IHttpContextAccessor _context;
 
-        public AccountService(IConfiguration configuration,IAquariumDao aquariumDao)
+        public AccountService(IHttpContextAccessor context,IConfiguration configuration,IAquariumDao aquariumDao)
         {
+            _context = context;
             _configuration = configuration;
             _aquariumDao = aquariumDao;
+        }
+        public int GetCurrentUserId()
+        {
+            return Convert.ToInt16(_context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
         public AquariumUser AddUser(AquariumUser user)
         {

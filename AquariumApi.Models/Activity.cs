@@ -7,6 +7,10 @@ namespace AquariumApi.Models
 {
     public enum ActivityTypes
     {
+        CreateAccountActivity = 3200,
+        DeleteAccountActivity = 3201,
+        LoginAccountActivity = 3205,
+
         CreateAquariumActivity = 1200,
         DeleteAquariumActivity = 1201,
         UpdateAquariumActivity = 1202,
@@ -24,6 +28,7 @@ namespace AquariumApi.Models
         public int AccountId { get; set; }
         public DateTime Timestamp { get; set; }
         public int Key1 { get; set; }
+
     }
     public class DeleteAquariumActivity : Activity
     {
@@ -78,6 +83,27 @@ namespace AquariumApi.Models
         public CreateAquariumTestResultsActivity()
         {
             this.ActivityType = ActivityTypes.CreateAquariumTestResults;
+        }
+    }
+    public class CreateAccountActivity : Activity
+    {
+        public CreateAccountActivity()
+        {
+            this.ActivityType = ActivityTypes.CreateAccountActivity;
+        }
+    }
+    public class DeleteAccountActivity : Activity
+    {
+        public DeleteAccountActivity()
+        {
+            this.ActivityType = ActivityTypes.DeleteAccountActivity;
+        }
+    }
+    public class LoginAccountActivity : Activity
+    {
+        public LoginAccountActivity()
+        {
+            this.ActivityType = ActivityTypes.LoginAccountActivity;
         }
     }
 }

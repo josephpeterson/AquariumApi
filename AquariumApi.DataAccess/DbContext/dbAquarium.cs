@@ -24,6 +24,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<BugReport> TblBugReports { get; set; }
         public virtual DbSet<AquariumProfile> TblAquariumProfiles { get; set; }
         public virtual DbSet<Activity> TblAccountActivity { get; set; }
+        public virtual DbSet<AccountRelationship> TblAccountRelationship { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -111,6 +112,11 @@ namespace AquariumApi.DataAccess
             modelBuilder.Entity<Activity>(entity =>
             {
                 entity.ToTable("tblAccountActivity");
+
+            });
+            modelBuilder.Entity<AccountRelationship>(entity =>
+            {
+                entity.ToTable("tblAccountRelationship");
 
             });
         }

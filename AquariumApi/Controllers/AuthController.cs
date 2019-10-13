@@ -17,10 +17,12 @@ namespace AquariumApi.Controllers
     public class AuthController : Controller
     {
         public readonly IAccountService _accountService;
+        private readonly IActivityService _activityService;
         public readonly ILogger<AuthController> _logger;
-        public AuthController(IAccountService accountService, ILogger<AuthController> logger)
+        public AuthController(IAccountService accountService, ILogger<AuthController> logger,IActivityService activityService)
         {
             _accountService = accountService;
+            _activityService = activityService;
             _logger = logger;
         }
 
@@ -32,6 +34,13 @@ namespace AquariumApi.Controllers
             {
                 _logger.LogInformation($"POST /v1/Auth/Login called");
                 var token = _accountService.LoginUser(user.Email,user.Password);
+
+                var userAcc = _accountService.GetUserByUsername(user.Email);
+                if(userAcc == null)
+                    userAcc = _accountService.GetUserByEmail(user.Email);
+                _activityService.RegisterActivity(new LoginAccountActivity() {
+                    AccountId = userAcc.Id
+                });
                 return new OkObjectResult(new { Token = token});
             }
             catch (Exception ex)
@@ -59,6 +68,8 @@ namespace AquariumApi.Controllers
                     Username = signupRequest.Username,
                 };
                 _accountService.AddUser(user);
+
+                _activityService.RegisterActivity(new CreateAccountActivity() { AccountId = user.Id });
 
                 return Login(new LoginModel
                 {
