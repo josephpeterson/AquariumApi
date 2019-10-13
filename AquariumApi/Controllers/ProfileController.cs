@@ -49,7 +49,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                AccountRelationship data = _aquariumService.UpsertFollowUser(followRequest.AquariumId, followRequest.TargetId);
+                AccountRelationship data = _aquariumService.UpsertFollowUser(followRequest.AccountId, followRequest.TargetId);
                 return new OkObjectResult(data);
             }
             catch (Exception ex)
@@ -61,7 +61,7 @@ namespace AquariumApi.Controllers
         }
         public class FollowRequest
         {
-            public int AquariumId { get; set; }
+            public int AccountId { get; set; }
             public int TargetId { get; set; }
         }
     }

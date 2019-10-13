@@ -63,6 +63,7 @@ namespace AquariumApi.Core
         FishPhoto GetFishPhotoById(int photoId);
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
         AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
+        List<SearchResult> PerformSearch(SearchOptions options);
     }
     public class AquariumService : IAquariumService
     {
@@ -368,6 +369,11 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.UpsertFollowUser(aquariumId, targetId);
 
+        }
+
+        public List<SearchResult> PerformSearch(SearchOptions options)
+        {
+            return _aquariumDao.PerformSearch(options);
         }
     }
 }

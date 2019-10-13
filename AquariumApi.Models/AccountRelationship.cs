@@ -5,6 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
+    public enum RelationshipTypes
+    {
+        None = 0,
+        Following = 1,
+        Blocked = 2,
+    }
     public class AccountRelationship
     {
         [Required]
@@ -12,6 +18,6 @@ namespace AquariumApi.Models
         public int Id { get; set; }
         public int AccountId { get; set; }
         public int TargetId { get; set; }
-        public int Relationship { get; set; }
+        public RelationshipTypes Relationship { get; set; }
     }
 }

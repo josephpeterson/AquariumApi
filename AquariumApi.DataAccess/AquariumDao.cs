@@ -74,6 +74,7 @@ namespace AquariumApi.DataAccess
         Activity GetAccountActivity(int activityId);
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
         AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
+        List<SearchResult> PerformSearch(SearchOptions options);
     }
 
     public class AquariumDao : IAquariumDao
@@ -536,6 +537,9 @@ namespace AquariumApi.DataAccess
 
         public AccountRelationship GetAccountRelationship(int aquariumId, int targetId)
         {
+            if (aquariumId == targetId)
+                return null;
+
             var relationship = _dbAquariumContext.TblAccountRelationship.Where(rel => rel.AccountId == aquariumId && rel.TargetId == targetId).FirstOrDefault();
             if(relationship == null)
             {
@@ -550,8 +554,55 @@ namespace AquariumApi.DataAccess
         }
         public AccountRelationship UpsertFollowUser(int aquariumId, int targetId)
         {
-            var rel = _dbAquariumContext.TblAccountRelationship.Where(r => r.AccountId == aquariumId && r.TargetId == targetId).First();
+            if (aquariumId == targetId)
+                return null;
+            var rel = _dbAquariumContext.TblAccountRelationship.Where(r => r.AccountId == aquariumId && r.TargetId == targetId).FirstOrDefault();
+            if (rel == null)
+                _dbAquariumContext.TblAccountRelationship.Add(rel = new AccountRelationship()
+                {
+                    AccountId = aquariumId,
+                    TargetId = targetId,
+                    Relationship = RelationshipTypes.Following
+                });
+            else if (rel.Relationship == RelationshipTypes.Following)
+                rel.Relationship = RelationshipTypes.None;
+            else
+                rel.Relationship = RelationshipTypes.Following;
+            _dbAquariumContext.SaveChanges();
             return rel;
+        }
+
+        public List<SearchResult> PerformSearch(SearchOptions options)
+        {
+            var results = new List<SearchResult>();
+            if (options.Accounts)
+                results.AddRange(_dbAquariumContext.TblAccounts.Where(a =>
+                a.Username.Contains(options.Query) ||
+                a.Email.Contains(options.Query)
+               ).ToList().Select(r => new SearchResult()
+               {
+                   Type = "Account",
+                   Data = new AquariumProfile()
+                   {
+                       Account = r,
+                       Relationship = GetAccountRelationship(options.AccountId, r.Id)
+                   }
+               }));
+            if (options.Aquariums)
+                results.AddRange(_dbAquariumContext.TblAquarium.Where(a =>
+                a.Name.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Aquarium", Data = r }));
+            if (options.Fish)
+                results.AddRange(_dbAquariumContext.TblFish.Where(a =>
+                a.Name.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Fish", Data = r }));
+            if (options.Species)
+                results.AddRange(_dbAquariumContext.TblSpecies.Where(a =>
+                a.Name.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Species", Data = r }));
+
+            return results.Take(10).ToList();
         }
     }
 }
+
