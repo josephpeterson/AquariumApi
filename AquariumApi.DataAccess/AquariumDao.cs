@@ -74,7 +74,18 @@ namespace AquariumApi.DataAccess
         Activity GetAccountActivity(int activityId);
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
         AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
+        void DeletePostCategory(int categoryId);
         List<SearchResult> PerformSearch(SearchOptions options);
+        List<PostCategory> GetPostCategories();
+        PostBoard GetBoardById(int boardId);
+        PostThread GetThreadById(int threadId);
+        Post GetPostById(int postId);
+        PostCategory CreatePostCategory(PostCategory category);
+        PostBoard CreatePostBoard(PostBoard board);
+        PostThread CreatePostThread(PostThread thread);
+        void DeletePostBoard(int boardId);
+        void DeletePostThread(int threadId);
+        void DeletePost(int postId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -600,8 +611,90 @@ namespace AquariumApi.DataAccess
                 results.AddRange(_dbAquariumContext.TblSpecies.Where(a =>
                 a.Name.Contains(options.Query)
                ).Select(r => new SearchResult() { Type = "Species", Data = r }));
+            if (options.Posts)
+                results.AddRange(_dbAquariumContext.TblPosts.Where(a =>
+                a.Title.Contains(options.Query) ||
+                a.Content.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Post", Data = r }));
+            if (options.Threads)
+                results.AddRange(_dbAquariumContext.TblPostThreads.Where(a =>
+                a.Title.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Thread", Data = r }));
 
             return results.Take(10).ToList();
+        }
+
+        /* Posts */
+        public List<PostCategory> GetPostCategories()
+        {
+            return _dbAquariumContext.TblPostCategories
+                .Include(c => c.Boards)
+                .ToList();
+        }
+        public PostBoard GetBoardById(int boardId)
+        {
+            return _dbAquariumContext.TblPostBoards
+                .Where(b => b.Id == boardId)
+                .Include(c => c.Threads).ThenInclude(t => t.Author)
+                .Include(b => b.Category)
+                .First();
+        }
+        public PostThread GetThreadById(int threadId)
+        {
+            return _dbAquariumContext.TblPostThreads
+                .Where(t => t.Id == threadId)
+                .Include(c => c.Posts)
+                .Include(t => t.Author)
+                .Include(t => t.Board).ThenInclude(b => b.Category)
+                .First();
+        }
+        public Post GetPostById(int postId)
+        {
+            return _dbAquariumContext.TblPosts.Where(p => p.Id == postId)
+                .Include(p => p.Author)
+                .Include(p => p.Thread)
+                    .ThenInclude(t => t.Board)
+                       .ThenInclude(t => t.Category)
+                .First();
+        }
+        public PostCategory CreatePostCategory(PostCategory category)
+        {
+            _dbAquariumContext.TblPostCategories.Update(category);
+            _dbAquariumContext.SaveChanges();
+            return category;
+        }
+        public PostBoard CreatePostBoard(PostBoard board)
+        {
+            _dbAquariumContext.TblPostBoards.Add(board);
+            _dbAquariumContext.SaveChanges();
+            return board;
+        }
+        public PostThread CreatePostThread(PostThread thread)
+        {
+            _dbAquariumContext.TblPostThreads.Add(thread);
+            _dbAquariumContext.SaveChanges();
+            return thread;
+        }
+
+        public void DeletePostCategory(int categoryId)
+        {
+            var category = _dbAquariumContext.TblPostCategories.Where(c => c.Id == categoryId).First();
+            _dbAquariumContext.TblPostCategories.Remove(category);
+        }
+        public void DeletePostBoard (int boardId)
+        {
+            var board = _dbAquariumContext.TblPostBoards.Where(c => c.Id == boardId).First();
+            _dbAquariumContext.TblPostBoards.Remove(board);
+        }
+        public void DeletePostThread(int threadId)
+        {
+            var thread = _dbAquariumContext.TblPostThreads.Where(c => c.Id == threadId).First();
+            _dbAquariumContext.TblPostThreads.Remove(thread);
+        }
+        public void DeletePost(int postId)
+        {
+            var post = _dbAquariumContext.TblPosts.Where(c => c.Id == postId).First();
+            _dbAquariumContext.TblPosts.Remove(post);
         }
     }
 }

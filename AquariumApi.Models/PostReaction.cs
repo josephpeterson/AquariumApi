@@ -5,13 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
-    [Table("tblPostReaction")]
     public class PostReaction
     {
         [Required]
         [Key]
         public int Id { get; set; }
-        public int AuthorId { get; set; }
+        public int AccountId { get; set; }
         public int PostId { get; set; }
         public int Reaction { get; set; }
 

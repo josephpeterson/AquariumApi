@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
-    [Table("tblPost")]
     public class Post
     {
         [Required]
@@ -15,7 +14,7 @@ namespace AquariumApi.Models
         public string Title { get; set; }
         public string Content { get; set; }
         public string Type { get; set; }
-        public int Privacy { get; set; }
+        public PrivacyTypes Privacy { get; set; }
         public DateTime Timestamp { get; set; }
         public int ThreadId { get; set; }
 

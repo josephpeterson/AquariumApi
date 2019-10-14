@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
-    [Table("tblPostThread")]
     public class PostThread
     {
         [Required]
@@ -14,7 +13,7 @@ namespace AquariumApi.Models
         public int AuthorId { get; set; }
         public string Title { get; set; }
         public string Type { get; set; }
-        public int Privacy { get; set; }
+        public PrivacyTypes Privacy { get; set; }
         public DateTime Timestamp { get; set; }
         public int BoardId { get; set; }
 
@@ -22,5 +21,7 @@ namespace AquariumApi.Models
         public AquariumUser Author { get; set; }
         [ForeignKey("BoardId")]
         public PostBoard Board { get; set; }
+
+        public ICollection<Post> Posts { get; set; }
     }
 }

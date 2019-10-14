@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
-    [Table("tblPostComment")]
     public class PostComment
     {
         [Required]

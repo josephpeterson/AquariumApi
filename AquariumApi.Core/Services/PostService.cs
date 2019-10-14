@@ -22,101 +22,87 @@ namespace AquariumApi.Core
 {
     public interface IPostService
     {
-        PostReaction UpsertReaction(int reactionId);
-        void DeleteReaction(PostReaction reaction);
-        //PostComment GetReactionById(int reactionId);
-
-        PostComment UpsertComment(PostComment comment);
-        void DeleteComment(PostComment comment);
-        //PostComment GetCommentById(int commentId);
-
-        Post UpsertPost(Post post);
-        void DeletePost(Post post);
-        Post GetPostById(int postId);
-
-        PostThread UpsertThread(Post post);
-        void DeleteThread(PostThread thread);
-        PostThread GetThreadById(int boardId);
-
-        PostBoard UpsertBoard(PostBoard board);
-        void DeleteBoard(PostBoard board);
+        PostBoard CreatePostBoard(PostBoard board);
+        PostCategory CreatePostCategory(PostCategory category);
+        PostThread CreatePostThread(PostThread thread);
+        void DeleteBoard(int boardId);
+        void DeleteCategory(int categoryId);
+        void DeletePost(int postId);
+        void DeleteThread(int threadId);
         PostBoard GetBoardById(int boardId);
-
+        Post GetPostById(int postId);
+        List<PostCategory> GetPostCategories();
+        PostThread GetThreadById(int threadId);
     }
     public class PostService : IPostService
     {
         private IConfiguration _configuration;
         private IAquariumDao _aquariumDao;
+        private IAccountService _accountService;
 
-        public PostService(IConfiguration configuration, IAquariumDao aquariumDao)
+        public PostService(IConfiguration configuration, IAquariumDao aquariumDao, IAccountService accountService)
         {
             _configuration = configuration;
             _aquariumDao = aquariumDao;
+            _accountService = accountService;
         }
-
-        public void DeleteBoard(PostBoard board)
+        public List<PostCategory> GetPostCategories()
         {
-            throw new NotImplementedException();
+            return _aquariumDao.GetPostCategories();
         }
-
-        public void DeleteComment(PostComment comment)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeletePost(Post post)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeleteReaction(PostReaction reaction)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeleteThread(PostThread thread)
-        {
-            throw new NotImplementedException();
-        }
-
         public PostBoard GetBoardById(int boardId)
         {
-            throw new NotImplementedException();
+            return _aquariumDao.GetBoardById(boardId);
         }
-
+        public PostThread GetThreadById(int threadId)
+        {
+            return _aquariumDao.GetThreadById(threadId);
+        }
         public Post GetPostById(int postId)
         {
-            throw new NotImplementedException();
+            return _aquariumDao.GetPostById(postId);
+        }
+        public PostCategory CreatePostCategory(PostCategory category)
+        {
+            category.Name = category.Name?.Trim();
+            if (category.Name == null)
+                throw new Exception("Invalid category name");
+
+            var nameInUse = GetPostCategories().Where(c => c.Name == category.Name).Any();
+            if (nameInUse)
+                throw new Exception("Category name already exists");
+            
+
+            return _aquariumDao.CreatePostCategory(category);
+        }
+        public PostBoard CreatePostBoard(PostBoard board)
+        {
+            board.AuthorId = _accountService.GetCurrentUserId();
+            board.Timestamp = DateTime.Now;
+            return _aquariumDao.CreatePostBoard(board);
+        }
+        public PostThread CreatePostThread(PostThread thread)
+        {
+            thread.AuthorId = _accountService.GetCurrentUserId();
+            thread.Timestamp = DateTime.Now;
+            return _aquariumDao.CreatePostThread(thread);
+        }
+        public void DeleteCategory(int categoryId)
+        {
+            _aquariumDao.DeletePostCategory(categoryId);
+        }
+        public void DeleteBoard(int boardId)
+        {
+            _aquariumDao.DeletePostBoard(boardId);
+        }
+        public void DeleteThread(int threadId)
+        {
+            _aquariumDao.DeletePostThread(threadId);
+        }
+        public void DeletePost(int postId)
+        {
+            _aquariumDao.DeletePost(postId);
         }
 
-        public PostThread GetThreadById(int boardId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public PostBoard UpsertBoard(PostBoard board)
-        {
-            throw new NotImplementedException();
-        }
-
-        public PostComment UpsertComment(PostComment comment)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Post UpsertPost(Post post)
-        {
-            throw new NotImplementedException();
-        }
-
-        public PostReaction UpsertReaction(int reactionId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public PostThread UpsertThread(Post post)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

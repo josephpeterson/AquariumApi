@@ -26,6 +26,15 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<Activity> TblAccountActivity { get; set; }
         public virtual DbSet<AccountRelationship> TblAccountRelationship { get; set; }
 
+        public virtual DbSet<PostCategory> TblPostCategories { get; set; }
+
+        public virtual DbSet<PostBoard> TblPostBoards { get; set; }
+
+        public virtual DbSet<PostThread> TblPostThreads { get; set; }
+        public virtual DbSet<Post> TblPosts { get; set; }
+        public virtual DbSet<PostReaction> TblPostReactions { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AquariumUser>(entity =>
@@ -117,6 +126,32 @@ namespace AquariumApi.DataAccess
             modelBuilder.Entity<AccountRelationship>(entity =>
             {
                 entity.ToTable("tblAccountRelationship");
+
+            });
+
+            /* Posts */
+            modelBuilder.Entity<PostCategory>(entity =>
+            {
+                entity.ToTable("tblPostCategory");
+            });
+            modelBuilder.Entity<PostBoard>(entity =>
+            {
+                entity.ToTable("tblPostBoard");
+
+            });
+            modelBuilder.Entity<PostThread>(entity =>
+            {
+                entity.ToTable("tblPostThread");
+
+            });
+            modelBuilder.Entity<Post>(entity =>
+            {
+                entity.ToTable("tblPost");
+
+            });
+            modelBuilder.Entity<PostReaction>(entity =>
+            {
+                entity.ToTable("tblPostReaction");
 
             });
         }
