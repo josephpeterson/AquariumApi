@@ -6,7 +6,10 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.App">
+      <PrivateAssets Condition="'%(PackageReference.Version)' == ''">all</PrivateAssets>
+      <Publish Condition="'%(PackageReference.Version)' == ''">true</Publish>
+    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.9" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.8.2" />
@@ -21,9 +24,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <Content Remove="wwwroot\.DS_Store" />
+    <Content Remove="wwwroot\photos\.DS_Store" />
+    <Content Remove="wwwroot\photos\51\1565031615875.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031353150.jpg" />
+    <Content Remove="wwwroot\photos\51\.DS_Store" />
+    <Content Remove="wwwroot\photos\51\1565032257471.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031914903.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031551752.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031573269.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031787547.jpg" />
+    <Content Remove="wwwroot\photos\51\1565032171309.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031274020.jpg" />
+    <Content Remove="wwwroot\photos\51\1565032033036.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031760374.jpg" />
+    <Content Remove="wwwroot\photos\51\1565031862540.jpg" />
+    <Content Remove="wwwroot\photos\51\thumbnail\1565032033036.jpg" />
+    <Content Remove="wwwroot\photos\51\medium\1565032033036.jpg" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
