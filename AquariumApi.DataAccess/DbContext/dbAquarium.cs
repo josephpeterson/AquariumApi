@@ -33,6 +33,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<PostThread> TblPostThreads { get; set; }
         public virtual DbSet<Post> TblPosts { get; set; }
         public virtual DbSet<PostReaction> TblPostReactions { get; set; }
+        public virtual DbQuery<PostBoardView> vwPostBoards { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -154,6 +155,8 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblPostReaction");
 
             });
+
+            modelBuilder.Query<PostBoardView>().ToView("vw_PostBoards");
         }
     }
 }

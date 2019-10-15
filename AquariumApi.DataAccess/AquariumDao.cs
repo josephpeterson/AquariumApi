@@ -627,17 +627,35 @@ namespace AquariumApi.DataAccess
         /* Posts */
         public List<PostCategory> GetPostCategories()
         {
-            return _dbAquariumContext.TblPostCategories
+            var categories  = _dbAquariumContext.TblPostCategories
                 .Include(c => c.Boards)
                 .ToList();
+
+            categories.ForEach(c =>
+            {
+                c.Boards.ToList().ForEach(b =>
+                {
+                    var data = _dbAquariumContext.vwPostBoards.Where(v => v.Id == b.Id).First();
+                    b.PostCount = data.PostCount;
+                    b.ThreadCount = data.ThreadCount;
+                });
+            });
+            return categories;
         }
         public PostBoard GetBoardById(int boardId)
         {
-            return _dbAquariumContext.TblPostBoards
+            var board = _dbAquariumContext.TblPostBoards
                 .Where(b => b.Id == boardId)
                 .Include(c => c.Threads).ThenInclude(t => t.Author)
                 .Include(b => b.Category)
                 .First();
+            var threads = board.Threads.ToList();
+            threads.ForEach(t =>
+            {
+                t.PostCount = _dbAquariumContext.TblPosts.Where(p => p.ThreadId == t.Id).Count();
+            });
+            board.Threads = threads;
+            return board;
         }
         public PostThread GetThreadById(int threadId)
         {

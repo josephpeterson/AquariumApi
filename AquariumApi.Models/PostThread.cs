@@ -23,5 +23,8 @@ namespace AquariumApi.Models
         public PostBoard Board { get; set; }
 
         public ICollection<Post> Posts { get; set; }
+
+        [NotMapped]
+        public int PostCount { get; set; }
     }
 }
