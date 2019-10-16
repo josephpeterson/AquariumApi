@@ -660,12 +660,14 @@ namespace AquariumApi.DataAccess
         }
         public PostThread GetThreadById(int threadId)
         {
-            return _dbAquariumContext.TblPostThreads
-                .Where(t => t.Id == threadId)
-                .Include(c => c.Posts)
-                .Include(t => t.Author).ThenInclude(a => a.Profile)
+            var thread = _dbAquariumContext.TblPostThreads.Where(t => t.Id == threadId)
                 .Include(t => t.Board).ThenInclude(b => b.Category)
                 .First();
+
+            thread.Posts = _dbAquariumContext.TblPosts.Where(p => p.ThreadId == threadId)
+                .Include(p => p.Author).ThenInclude(p => p.Profile)
+                .ToList();
+            return thread;
         }
         public Post GetPostById(int postId)
         {

@@ -57,11 +57,13 @@ namespace AquariumApi.Core
         }
         public PostThread GetThreadById(int threadId)
         {
-            return _aquariumDao.GetThreadById(threadId);
+            var thread = _aquariumDao.GetThreadById(threadId);
+            return thread;
         }
         public Post GetPostById(int postId)
         {
-            return _aquariumDao.GetPostById(postId);
+            var post =  _aquariumDao.GetPostById(postId);
+            return post;
         }
         public PostCategory CreatePostCategory(PostCategory category)
         {
@@ -89,6 +91,9 @@ namespace AquariumApi.Core
 
             //Make sure  there's a first post
             var firstPost = thread.Posts.First();
+            firstPost.Content = firstPost.Content?.Trim();
+            if (firstPost.Content == null)
+                throw new Exception("Post must contain content");
             firstPost.AuthorId = thread.AuthorId;
             firstPost.Timestamp = DateTime.Now;
 
@@ -96,6 +101,10 @@ namespace AquariumApi.Core
         }
         public Post CreatePost(Post post)
         {
+            post.Content = post.Content?.Trim();
+            if (post.Content == null)
+                throw new Exception("Post must contain content");
+
             post.AuthorId = _accountService.GetCurrentUserId();
             post.Timestamp = DateTime.Now;
             return _aquariumDao.CreatePost(post);
