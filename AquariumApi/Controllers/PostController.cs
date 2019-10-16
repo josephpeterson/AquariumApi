@@ -125,6 +125,22 @@ namespace AquariumApi.Controllers
             }
 
         }
+        [HttpPost]
+        [Route("Post")]
+        public IActionResult CreatePost([FromBody]Post post)
+        {
+            try
+            {
+                var data = _postService.CreatePost(post);
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Post/Post endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
+            }
+
+        }
         [HttpDelete]
         [Route("Category/{categoryId}")]
         public IActionResult DeletePostCategory(int categoryId)

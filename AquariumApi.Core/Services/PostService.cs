@@ -22,6 +22,7 @@ namespace AquariumApi.Core
 {
     public interface IPostService
     {
+        Post CreatePost(Post post);
         PostBoard CreatePostBoard(PostBoard board);
         PostCategory CreatePostCategory(PostCategory category);
         PostThread CreatePostThread(PostThread thread);
@@ -85,7 +86,19 @@ namespace AquariumApi.Core
         {
             thread.AuthorId = _accountService.GetCurrentUserId();
             thread.Timestamp = DateTime.Now;
+
+            //Make sure  there's a first post
+            var firstPost = thread.Posts.First();
+            firstPost.AuthorId = thread.AuthorId;
+            firstPost.Timestamp = DateTime.Now;
+
             return _aquariumDao.CreatePostThread(thread);
+        }
+        public Post CreatePost(Post post)
+        {
+            post.AuthorId = _accountService.GetCurrentUserId();
+            post.Timestamp = DateTime.Now;
+            return _aquariumDao.CreatePost(post);
         }
         public void DeleteCategory(int categoryId)
         {

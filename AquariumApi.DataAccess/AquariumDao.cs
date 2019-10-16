@@ -79,6 +79,7 @@ namespace AquariumApi.DataAccess
         List<PostCategory> GetPostCategories();
         PostBoard GetBoardById(int boardId);
         PostThread GetThreadById(int threadId);
+        Post CreatePost(Post post);
         Post GetPostById(int postId);
         PostCategory CreatePostCategory(PostCategory category);
         PostBoard CreatePostBoard(PostBoard board);
@@ -662,14 +663,14 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblPostThreads
                 .Where(t => t.Id == threadId)
                 .Include(c => c.Posts)
-                .Include(t => t.Author)
+                .Include(t => t.Author).ThenInclude(a => a.Profile)
                 .Include(t => t.Board).ThenInclude(b => b.Category)
                 .First();
         }
         public Post GetPostById(int postId)
         {
             return _dbAquariumContext.TblPosts.Where(p => p.Id == postId)
-                .Include(p => p.Author)
+                .Include(p => p.Author).ThenInclude(a => a.Profile)
                 .Include(p => p.Thread)
                     .ThenInclude(t => t.Board)
                        .ThenInclude(t => t.Category)
@@ -693,20 +694,46 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return thread;
         }
+        public Post CreatePost(Post post)
+        {
+            _dbAquariumContext.TblPosts.Add(post);
+            _dbAquariumContext.SaveChanges();
+            return post;
+        }
 
         public void DeletePostCategory(int categoryId)
         {
-            var category = _dbAquariumContext.TblPostCategories.Where(c => c.Id == categoryId).First();
+            var category = _dbAquariumContext.TblPostCategories.Where(c => c.Id == categoryId)
+                .Include(c => c.Boards).ThenInclude(b =>  b.Threads).ThenInclude(t => t.Posts)
+                .First();
+
+            foreach(var board in category.Boards)
+            {
+                foreach (var thread in board.Threads)
+                    _dbAquariumContext.TblPosts.RemoveRange(thread.Posts);
+                _dbAquariumContext.TblPostThreads.RemoveRange(board.Threads);
+            }
+            _dbAquariumContext.TblPostBoards.RemoveRange(category.Boards);
             _dbAquariumContext.TblPostCategories.Remove(category);
+            _dbAquariumContext.SaveChanges();
         }
-        public void DeletePostBoard (int boardId)
+        public void DeletePostBoard(int boardId)
         {
-            var board = _dbAquariumContext.TblPostBoards.Where(c => c.Id == boardId).First();
+            var board = _dbAquariumContext.TblPostBoards.Where(c => c.Id == boardId)
+                .Include(b  => b.Threads).ThenInclude(t => t.Posts)
+                .First();
+
+            foreach (var thread in board.Threads)
+                _dbAquariumContext.TblPosts.RemoveRange(thread.Posts);
+            _dbAquariumContext.TblPostThreads.RemoveRange(board.Threads);
             _dbAquariumContext.TblPostBoards.Remove(board);
         }
         public void DeletePostThread(int threadId)
         {
-            var thread = _dbAquariumContext.TblPostThreads.Where(c => c.Id == threadId).First();
+            var thread = _dbAquariumContext.TblPostThreads.Where(c => c.Id == threadId)
+                .Include(t => t.Posts)
+                .First();
+            _dbAquariumContext.TblPosts.RemoveRange(thread.Posts);
             _dbAquariumContext.TblPostThreads.Remove(thread);
         }
         public void DeletePost(int postId)
@@ -714,6 +741,8 @@ namespace AquariumApi.DataAccess
             var post = _dbAquariumContext.TblPosts.Where(c => c.Id == postId).First();
             _dbAquariumContext.TblPosts.Remove(post);
         }
+
+        
     }
 }
 
