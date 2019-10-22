@@ -31,13 +31,15 @@ namespace AquariumApi.Core
     {
         private IConfiguration _configuration;
         private IAquariumDao _aquariumDao;
+        private readonly IEncryptionService _encryptionService;
         private readonly IHttpContextAccessor _context;
 
-        public AccountService(IHttpContextAccessor context,IConfiguration configuration,IAquariumDao aquariumDao)
+        public AccountService(IHttpContextAccessor context,IConfiguration configuration,IAquariumDao aquariumDao,IEncryptionService encryptionService)
         {
             _context = context;
             _configuration = configuration;
             _aquariumDao = aquariumDao;
+            _encryptionService = encryptionService;
         }
         public int GetCurrentUserId()
         {
@@ -45,6 +47,12 @@ namespace AquariumApi.Core
         }
         public AquariumUser AddUser(AquariumUser user)
         {
+            if(_aquariumDao.GetUserByEmail(user.Email) != null)
+                throw new Exception("There is already account with this email.");
+            if (_aquariumDao.GetUserByUsername(user.Username) != null)
+                throw new Exception("Sorry, this username is already taken. Please try another one.");
+
+            user.Password = _encryptionService.Encrypt(user.Password);
             user.Role = "User";
             user.SeniorityDate = DateTime.Now;
             user.Profile = new AquariumProfile();
@@ -77,7 +85,8 @@ namespace AquariumApi.Core
         }
         public string LoginUser(string email, string password)
         {
-            AquariumUser user = _aquariumDao.GetAccountByLogin(email, password);
+            var hash = _encryptionService.Encrypt(password);
+            AquariumUser user = _aquariumDao.GetAccountByLogin(email, hash);
 
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
