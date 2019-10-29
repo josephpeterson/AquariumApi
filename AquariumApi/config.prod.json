@@ -9,7 +9,9 @@
     "Audience": "http://localhost:5000",
     "LengthMins": 60
   },
-  "EncryptionSalt": "",
+  "Password": {
+    "EncryptionSalt": ""
+  },
   "Photos": {
     "ExpandSizes": true,
     "Path": "./photos",

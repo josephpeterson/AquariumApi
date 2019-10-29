@@ -37,7 +37,7 @@ namespace AquariumApi.Core
         }
         public string Encrypt(string key)
         {
-            var salt = _configuration["EncryptionSalt"];
+            var salt = _configuration["Password:EncryptionSalt"];
             var sha1 = System.Security.Cryptography.SHA1.Create();
             var inputBytes = Encoding.ASCII.GetBytes(key + salt);
             var hash = sha1.ComputeHash(inputBytes);
