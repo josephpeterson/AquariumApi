@@ -13,7 +13,6 @@ namespace AquariumApi.Models
         public int Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; } /* Todo: Remove this field from this model and move it into AquariumSignupAccount, thus no longer exposing PII */
         public DateTime SeniorityDate { get; set; }
         public string Role { get; set; }
 

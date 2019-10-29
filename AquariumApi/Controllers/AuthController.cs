@@ -16,11 +16,13 @@ namespace AquariumApi.Controllers
 {
     public class AuthController : Controller
     {
+        private readonly IEncryptionService _encryptionService;
         public readonly IAccountService _accountService;
         private readonly IActivityService _activityService;
         public readonly ILogger<AuthController> _logger;
-        public AuthController(IAccountService accountService, ILogger<AuthController> logger,IActivityService activityService)
+        public AuthController(IEncryptionService encryptionService,IAccountService accountService, ILogger<AuthController> logger,IActivityService activityService)
         {
+            _encryptionService = encryptionService;
             _accountService = accountService;
             _activityService = activityService;
             _logger = logger;
@@ -28,7 +30,7 @@ namespace AquariumApi.Controllers
 
         [HttpPost]
         [Route("/v1/Auth/Login")]
-        public IActionResult Login([FromBody]LoginModel user)
+        public IActionResult Login([FromBody]LoginRequest user)
         {
             try
             {
@@ -51,30 +53,17 @@ namespace AquariumApi.Controllers
         }
         [HttpPost]
         [Route("/v1/Auth/Signup")]
-        public IActionResult Signup([FromBody]SignupModel signupRequest)
+        public IActionResult Signup([FromBody]SignupRequest signupRequest)
         {
             try
             {
                 _logger.LogInformation($"POST /v1/Auth/Signup called");
-
-                //Form validation
-                if (signupRequest.Password != signupRequest.Password2)
-                    return BadRequest();
-
-                var user = new AquariumUser()
-                {
-                    Email = signupRequest.Email,
-                    Password = signupRequest.Password,
-                    Username = signupRequest.Username,
-                };
-                _accountService.AddUser(user);
-
+                var user = _accountService.AddUser(signupRequest);
                 _activityService.RegisterActivity(new CreateAccountActivity() { AccountId = user.Id });
-
-                return Login(new LoginModel
+                return Login(new LoginRequest
                 {
                     Email = user.Email,
-                    Password = user.Password
+                    Password = signupRequest.Password2
                 });
             }
             catch (Exception ex)
@@ -83,5 +72,30 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+
+
+        /*
+        [HttpGet]
+        [Route("/v1/Auth/Recrypt")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult RecryptPasswords()
+        {
+            try
+            {
+                var accounts = _accountService.GetAllUsers();
+                accounts.ForEach(acc =>
+                {
+                    acc.Password = _encryptionService.Encrypt(acc.Password);
+                    _accountService.UpdateUser(acc);
+                });
+                return new OkObjectResult(accounts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Account/Current endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        */
     }
 }

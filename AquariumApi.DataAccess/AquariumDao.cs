@@ -40,7 +40,7 @@ namespace AquariumApi.DataAccess
         Feeding AddFeeding(Feeding feeding);
         Feeding GetFeedingById(int feedingId);
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
-        AquariumUser AddAccount(AquariumUser user);
+        AquariumUser AddAccount(SignupRequest signupRequest);
         Feeding UpdateFeeding(Feeding feeding);
         void DeleteFeeding(int feedingId);
 
@@ -61,7 +61,7 @@ namespace AquariumApi.DataAccess
         List<AquariumOverviewResponse> GetAquariumOverviews();
 
 
-        AquariumUser GetAccountByLogin(string email, string password);
+        AquariumUser GetAccountByLogin(int userId, string password);
         AquariumUser GetAccountById(int userId);
         List<AquariumUser> GetAllAccounts();
         AquariumUser GetUserByUsername(string username);
@@ -72,6 +72,7 @@ namespace AquariumApi.DataAccess
         AquariumProfile GetProfileById(int targetId);
         List<Activity> GetRecentAccountActivity(int accountId);
         Activity GetAccountActivity(int activityId);
+        AquariumUser UpdateUser(AquariumUser user);
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
         AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
         void DeletePostCategory(int categoryId);
@@ -83,6 +84,7 @@ namespace AquariumApi.DataAccess
         Post GetPostById(int postId);
         PostCategory CreatePostCategory(PostCategory category);
         PostBoard CreatePostBoard(PostBoard board);
+        AquariumUser GetUserByUsernameOrEmail(string email);
         PostThread CreatePostThread(PostThread thread);
         void DeletePostBoard(int boardId);
         void DeletePostThread(int threadId);
@@ -443,12 +445,12 @@ namespace AquariumApi.DataAccess
 
 
         /* Aquarium Accounts */
-        public AquariumUser GetAccountByLogin(string email, string password)
+        public AquariumUser GetAccountByLogin(int userId, string password)
         {
-            return _dbAquariumContext.TblAccounts.AsNoTracking()
-                 .Where(p => (p.Email == email || p.Username == email) 
-                 && p.Password == password)
+            var acc = _dbAquariumContext.TblSignupRequests.AsNoTracking()
+                 .Where(p => p.Id == userId && p.Password == password)
                  .First();
+            return GetAccountById(acc.Id);
         }
 
         public AquariumUser GetAccountById(int userId)
@@ -477,18 +479,11 @@ namespace AquariumApi.DataAccess
                 .SingleOrDefault();
         }
 
-        public AquariumUser AddAccount(AquariumUser user)
+        public AquariumUser AddAccount(SignupRequest signupRequest)
         {
-            //Unique values
-            var email = user.Email;
-            var username = user.Username;
-
-            if (_dbAquariumContext.TblAccounts.AsNoTracking().Where(e => e.Email == email || e.Username == username).Any())
-                throw new System.Exception("Username/Email already in use");
-
-            _dbAquariumContext.TblAccounts.Add(user);
+            _dbAquariumContext.TblSignupRequests.Add(signupRequest);
             _dbAquariumContext.SaveChanges();
-            return user;
+            return GetAccountById(signupRequest.Id);
         }
 
         public FishPhoto AddFishPhoto(FishPhoto photo)
@@ -744,7 +739,23 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblPosts.Remove(post);
         }
 
-        
+        public AquariumUser UpdateUser(AquariumUser user)
+        {
+            var userToUpdate = _dbAquariumContext.TblAccounts.SingleOrDefault(u => user.Id == u.Id);
+            if (userToUpdate == null)
+                throw new KeyNotFoundException();
+
+            userToUpdate = _mapper.Map(user, userToUpdate);
+            _dbAquariumContext.SaveChanges();
+            return GetUserByEmail(userToUpdate.Email);
+        }
+
+        public AquariumUser GetUserByUsernameOrEmail(string email)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Username == email || p.Email == email)
+                .SingleOrDefault();
+        }
     }
 }
 

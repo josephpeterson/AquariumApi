@@ -20,6 +20,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<Fish> TblFish { get; set; }
         public virtual DbSet<Species> TblSpecies { get; set; }
         public virtual DbSet<AquariumDevice> TblDevice { get; set; }
+        public virtual DbSet<SignupRequest> TblSignupRequests { get; set; }
         public virtual DbSet<AquariumUser> TblAccounts { get; set; }
         public virtual DbSet<BugReport> TblBugReports { get; set; }
         public virtual DbSet<AquariumProfile> TblAquariumProfiles { get; set; }
@@ -42,7 +43,15 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblAccount");
                 entity.HasMany(e => e.Aquariums);
+                
             });
+            modelBuilder.Entity<SignupRequest>(entity =>
+            {
+                entity.ToTable("tblAccount");
+                entity.HasOne(o => o.Account).WithOne()
+                    .HasForeignKey<AquariumUser>(o => o.Id);
+            });
+            
             modelBuilder.Entity<Aquarium>(entity =>
             {
 

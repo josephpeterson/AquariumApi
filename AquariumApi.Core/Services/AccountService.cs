@@ -17,7 +17,7 @@ namespace AquariumApi.Core
 {
     public interface IAccountService
     {
-        AquariumUser AddUser(AquariumUser user);
+        AquariumUser AddUser(SignupRequest signupRequest);
         List<AquariumUser> GetAllUsers();
         AquariumUser GetUserById(int id);
         AquariumUser GetUserByUsername(string username);
@@ -45,18 +45,26 @@ namespace AquariumApi.Core
         {
             return Convert.ToInt16(_context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
         }
-        public AquariumUser AddUser(AquariumUser user)
+        public AquariumUser AddUser(SignupRequest signupRequest)
         {
-            if(_aquariumDao.GetUserByEmail(user.Email) != null)
+            if (signupRequest.Password != signupRequest.Password2)
+                throw new Exception("Passwords do not match.");
+            if (_aquariumDao.GetUserByEmail(signupRequest.Email) != null)
                 throw new Exception("There is already account with this email.");
-            if (_aquariumDao.GetUserByUsername(user.Username) != null)
+            if (_aquariumDao.GetUserByUsername(signupRequest.Username) != null)
                 throw new Exception("Sorry, this username is already taken. Please try another one.");
 
-            user.Password = _encryptionService.Encrypt(user.Password);
-            user.Role = "User";
-            user.SeniorityDate = DateTime.Now;
-            user.Profile = new AquariumProfile();
-            return _aquariumDao.AddAccount(user);
+            signupRequest.Password = _encryptionService.Encrypt(signupRequest.Password);
+            signupRequest.Account =  new AquariumUser()
+            {
+                Username = signupRequest.Username,
+                Email = signupRequest.Email,
+                Role = "User",
+                SeniorityDate = DateTime.Now,
+                Profile = new AquariumProfile()
+            };
+            var user = _aquariumDao.AddAccount(signupRequest);
+            return user;
         }
         public List<AquariumUser> GetAllUsers()
         {
@@ -77,7 +85,7 @@ namespace AquariumApi.Core
         }
         public AquariumUser UpdateUser(AquariumUser user)
         {
-            throw new NotImplementedException();
+            return _aquariumDao.UpdateUser(user);
         }
         public void DeleteUser(int userId)
         {
@@ -85,8 +93,12 @@ namespace AquariumApi.Core
         }
         public string LoginUser(string email, string password)
         {
+            var targetUser = _aquariumDao.GetUserByUsernameOrEmail(email);
+            if (targetUser == null)
+                throw new UnauthorizedAccessException();
+
             var hash = _encryptionService.Encrypt(password);
-            AquariumUser user = _aquariumDao.GetAccountByLogin(email, hash);
+            AquariumUser user = _aquariumDao.GetAccountByLogin(targetUser.Id, hash);
 
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
