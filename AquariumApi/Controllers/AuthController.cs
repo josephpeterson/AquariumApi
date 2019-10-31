@@ -73,6 +73,40 @@ namespace AquariumApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("/v1/Auth/PasswordReset/Upgrade")]
+        public IActionResult ResetPasswordHandshake([FromBody]TokenRequest token)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Auth/PasswordReset/Upgrade called");
+                var requestToken = _accountService.UpgradePasswordResetToken(token.Token);
+                return new OkObjectResult(new TokenRequest {
+                    Token = requestToken
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Auth/PasswordReset/Upgrade endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Auth/PasswordReset/Submit")]
+        public IActionResult SubmitPasswordResetRequest([FromBody]PasswordResetRequest request)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Auth/PasswordReset/Submit called");
+                var user = _accountService.AttemptPasswordReset(request.Token, request.Password);
+                return new OkObjectResult(user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Auth/PasswordReset/Submit endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
 
         /*
         [HttpGet]
@@ -97,5 +131,14 @@ namespace AquariumApi.Controllers
             }
         }
         */
+    }
+    public class TokenRequest
+    {
+        public string Token { get; set; }
+    }
+    public class PasswordResetRequest
+    {
+        public string Token { get; set; }
+        public string Password { get; set; }
     }
 }

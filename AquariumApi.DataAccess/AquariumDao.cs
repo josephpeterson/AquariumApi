@@ -89,6 +89,7 @@ namespace AquariumApi.DataAccess
         void DeletePostBoard(int boardId);
         void DeletePostThread(int threadId);
         void DeletePost(int postId);
+        void UpdatePasswordForUser(int uId, string newPassword);
     }
 
     public class AquariumDao : IAquariumDao
@@ -484,6 +485,12 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblSignupRequests.Add(signupRequest);
             _dbAquariumContext.SaveChanges();
             return GetAccountById(signupRequest.Id);
+        }
+        public void UpdatePasswordForUser(int uId,string newPassword)
+        {
+            var acc = _dbAquariumContext.TblSignupRequests.Where(s => s.Id == uId).First();
+            acc.Password = newPassword;
+            _dbAquariumContext.SaveChanges();
         }
 
         public FishPhoto AddFishPhoto(FishPhoto photo)

@@ -26,6 +26,9 @@ namespace AquariumApi.Core
         void DeleteUser(int userId);
         string LoginUser(string email, string password);
         int GetCurrentUserId();
+        void SendResetPasswordEmail();
+        string UpgradePasswordResetToken(string token);
+        AquariumUser AttemptPasswordReset(string requestToken, string newPassword);
     }
     public class AccountService : IAccountService
     {
@@ -33,10 +36,12 @@ namespace AquariumApi.Core
         private IAquariumDao _aquariumDao;
         private readonly IEncryptionService _encryptionService;
         private readonly IHttpContextAccessor _context;
+        private IEmailerService _emailerService;
 
-        public AccountService(IHttpContextAccessor context,IConfiguration configuration,IAquariumDao aquariumDao,IEncryptionService encryptionService)
+        public AccountService(IHttpContextAccessor context,IConfiguration configuration,IAquariumDao aquariumDao,IEncryptionService encryptionService,IEmailerService emailerService)
         {
             _context = context;
+            _emailerService = emailerService;
             _configuration = configuration;
             _aquariumDao = aquariumDao;
             _encryptionService = encryptionService;
@@ -120,6 +125,92 @@ namespace AquariumApi.Core
                 signingCredentials: signinCredentials
             );
             return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+        }
+        private string GenerateResetPassword()
+        {
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Password:ResetPasswordSecret"]));
+            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, GetCurrentUserId().ToString()),
+            };
+            var tokeOptions = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Password:ResetPasswordLimitMins"])),
+                signingCredentials: signinCredentials
+            );
+            var token = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+            var url = _configuration["Password:ResetRedirectUri"] + $"/{token}";
+            return url;
+        }
+        public void SendResetPasswordEmail()
+        {
+            var email = GetUserById(GetCurrentUserId()).Email;
+            var resetLink = GenerateResetPassword();
+
+            var subject = "[Aquarium Monitor] Password Reset Requested";
+            var content = "You have recently requested to change your password. You may click this link to reset your password\n\n" + resetLink;
+            _emailerService.SendAsync(email, subject, content);
+        }
+        public string UpgradePasswordResetToken(string token)
+        {
+            TokenValidationParameters validationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Password:ResetPasswordSecret"]))
+            };
+            SecurityToken validatedToken;
+            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            var user = handler.ValidateToken(token, validationParameters, out validatedToken);
+
+            //Generate a new (smaller token)
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Password:ResetPasswordSecret2"]));
+            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, GetCurrentUserId().ToString()),
+            };
+            var tokeOptions = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Password:ResetPasswordLimitMins2"])),
+                signingCredentials: signinCredentials
+            );
+            return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+        }
+        public AquariumUser AttemptPasswordReset(string requestToken,string newPassword)
+        {
+            TokenValidationParameters validationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidAudience = _configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Password:ResetPasswordSecret2"]))
+            };
+            SecurityToken validatedToken;
+            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            var user = handler.ValidateToken(requestToken, validationParameters, out validatedToken);
+
+            var uId = Convert.ToInt16(user.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var pwd = _encryptionService.Encrypt(newPassword);
+            _aquariumDao.UpdatePasswordForUser(uId, pwd);
+            return GetUserById(uId);
         }
     }
 }

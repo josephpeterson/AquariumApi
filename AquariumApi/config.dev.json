@@ -10,6 +10,11 @@
     "LengthMins": 60
   },
   "Password": {
+    "ResetPasswordLimitMins": 10,
+    "ResetPasswordLimitMins2": 5,
+    "ResetRedirectUri": "https://aquarium-dashboard-dev.azurewebsites.net/passwordreset",
+    "ResetPasswordSecret": "",
+    "ResetPasswordSecret2": "",
     "EncryptionSalt": ""
   },
   "Photos": {

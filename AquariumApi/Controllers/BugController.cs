@@ -53,14 +53,12 @@ namespace AquariumApi.Controllers
         [HttpGet, Route("/v1/EmailTest")]
         public IActionResult SendEmail()
         {
-
-            var userId = _accountService.GetCurrentUserId();
-            var account = _accountService.GetUserById(userId);
-
+             
+            
             try
             {
                 _logger.LogInformation($"POST /v1/EmailTest called");
-                _emailerService.SendAsync(account.Email, "Test Email", "This is a test email from the Aquarium Solutions Group.").Wait();
+                _accountService.SendResetPasswordEmail();
                 return Ok();
             }
             catch (Exception ex)
