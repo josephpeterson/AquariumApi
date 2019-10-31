@@ -17,6 +17,10 @@
     "Path": "./photos",
     "Sizes": [ 0.25, 0.5 ]
   },
+  "Emailer": {
+    "ApiKey": "",
+    "Address1": ""
+  },
   "Azure": {
     "AccountUsername": "",
     "AccountKey": "",

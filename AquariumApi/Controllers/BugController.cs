@@ -19,11 +19,15 @@ namespace AquariumApi.Controllers
     [Authorize]
     public class BugController : Controller
     {
+        private IAccountService _accountService;
+        private readonly IEmailerService _emailerService;
         public readonly IAquariumService _aquariumService;
         public readonly IDeviceService _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public BugController(IAquariumService aquariumService, IDeviceService deviceService, ILogger<DeviceController> logger)
+        public BugController(IAquariumService aquariumService, IAccountService accountService,IDeviceService deviceService, ILogger<DeviceController> logger,IEmailerService emailerService)
         {
+            _accountService = accountService;
+            _emailerService = emailerService;
             _aquariumService = aquariumService;
             _deviceService = deviceService;
             _logger = logger;
@@ -39,6 +43,25 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation($"POST /v1/Bug/Submit called");
                 var r = _aquariumService.SubmitBugReport(report);
                 return new OkObjectResult(r);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Bug/Submit endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpGet, Route("/v1/EmailTest")]
+        public IActionResult SendEmail()
+        {
+
+            var userId = _accountService.GetCurrentUserId();
+            var account = _accountService.GetUserById(userId);
+
+            try
+            {
+                _logger.LogInformation($"POST /v1/EmailTest called");
+                _emailerService.SendAsync(account.Email, "Test Email", "This is a test email from the Aquarium Solutions Group.").Wait();
+                return Ok();
             }
             catch (Exception ex)
             {

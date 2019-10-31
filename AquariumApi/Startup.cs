@@ -155,6 +155,7 @@ namespace AquariumApi
             services.AddTransient<IPostService, PostService>();
             services.AddTransient<IPhotoManager, PhotoManager>();
             services.AddTransient<IEncryptionService, EncryptionService>();
+            services.AddTransient<IEmailerService, EmailerService>();
             services.AddSingleton<IConfiguration>(Configuration);
         }
     }

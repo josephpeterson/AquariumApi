@@ -1,25 +1,29 @@
 ﻿{
   "Port": 5000,
   "Database": {
-    "dbAquarium": ""
+    "dbAquarium": "Data Source=dbaquarium.database.windows.net; Database=dbAquariumDev; MultipleActiveResultSets=true; User ID=Aquarium; Password=testpassword1.;"
   },
   "Jwt": {
-    "Secret": "",
+    "Secret": "notsafesecretchangethis",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
     "LengthMins": 90
   },
   "Password": {
-    "EncryptionSalt":  ""
+    "EncryptionSalt":  "thisisadefaultsaltforhashing"
   },
   "Photos": {
     "ExpandSizes": true,
     "Path": "./photos",
     "Sizes": [ 0.25, 0.5 ]
   },
+  "Emailer": {
+    "ApiKey": "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",
+    "Address1": "azure_dc48d12be2b8c60bfc3f6e92b7fd6036@azure.com"
+  },
   "Azure": {
-    "AccountUsername": "",
-    "AccountKey": "",
+    "AccountUsername": "aquariumstorage",
+    "AccountKey": "/4oZz2BFSxmoQAqXmLl3+6y7z7n3jBtv6+qxqOjPLhafKhCZT5XTqv1NCCSULlH7Tah3aas6Rbj9Uzududm+tw==",
     "AquariumPhotosShare": "aquarium-photos"
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
