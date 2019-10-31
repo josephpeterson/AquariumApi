@@ -50,22 +50,5 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet, Route("/v1/EmailTest")]
-        public IActionResult SendEmail()
-        {
-             
-            
-            try
-            {
-                _logger.LogInformation($"POST /v1/EmailTest called");
-                _accountService.SendResetPasswordEmail();
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Bug/Submit endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
     }
 }

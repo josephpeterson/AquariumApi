@@ -72,7 +72,22 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
-
+        [HttpPost]
+        [Route("/v1/Auth/PasswordReset/Attempt")]
+        public IActionResult SendPasswordResetEmail([FromBody]TokenRequest token)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Auth/PasswordReset/Attempt called");
+                _accountService.SendResetPasswordEmail(token.Token);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Auth/PasswordReset/Attempt endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
         [HttpPost]
         [Route("/v1/Auth/PasswordReset/Upgrade")]
         public IActionResult ResetPasswordHandshake([FromBody]TokenRequest token)

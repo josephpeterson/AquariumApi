@@ -41,8 +41,8 @@ namespace AquariumApi.Core
             var apiKey = _configuration["Emailer:ApiKey"];
             var fromAddress = _configuration["Emailer:Address1"];
             var client = new SendGridClient(apiKey);
-            var from = new EmailAddress(fromAddress.Trim(), "Example User");
-            var to = new EmailAddress(recieveAddress.Trim(), "Example User");
+            var from = new EmailAddress(fromAddress.Trim(), "Aquarium Solutions");
+            var to = new EmailAddress(recieveAddress.Trim(), recieveAddress);
             var msg = MailHelper.CreateSingleEmail(from, to, subject, content, content);
             await client.SendEmailAsync(msg);
         }

@@ -26,7 +26,7 @@ namespace AquariumApi.Core
         void DeleteUser(int userId);
         string LoginUser(string email, string password);
         int GetCurrentUserId();
-        void SendResetPasswordEmail();
+        void SendResetPasswordEmail(string email);
         string UpgradePasswordResetToken(string token);
         AquariumUser AttemptPasswordReset(string requestToken, string newPassword);
     }
@@ -126,13 +126,13 @@ namespace AquariumApi.Core
             );
             return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
         }
-        private string GenerateResetPassword()
+        private string GenerateResetPassword(int uId)
         {
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Password:ResetPasswordSecret"]));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, GetCurrentUserId().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, uId.ToString()),
             };
             var tokeOptions = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -145,10 +145,13 @@ namespace AquariumApi.Core
             var url = _configuration["Password:ResetRedirectUri"] + $"/{token}";
             return url;
         }
-        public void SendResetPasswordEmail()
+        public void SendResetPasswordEmail(string email)
         {
-            var email = GetUserById(GetCurrentUserId()).Email;
-            var resetLink = GenerateResetPassword();
+            var user = _aquariumDao.GetUserByUsernameOrEmail(email);
+            if (user == null)
+                throw new InvalidProgramException();
+            email = user.Email;
+            var resetLink = GenerateResetPassword(user.Id);
 
             var subject = "[Aquarium Monitor] Password Reset Requested";
             var content = "You have recently requested to change your password. You may click this link to reset your password\n\n" + resetLink;
