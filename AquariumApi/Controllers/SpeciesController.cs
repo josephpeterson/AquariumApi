@@ -69,7 +69,7 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation("POST /v1/Species/Add called");
                 var newSpecies = _aquariumService.AddSpecies(species);
 
-                return ScrapeSourcesForSpecies(newSpecies.Id);
+                return new OkObjectResult(newSpecies);
             }
             catch (Exception ex)
             {

@@ -32,7 +32,7 @@ namespace AquariumApi.Core
         }
         public AquariumPhoto StoreAquariumPhoto(int aquariumId,byte[] buffer)
         {
-            var now = DateTime.Now;
+            var now = DateTime.Now.ToUniversalTime();
             var path = $"{_config["Photos:Path"]}/aquarium/{aquariumId}/" + now.Ticks + ".jpg";
 
             var exists = StorePhoto(path, buffer).Result;
@@ -48,7 +48,7 @@ namespace AquariumApi.Core
         }
         public FishPhoto StoreFishPhoto(int fishId, int aquariumId, Stream file)
         {
-            var now = DateTime.Now;
+            var now = DateTime.Now.ToUniversalTime();
             var path = $"{_config["Photos:Path"]}/fish/{fishId}/" + now.Ticks + ".jpg";
             //StorePhoto(path, file);
             return new FishPhoto()

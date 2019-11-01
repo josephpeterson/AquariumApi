@@ -65,7 +65,7 @@ namespace AquariumApi.Core
                 Username = signupRequest.Username,
                 Email = signupRequest.Email,
                 Role = "User",
-                SeniorityDate = DateTime.Now,
+                SeniorityDate = DateTime.Now.ToUniversalTime(),
                 Profile = new AquariumProfile()
             };
             var user = _aquariumDao.AddAccount(signupRequest);

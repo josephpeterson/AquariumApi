@@ -72,14 +72,13 @@ namespace AquariumApi.Core
         private readonly IDeviceService _deviceService;
         private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
-        private readonly IAzureService _azureService;
         private readonly IActivityService _activityService;
         private readonly IAccountService _accountService;
 
-        public AquariumService(IConfiguration config,IAccountService accountService, IAzureService azureService,IActivityService activityService,IAquariumDao aquariumDao,IDeviceService deviceService, ILogger<AquariumService> logger,IPhotoManager photoManager)
+        public AquariumService(IConfiguration config, ILogger<AquariumService> logger, IAquariumDao aquariumDao, IAccountService accountService,
+                               IActivityService activityService,IDeviceService deviceService,IPhotoManager photoManager)
         {
             _config = config;
-            _azureService = azureService;
             _activityService = activityService;
             _accountService = accountService;
             _aquariumDao = aquariumDao;
@@ -179,6 +178,13 @@ namespace AquariumApi.Core
         }
         public Species AddSpecies(Species species)
         {
+            species.Name = species.Name.Trim();
+            if (species.Name == null)
+                throw new Exception("Species must have a name");
+            var exists = _aquariumDao.GetAllSpecies().Where(s => s.Name == species.Name).Any(); //todo move this into new method maybe
+            if(exists)
+                throw new Exception("Species with this name already exists");
+
             return _aquariumDao.AddSpecies(species);
         }
         public Species UpdateSpecies(Species species)
@@ -341,7 +347,7 @@ namespace AquariumApi.Core
 
         public BugReport SubmitBugReport(BugReport report)
         {
-            report.Date = DateTime.Now;
+            report.Date = DateTime.Now.ToUniversalTime();
             report.Status = "Submitted";
             return _aquariumDao.AddBugReport(report);
         }

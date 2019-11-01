@@ -81,13 +81,13 @@ namespace AquariumApi.Core
         public PostBoard CreatePostBoard(PostBoard board)
         {
             board.AuthorId = _accountService.GetCurrentUserId();
-            board.Timestamp = DateTime.Now;
+            board.Timestamp = DateTime.Now.ToUniversalTime();
             return _aquariumDao.CreatePostBoard(board);
         }
         public PostThread CreatePostThread(PostThread thread)
         {
             thread.AuthorId = _accountService.GetCurrentUserId();
-            thread.Timestamp = DateTime.Now;
+            thread.Timestamp = DateTime.Now.ToUniversalTime();
 
             //Make sure  there's a first post
             var firstPost = thread.Posts.First();
@@ -95,7 +95,7 @@ namespace AquariumApi.Core
             if (firstPost.Content == null)
                 throw new Exception("Post must contain content");
             firstPost.AuthorId = thread.AuthorId;
-            firstPost.Timestamp = DateTime.Now;
+            firstPost.Timestamp = DateTime.Now.ToUniversalTime();
 
             return _aquariumDao.CreatePostThread(thread);
         }
@@ -106,7 +106,7 @@ namespace AquariumApi.Core
                 throw new Exception("Post must contain content");
 
             post.AuthorId = _accountService.GetCurrentUserId();
-            post.Timestamp = DateTime.Now;
+            post.Timestamp = DateTime.Now.ToUniversalTime();
             return _aquariumDao.CreatePost(post);
         }
         public void DeleteCategory(int categoryId)

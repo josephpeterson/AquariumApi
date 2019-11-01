@@ -132,7 +132,8 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Fish).ThenInclude(d => d.Thumbnail)
                 .Include(aq => aq.Feedings)
                 .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
-                .First();
+                .FirstOrDefault();
+            if (aquarium == null) return aquarium;
 
             if (aquarium.Device != null && aquarium.Device.CameraConfiguration == null)
                 aquarium.Device.CameraConfiguration = new CameraConfiguration();
@@ -250,20 +251,19 @@ namespace AquariumApi.DataAccess
         public Fish GetFishById(int fishId)
         {
             return _dbAquariumContext.TblFish.AsNoTracking()
+                .Where(s => s.Id == fishId)
                 .Include(f => f.Species)
                 .Include(f => f.Aquarium)
                 .Include(f => f.Feedings)
                 .Include(f => f.Photos)
                 .Include(f => f.Thumbnail)
-                .Where(s => s.Id == fishId).First();
+                .FirstOrDefault();
         }
         public Fish AddFish(Fish fish)
         {
-            fish.Species = null;
-            fish.Aquarium = null; //todo separate this into a request/response models
             _dbAquariumContext.TblFish.Add(fish);
             _dbAquariumContext.SaveChanges();
-            return GetFishById(fish.Id);
+            return fish;
         }
         public Fish UpdateFish(Fish fish)
         {
@@ -534,8 +534,7 @@ namespace AquariumApi.DataAccess
 
         public void RegisterActivity(Activity newActivity)
         {
-            var activity = _mapper.Map<Activity>(newActivity);
-            _dbAquariumContext.TblAccountActivity.Add(activity);
+            _dbAquariumContext.TblAccountActivity.Add(newActivity);
             _dbAquariumContext.SaveChanges();
         }
         public List<Activity> GetRecentAccountActivity(int accountId)

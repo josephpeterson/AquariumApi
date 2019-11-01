@@ -36,8 +36,9 @@ namespace AquariumApi.Core
         }
         public void RegisterActivity(Activity newActivity)
         {
-            newActivity.Timestamp = DateTime.Now;
-            _aquariumDao.RegisterActivity(newActivity);
+            var activity = _mapper.Map<Activity>(newActivity);
+            activity.Timestamp = DateTime.Now.ToUniversalTime();
+            _aquariumDao.RegisterActivity(activity);
         }
         public List<Activity>GetRecentActivity(int accountId)
         {

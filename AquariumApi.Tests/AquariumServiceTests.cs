@@ -17,85 +17,117 @@ using Xunit;
 public class AquariumServiceTests
 {
     IMapper _mapper;
-    private DbContextOptions<DbAquariumContext> _dbAquariumContextOptions;
-    DbAquariumContext _dbAquariumContext;
-    AquariumService _aquariumService;
-    AquariumDao _aquariumDao;
+    private ActivityService _activityService;
+    private AccountService _accountService;
+    private AquariumService _aquariumService;
+    private AquariumDao _aquariumDao;
     private IConfigurationRoot _config;
+    private DbAquariumContext _dbAquariumContext;
 
     public AquariumServiceTests()
     {
-        var currentDirectory = Directory.GetCurrentDirectory();
-
         // Set up configuration sources.
         var builder = new ConfigurationBuilder()
-            .SetBasePath(currentDirectory)
+            .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile($"./config.json", optional: false)
             .AddEnvironmentVariables();
         _config = builder.Build();
 
+        //Set up AutoMapper
         var config = new MapperConfiguration(cfg => { cfg.AddProfile<MappingProfile>(); });
         _mapper = config.CreateMapper();
+
         //Set up db
-        _dbAquariumContextOptions = new DbContextOptionsBuilder<DbAquariumContext>()
+        _dbAquariumContext = new DbAquariumContext(new DbContextOptionsBuilder<DbAquariumContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString() + "dbAquarium")
-            .Options;
-        //_dbAquariumContext = new DbAquariumContext();
-        //_aquariumDao = , new NullLogger<AquariumDao>());
-        //_aquariumService = new AquariumService(_config,new AquariumDao(dbAquarium, _mapper, new NullLogger<AquariumService>());
+            .Options);
+        _aquariumDao = new AquariumDao(_mapper, _config, _dbAquariumContext, new NullLogger<AquariumDao>());
+        
+        
+
+        //Set up service
+        _activityService = new ActivityService(_config, _aquariumDao, _mapper);
+        _accountService = new AccountService(null, _config, _aquariumDao, null, null);
+        _aquariumService = new AquariumService(_config,
+            new NullLogger<AquariumService>(),
+            _aquariumDao,
+            _accountService,
+            _activityService,
+            null,
+            null);
+    }
+    private void CreateDatabaseWithAccount()
+    {
+        _dbAquariumContext.TblAccounts.Add(new AquariumUser
+        {
+           Username = "Test",
+           Email = "test@test.com",
+           Role = "User"
+        });
+        _dbAquariumContext.SaveChanges();
+    }
+
+
+    [Fact]
+    public void GivenAccount_CreateAquarium_AquariumCreates()
+    {
+        _dbAquariumContext.Database.EnsureDeleted();
+        CreateDatabaseWithAccount();
+        var acc = _dbAquariumContext.TblAccounts.First();
+
+        var expected = new Aquarium()
+        {
+            Name = "Test Aquarium",
+            Gallons = 10,
+            OwnerId = acc.Id, //todo - move this into an aquariumservice parameter, have the controller determine the id and validate.
+        };
+        var aq = _aquariumService.AddAquarium(expected);
+        var actual = _aquariumService.GetAquariumById(aq.Id);
+        Assert.NotNull(actual);
     }
     [Fact]
-    public void GivenAquariumId_ReturnAquariumProfile_WithCompletedCollections()
+    public void GivenAccount_DeleteAquarium_AquariumDeletes()
     {
-        var db = new DbAquariumContext(_dbAquariumContextOptions);
+        _dbAquariumContext.Database.EnsureDeleted();
+        CreateDatabaseWithAccount();
+        var acc = _dbAquariumContext.TblAccounts.First();
 
-
-
-        var account = new AquariumUser()
-        {
-            Id = 0,
-            Username = "test username"
-        };
         var aquarium = new Aquarium()
         {
-            Id = 2,
-            OwnerId = 0,
-            Name = "test aquarium"
+            Name = "Test Aquarium",
+            Gallons = 10,
+            OwnerId = acc.Id, //todo - move this into an aquariumservice parameter, have the controller determine the id and validate.
         };
+        aquarium = _aquariumService.AddAquarium(aquarium);
+        _aquariumService.DeleteAquarium(aquarium.Id);
+        Assert.Null(_aquariumService.GetAquariumById(aquarium.Id));
+    }
+    [Fact]
+    public void GivenAccountHasAquarium_AddFish_FishIsAdded()
+    {
+        _dbAquariumContext.Database.EnsureDeleted();
+        CreateDatabaseWithAccount();
+        var acc = _dbAquariumContext.TblAccounts.First();
+
+        var aquarium = new Aquarium()
+        {
+            Name = "Test Aquarium",
+            Gallons = 10,
+            OwnerId = acc.Id, //todo - move this into an aquariumservice parameter, have the controller determine the id and validate.
+        };
+        aquarium = _aquariumService.AddAquarium(aquarium);
+
         var fish = new Fish()
         {
-            Id = 10,
-            Name = "test fish",
-            AquariumId = 2
+            Name = "Basic fish",
+            AquariumId = aquarium.Id
         };
-        var expected = new AquariumProfile()
-        {
-            Id = 0,
-            Biography = "test biography"
-        };
-        expected.Account = account;
-        expected.Aquariums = new List<Aquarium>() { aquarium };
-        expected.Fish = new List<Fish>() { fish };
 
-        db.Database.EnsureDeleted();
-        db.TblAquariumProfiles.Add(expected);
-        db.TblAccounts.Add(account);
-        db.TblAquarium.Add(aquarium);
-        db.TblFish.Add(fish);
-        db.SaveChanges();
+        var newfish = _aquariumService.AddFish(fish);
 
-        var aquariumService = new AquariumService(_config,
-            null,
-            new AquariumDao(_mapper, _config, db, new NullLogger<AquariumDao>()),
-            null,
-            new NullLogger<AquariumService>(),
-            null);
 
-        var actual = aquariumService.GetProfileById(account.Id);
-
-        Assert.Equal(expected.Account.Username, actual.Account.Username);
-        Assert.Equal(expected.Biography, actual.Biography);
-        Assert.Equal(expected.Aquariums.Count(), actual.Aquariums.Count());
-        Assert.Equal(expected.Fish.Count(), actual.Fish.Count());
+        var expected = fish.Name;
+        var actual = _aquariumService.GetAquariumById(aquarium.Id).Fish.First().Name;
+        Assert.Equal(expected,actual);
     }
 }
