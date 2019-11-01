@@ -180,7 +180,7 @@ namespace AquariumApi.Core
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, GetCurrentUserId().ToString()),
+                user.FindFirst(ClaimTypes.NameIdentifier),
             };
             var tokeOptions = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
