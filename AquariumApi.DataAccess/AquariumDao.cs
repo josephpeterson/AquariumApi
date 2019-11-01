@@ -534,7 +534,8 @@ namespace AquariumApi.DataAccess
 
         public void RegisterActivity(Activity newActivity)
         {
-            _dbAquariumContext.TblAccountActivity.Add(newActivity);
+            var activity = _mapper.Map<Activity>(newActivity);
+            _dbAquariumContext.TblAccountActivity.Add(activity);
             _dbAquariumContext.SaveChanges();
         }
         public List<Activity> GetRecentAccountActivity(int accountId)
