@@ -261,6 +261,8 @@ namespace AquariumApi.DataAccess
         }
         public Fish AddFish(Fish fish)
         {
+            fish.Species = null;
+            fish.Aquarium = null;
             _dbAquariumContext.TblFish.Add(fish);
             _dbAquariumContext.SaveChanges();
             return fish;
