@@ -13,7 +13,7 @@ namespace AquariumApi.Models
         public int Id { get; set; }
         public int AquariumId { get; set; }
         public int SpeciesId { get; set; }
-        public int BreedId { get; set; }
+        public int? BreedId { get; set; }
         public string Gender { get; set; }
         public string Name { get; set; }
         public bool Dead { get; set; }
