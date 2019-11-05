@@ -42,6 +42,7 @@ namespace AquariumApi.DataAccess
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
         AquariumUser AddAccount(SignupRequest signupRequest);
         Feeding UpdateFeeding(Feeding feeding);
+        FishDisease AddDiseaseDiagnosis(FishDisease diseaseDiagnois);
         void DeleteFeeding(int feedingId);
 
         void SetAquariumDevice(int aquariumId,int deviceId);
@@ -53,6 +54,7 @@ namespace AquariumApi.DataAccess
 
         List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
         void DeleteAquariumPhoto(int photoId);
+        FishBreeding AddBreeding(FishBreeding breeding);
         void DeleteFishPhoto(int photoId);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
@@ -62,8 +64,10 @@ namespace AquariumApi.DataAccess
 
 
         AquariumUser GetAccountByLogin(int userId, string password);
+        Fish MarkDeseased(FishDeath death);
         AquariumUser GetAccountById(int userId);
         List<AquariumUser> GetAllAccounts();
+        Fish TransferFish(int fishId, int aquariumId);
         AquariumUser GetUserByUsername(string username);
         AquariumUser GetUserByEmail(string email);
         FishPhoto GetFishPhotoById(int photoId);
@@ -789,6 +793,60 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblAquarium
                 .Where(aq => aq.OwnerId == userId)
                 .ToList();
+        }
+
+        public Fish TransferFish(int fishId, int aquariumId)
+        {
+            var fish = _dbAquariumContext.TblFish.Where(f => f.Id == fishId).First();
+            fish.AquariumId = aquariumId;
+            _dbAquariumContext.Update(fish);
+            _dbAquariumContext.SaveChanges();
+            return fish;
+        }
+
+        public Fish MarkDeseased(FishDeath death)
+        {
+            var fish = _dbAquariumContext.TblFish.Where(f => f.Id == death.FishId).First();
+            fish.Death = death;
+            fish.Dead = true;
+            _dbAquariumContext.Update(fish);
+            _dbAquariumContext.SaveChanges();
+            return GetFishById(death.FishId);
+        }
+
+        public FishBreeding AddBreeding(FishBreeding breeding)
+        {
+            _dbAquariumContext.TblFishBreeds.Add(breeding);
+            _dbAquariumContext.SaveChanges();
+
+            var mother = _dbAquariumContext.TblFish.AsNoTracking()
+                .Where(f => f.Id == breeding.MotherId)
+                .Include(f => f.Species)
+                .First();
+
+            var newFish = new List<Fish>();
+
+            for (var i = 0; i < breeding.Amount; i++)
+            {
+                newFish.Add(new Fish()
+                {
+                    AquariumId = mother.AquariumId,
+                    BreedId = breeding.Id,
+                    SpeciesId = mother.SpeciesId,
+                    Name = mother.Species.Name + $"({i})"
+                });
+            }
+            _dbAquariumContext.UpdateRange(newFish);
+            _dbAquariumContext.SaveChanges();
+            breeding.Fish = newFish;
+            return breeding;
+        }
+
+        public FishDisease AddDiseaseDiagnosis(FishDisease diseaseDiagnois)
+        {
+            _dbAquariumContext.Add(diseaseDiagnois);
+            _dbAquariumContext.SaveChanges();
+            return diseaseDiagnois;
         }
     }
 }

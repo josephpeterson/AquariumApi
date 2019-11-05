@@ -18,6 +18,10 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<AquariumSnapshot> TblSnapshot { get; set; }
         public virtual DbSet<AquariumPhoto> TblAquariumPhoto { get; set; }
         public virtual DbSet<FishPhoto> TblFishPhoto { get; set; }
+        public virtual DbSet<FishDeath> TblFishDeath { get; set; }
+        public virtual DbSet<FishBreeding> TblFishBreeds { get; set; }
+        public virtual DbSet<FishDisease> TblFishDisease { get; set; }
+        public virtual DbSet<FishTreatment> TblFishTreatment { get; set; }
         public virtual DbSet<CameraConfiguration> TblCameraConfiguration { get; set; }
         public virtual DbSet<Feeding> TblFeeding { get; set; }
         public virtual DbSet<Fish> TblFish { get; set; }
@@ -102,10 +106,27 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblFish");
                 entity.HasOne(e => e.Aquarium);
                 entity.HasOne(e => e.Species);
+                entity.HasOne(e => e.Breed).WithMany(b => b.Fish);
+                entity.HasMany(e => e.Disease).WithOne(d => d.Fish);
+                entity.HasOne(e => e.Death);
             });
             modelBuilder.Entity<Species>(entity =>
             {
                 entity.ToTable("tblSpecies");
+            });
+            modelBuilder.Entity<FishDeath>(entity =>
+            {
+            });
+            modelBuilder.Entity<FishBreeding>(entity =>
+            {
+
+            });
+            modelBuilder.Entity<FishDisease>(entity =>
+            {
+                entity.HasOne(e => e.Treatment).WithOne(t => t.Disease);
+            });
+            modelBuilder.Entity<FishTreatment>(entity =>
+            {
             });
             modelBuilder.Entity<FishPhoto>(entity =>
             {
