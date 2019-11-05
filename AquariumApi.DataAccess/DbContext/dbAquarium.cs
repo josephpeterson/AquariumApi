@@ -119,7 +119,8 @@ namespace AquariumApi.DataAccess
             });
             modelBuilder.Entity<FishBreeding>(entity =>
             {
-
+                entity.HasOne(e => e.Mother);
+                entity.HasOne(e => e.Father);
             });
             modelBuilder.Entity<FishDisease>(entity =>
             {
