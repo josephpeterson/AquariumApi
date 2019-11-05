@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using AutoMapper;
+using System;
 
 namespace AquariumApi.DataAccess
 {
@@ -271,6 +272,8 @@ namespace AquariumApi.DataAccess
                 .Include(f => f.Feedings)
                 .Include(f => f.Photos)
                 .Include(f => f.Thumbnail)
+                .Include(f => f.Death)
+                .Include(f => f.Disease).ThenInclude(d => d.Treatment)
                 .FirstOrDefault();
         }
         public Fish AddFish(Fish fish)
@@ -286,6 +289,8 @@ namespace AquariumApi.DataAccess
             var fishToUpdate = GetFishById(fish.Id);
             if (fishToUpdate == null)
                 throw new KeyNotFoundException();
+            if (fishToUpdate.AquariumId != fish.AquariumId)
+                throw new Exception("AquariumId cannot be changed while updating entries");
 
             _mapper.Map(fish, fishToUpdate);
             _dbAquariumContext.TblFish.Update(fishToUpdate);

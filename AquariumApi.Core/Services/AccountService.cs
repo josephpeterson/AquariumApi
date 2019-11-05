@@ -31,6 +31,10 @@ namespace AquariumApi.Core
         AquariumUser AttemptPasswordReset(string requestToken, string newPassword);
         bool CanAccess(int accountId, AquariumUser user);
         bool CanAccess(int accountId, Aquarium aquarium);
+        bool CanModify(int accountId, Aquarium aquarium);
+
+        bool CanModify(int accountId, Fish fish);
+        bool CanAccess(int accountId, Fish fish);
     }
     public class AccountService : IAccountService
     {
@@ -224,9 +228,33 @@ namespace AquariumApi.Core
             throw new NotImplementedException();
         }
 
+        
+
+        public bool CanModify(int accountId, Fish fish)
+        {
+            var actualFish = _aquariumDao.GetFishById(fish.Id);
+            var ownerId = actualFish.Aquarium.OwnerId;
+            if (accountId != ownerId) return false;
+
+            return true;
+        }
+
+        public bool CanAccess(int accountId, Fish fish)
+        {
+            return true;
+        }
+
+        public bool CanModify(int accountId, Aquarium aquarium)
+        {
+            var actualAquarium = _aquariumDao.GetAquariumById(aquarium.Id);
+            var ownerId = actualAquarium.OwnerId;
+            if (accountId != ownerId) return false;
+
+            return true;
+        }
         public bool CanAccess(int accountId, Aquarium aquarium)
         {
-            throw new NotImplementedException();
+            return true;
         }
     }
 }

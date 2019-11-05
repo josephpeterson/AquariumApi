@@ -17,10 +17,17 @@ namespace AquariumApi.Controllers
     public class FishController : Controller
     {
         public readonly IAquariumService _aquariumService;
+        private readonly IAccountService _accountService;
+        private readonly IFishService _fishService;
         public readonly ILogger<FishController> _logger;
-        public FishController(IAquariumService aquariumService, ILogger<FishController> logger)
+        public FishController(IAquariumService aquariumService,
+            IFishService fishService,
+            IAccountService accountService,
+            ILogger<FishController> logger)
         {
             _aquariumService = aquariumService;
+            _accountService = accountService;
+            _fishService = fishService;
             _logger = logger;
         }
         [HttpGet]
@@ -32,7 +39,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"GET /v1/Fish/{fishId} called");
-                return new OkObjectResult(_aquariumService.GetFishById(fishId));
+                return new OkObjectResult(_fishService.GetFishById(fishId));
             }
             catch (Exception ex)
             {
@@ -48,13 +55,14 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                //Check if this is our aquarium
-                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                if (_aquariumService.GetAquariumById(fish.AquariumId).OwnerId != userId)
-                    return Unauthorized();
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(fish.AquariumId);
+                var access = _accountService.CanModify(id, aq);
+                if (!access) return Unauthorized();
 
                 _logger.LogInformation("POST /v1/Fish/Add called");
-                var newFish = _aquariumService.AddFish(fish);
+                var newFish = _fishService.CreateFish(fish);
                 return CreatedAtAction(nameof(GetFishById),newFish);
             }
             catch (Exception ex)
@@ -69,10 +77,10 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                //Check if this is our fish
-                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                if (_aquariumService.GetFishById(fish.Id).Aquarium.OwnerId != userId)
-                    return Unauthorized();
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var access = _accountService.CanModify(id,fish);
+                if(!access) return Unauthorized();
 
                 _logger.LogInformation("POST /v1/Fish/Update called");
                 var updatedFish = _aquariumService.UpdateFish(fish);
@@ -90,10 +98,11 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                //Check if this is our fish
-                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                if (_aquariumService.GetFishById(fishId).Aquarium.OwnerId != userId)
-                    return Unauthorized();
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var fish = _fishService.GetFishById(fishId);
+                var access = _accountService.CanModify(id, fish);
+                if (!access) return Unauthorized();
 
                 _logger.LogInformation("POST /v1/Fish/Delete called");
                 _aquariumService.DeleteFish(fishId);
@@ -113,10 +122,11 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                //Check if this is our fish
-                int userId = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                if (_aquariumService.GetFishById(fishId).Aquarium.OwnerId != userId)
-                    return Unauthorized();
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var fish = _fishService.GetFishById(fishId);
+                var access = _accountService.CanModify(id, fish);
+                if (!access) return Unauthorized();
 
                 _logger.LogInformation($"POST /v1/Fish/{fishId}/UploadPhoto called");
                 FishPhoto fishPhoto = _aquariumService.AddFishPhoto(fishId, photoData);
@@ -133,6 +143,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                //todo access
                 _logger.LogInformation($"POST /v1/Fish/Photo/Delete called");
                 _aquariumService.DeleteFishPhoto(fishPhotoId);
                 return new OkResult();
@@ -143,6 +154,91 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost, Route("/v1/Fish/Death")]
+        public IActionResult MarkFishDeath([FromBody] FishDeath death)
+        {
+            try
+            {
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var fish = _fishService.GetFishById(death.FishId);
+                var access = _accountService.CanModify(id, fish);
+                if (!access) return Unauthorized();
 
+                _logger.LogInformation($"POST /v1/Fish/Death called");
+                var d = _fishService.MarkDeseased(death);
+                return new OkObjectResult(d);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/Death endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost, Route("/v1/Fish/Breed")]
+        public IActionResult BreedFish([FromBody] FishBreeding breeding)
+        {
+            try
+            {
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var m = _fishService.GetFishById(breeding.MotherId);
+                var d = _fishService.GetFishById(breeding.FatherId);
+                var access = _accountService.CanModify(id, m);
+                var access2 = _accountService.CanModify(id, d);
+                if (!access || !access2) return Unauthorized();
+
+                _logger.LogInformation($"POST /v1/Fish/Breed called");
+                var breed = _fishService.Breed(breeding);
+                return new OkObjectResult(breed);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/Breed endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost, Route("/v1/Fish/Transfer/{aquariumId}")]
+        public IActionResult TransferFish(int aquariumId,[FromBody] Fish f)
+        {
+            try
+            {
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var fish = _fishService.GetFishById(f.Id);
+                var access = _accountService.CanModify(id, fish);
+                if (!access) return Unauthorized();
+
+                _logger.LogInformation($"POST /v1/Fish/Transfer/{aquariumId} called");
+                var d = _fishService.TransferFish(fish.Id,aquariumId);
+                return new OkObjectResult(d);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/Transfer/{aquariumId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost, Route("/v1/Fish/Disease")]
+        public IActionResult AddDiseaseDiagnosis([FromBody] FishDisease f)
+        {
+            try
+            {
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var fish = _fishService.GetFishById(f.FishId);
+                var access = _accountService.CanModify(id, fish);
+                if (!access) return Unauthorized();
+
+                _logger.LogInformation($"POST /v1/Fish/Disease called");
+                var d = _fishService.AddDiseaseDiagnosis(f);
+                return new OkObjectResult(d);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/Disease endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }
