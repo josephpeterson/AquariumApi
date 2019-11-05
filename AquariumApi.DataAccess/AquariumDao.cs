@@ -90,6 +90,8 @@ namespace AquariumApi.DataAccess
         void DeletePostThread(int threadId);
         void DeletePost(int postId);
         void UpdatePasswordForUser(int uId, string newPassword);
+        List<AquariumSnapshot> GetAquariumTemperatureHistogram(int aquariumId);
+        List<Aquarium> GetAquariumsByAccountId(int userId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -128,6 +130,9 @@ namespace AquariumApi.DataAccess
         {
             var aquarium = _dbAquariumContext.TblAquarium.AsNoTracking()
                 .Where(aq => aq.Id == aquariumId)
+                .Include(aq => aq.Equipment)
+                .Include(aq => aq.Substrate)
+                .Include(aq => aq.Plan)
                 .Include(aq => aq.Fish).ThenInclude(d => d.Species)
                 .Include(aq => aq.Fish).ThenInclude(d => d.Thumbnail)
                 .Include(aq => aq.Feedings)
@@ -158,7 +163,12 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteAquarium(int aquariumId)
         {
-            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId).Include(aq => aq.Device).Include(aq => aq.Fish).First();
+            var aquarium = _dbAquariumContext.TblAquarium.Where(aq => aq.Id == aquariumId)
+                .Include(aq => aq.Equipment)
+                .Include(aq => aq.Substrate)
+                .Include(aq => aq.Plan)
+                .Include(aq => aq.Device)
+                .Include(aq => aq.Fish).First();
             _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
             if(aquarium.Device != null)
                 _dbAquariumContext.TblDevice.Remove(aquarium.Device);
@@ -764,6 +774,21 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblAccounts.AsNoTracking()
                 .Where(p => p.Username == email || p.Email == email)
                 .SingleOrDefault();
+        }
+
+        public List<AquariumSnapshot> GetAquariumTemperatureHistogram(int aquariumId)
+        {
+            return _dbAquariumContext.TblSnapshot.AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId)
+                .TakeLast(30)
+                .ToList();
+        }
+
+        public List<Aquarium> GetAquariumsByAccountId(int userId)
+        {
+            return _dbAquariumContext.TblAquarium
+                .Where(aq => aq.OwnerId == userId)
+                .ToList();
         }
     }
 }

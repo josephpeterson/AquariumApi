@@ -64,6 +64,8 @@ namespace AquariumApi.Core
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
         AccountRelationship UpsertFollowUser(int aquariumId, int targetId);
         List<SearchResult> PerformSearch(SearchOptions options);
+        List<Aquarium> GetAquariumsByAccountId(int userId);
+        List<AquariumSnapshot> GetAquariumTemperatureHistogram(int id);
     }
     public class AquariumService : IAquariumService
     {
@@ -93,6 +95,11 @@ namespace AquariumApi.Core
         }
         public Aquarium AddAquarium(Aquarium aquarium)
         {
+            aquarium.Name = aquarium.Name.Trim();
+            aquarium.StartDate = aquarium.StartDate.ToUniversalTime();
+            if (aquarium.Name == null) throw new Exception("Invalid aquarium name");
+            if (aquarium.Gallons <= 0) throw new Exception("Invalid aquarium size");
+
             var newAquarium = _aquariumDao.AddAquarium(aquarium);
 
             var activity = new CreateAquariumActivity()
@@ -381,5 +388,15 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.PerformSearch(options);
         }
+        public List<Aquarium> GetAquariumsByAccountId(int userId)
+        {
+            return _aquariumDao.GetAquariumsByAccountId(userId);
+
+        }
+        public List<AquariumSnapshot> GetAquariumTemperatureHistogram(int id)
+        {
+            return _aquariumDao.GetAquariumTemperatureHistogram(id);
+        }
+
     }
 }

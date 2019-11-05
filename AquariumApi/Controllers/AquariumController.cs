@@ -15,10 +15,12 @@ namespace AquariumApi.Controllers
     [Authorize]
     public class AquariumController : Controller
     {
+        private readonly IAccountService _accountService;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public AquariumController(IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        public AquariumController(IAccountService accountService,IAquariumService aquariumService, ILogger<SnapshotController> logger)
         {
+            _accountService = accountService;
             _aquariumService = aquariumService;
             _logger = logger;
         }
@@ -31,9 +33,8 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation("GET /v1/Aquariums called");
-                int id = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-                var aquariums = _aquariumService.GetAllAquariums().Where(aq => aq.OwnerId == id);
+                var id = _accountService.GetCurrentUserId();
+                var aquariums = _aquariumService.GetAquariumsByAccountId(id);
                 return new OkObjectResult(aquariums);
             }
             catch (Exception ex)
@@ -75,7 +76,7 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation("POST /v1/Aquarium/Add called");
 
                 //Static properties
-                int id = Convert.ToInt16(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                int id = _accountService.GetCurrentUserId();
                 aquarium.OwnerId = id;
                 var newAquarium = _aquariumService.AddAquarium(aquarium);
                 return CreatedAtAction(nameof(GetAquariumById),new { id = newAquarium.Id }, newAquarium);
@@ -83,7 +84,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Aquarium/Add caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
+                return new BadRequestObjectResult(ex.Message);
             }
         }
         [HttpPost]
@@ -93,6 +94,9 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation("POST /v1/Aquariums/Update called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
                 var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
                 return new OkObjectResult(aquarium);
             }
@@ -109,6 +113,9 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(removeAquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
                 _aquariumService.DeleteAquarium(removeAquariumId);
                 return new OkResult();
             }
@@ -125,6 +132,9 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
                 _aquariumService.SetAquariumDevice(aquariumId, deviceId);
                 return new OkResult();
             }
@@ -133,6 +143,18 @@ namespace AquariumApi.Controllers
                 _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
+        }
+
+        [Route("/v1/Aquarium/TemperatureHistogram")]
+        public IActionResult GetTemperatureHistogram(int aquariumId)
+        {
+            var id = _accountService.GetCurrentUserId();
+            var aq = _aquariumService.GetAquariumById(aquariumId);
+            if (aq.OwnerId != id) return new UnauthorizedResult();
+
+            var temps = _aquariumService.GetAquariumTemperatureHistogram(aquariumId);
+
+            return new OkObjectResult(temps);
         }
     }
 }

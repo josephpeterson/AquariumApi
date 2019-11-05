@@ -29,6 +29,8 @@ namespace AquariumApi.Core
         void SendResetPasswordEmail(string email);
         string UpgradePasswordResetToken(string token);
         AquariumUser AttemptPasswordReset(string requestToken, string newPassword);
+        bool CanAccess(int accountId, AquariumUser user);
+        bool CanAccess(int accountId, Aquarium aquarium);
     }
     public class AccountService : IAccountService
     {
@@ -214,6 +216,17 @@ namespace AquariumApi.Core
             var pwd = _encryptionService.Encrypt(newPassword);
             _aquariumDao.UpdatePasswordForUser(uId, pwd);
             return GetUserById(uId);
+        }
+
+        public bool CanAccess(int accountId, AquariumUser user)
+        {
+
+            throw new NotImplementedException();
+        }
+
+        public bool CanAccess(int accountId, Aquarium aquarium)
+        {
+            throw new NotImplementedException();
         }
     }
 }

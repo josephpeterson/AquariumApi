@@ -12,6 +12,9 @@ namespace AquariumApi.DataAccess
         }
 
         public virtual DbSet<Aquarium> TblAquarium { get; set; }
+        public virtual DbSet<Equipment> TblAquariumEquipment { get; set; }
+        public virtual DbSet<Substrate> TblAquariumSubstrate { get; set; }
+        public virtual DbSet<AquariumPlan> TblAquariumPlan { get; set; }
         public virtual DbSet<AquariumSnapshot> TblSnapshot { get; set; }
         public virtual DbSet<AquariumPhoto> TblAquariumPhoto { get; set; }
         public virtual DbSet<FishPhoto> TblFishPhoto { get; set; }
@@ -51,7 +54,13 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(o => o.Account).WithOne()
                     .HasForeignKey<AquariumUser>(o => o.Id);
             });
-            
+            modelBuilder.Entity<SignupRequest>(entity =>
+            {
+                entity.ToTable("tblAccount");
+                entity.HasOne(o => o.Account).WithOne()
+                    .HasForeignKey<AquariumUser>(o => o.Id);
+            });
+
             modelBuilder.Entity<Aquarium>(entity =>
             {
 
@@ -59,6 +68,22 @@ namespace AquariumApi.DataAccess
                 entity.HasKey(e => new { e.Id });
                 entity.HasMany(e => e.Fish);
                 entity.HasMany(e => e.Feedings);
+
+                entity.HasOne(o => o.Substrate).WithOne(s => s.Aquarium)
+                    .HasForeignKey<Substrate>(o => o.Id);
+                entity.HasMany(e => e.Equipment).WithOne(e => e.Aquarium);
+                entity.HasOne(o => o.Plan).WithOne(s => s.Aquarium)
+                    .HasForeignKey<AquariumPlan>(o => o.Id);
+
+            });
+            modelBuilder.Entity<Substrate>(entity =>
+            {
+            });
+            modelBuilder.Entity<Equipment>(entity =>
+            {
+            });
+            modelBuilder.Entity<AquariumPlan>(entity =>
+            {
             });
             modelBuilder.Entity<AquariumSnapshot>(entity =>
             {
