@@ -42,6 +42,12 @@
     <Content Remove="wwwroot\photos\51\thumbnail\1565032033036.jpg" />
     <Content Remove="wwwroot\photos\51\medium\1565032033036.jpg" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\fish.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

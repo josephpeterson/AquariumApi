@@ -49,7 +49,9 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Snapshot/Photo/{photoId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                var path = Directory.GetCurrentDirectory();
+                return base.File("~/fish.png", "image/jpeg");
+                //return NotFound();
             }
 
         }
