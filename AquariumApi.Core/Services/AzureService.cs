@@ -23,6 +23,7 @@ namespace AquariumApi.Core
     public interface IAzureService
     {
         Task UploadFileToStorage(byte[] buffer, string fileName);
+        Task UploadFileToStorage(Stream stream, string fileName);
         Task<bool> DeleteFileFromStorage(string path);
         Task<byte[]> GetFileFromStorage(string path);
         bool Exists(string path);
@@ -55,6 +56,23 @@ namespace AquariumApi.Core
                 await currentDir.CreateIfNotExistsAsync();
             }
             await currentDir.GetFileReference(fileName).UploadFromByteArrayAsync(buffer,0,buffer.Length);
+        }
+        public async Task UploadFileToStorage(Stream stream, string path)
+        {
+            var share = await GetFileShare();
+
+            //Expand paths to share
+            var directories = Path.GetDirectoryName(path).Split("\\").ToList();
+            var fileName = Path.GetFileName(path);
+            directories.Remove(".");
+
+            var currentDir = share.GetRootDirectoryReference();
+            foreach (var dir in directories)
+            {
+                currentDir = currentDir.GetDirectoryReference(dir);
+                await currentDir.CreateIfNotExistsAsync();
+            }
+            await currentDir.GetFileReference(fileName).UploadFromStreamAsync(stream);
         }
         public async Task<bool> DeleteFileFromStorage(string path)
         {

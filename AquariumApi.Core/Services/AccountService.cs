@@ -35,6 +35,7 @@ namespace AquariumApi.Core
 
         bool CanModify(int accountId, Fish fish);
         bool CanAccess(int accountId, Fish fish);
+        AquariumProfile UpdateProfile(AquariumProfile profile);
     }
     public class AccountService : IAccountService
     {
@@ -93,6 +94,10 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.GetUserByUsername(username);
 
+        }
+        public AquariumProfile UpdateProfile(AquariumProfile profile)
+        {
+            return _aquariumDao.UpdateProfile(profile);
         }
         public AquariumUser UpdateUser(AquariumUser user)
         {

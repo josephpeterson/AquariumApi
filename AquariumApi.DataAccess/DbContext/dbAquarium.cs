@@ -43,9 +43,13 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<PostReaction> TblPostReactions { get; set; }
         public virtual DbQuery<PostBoardView> vwPostBoards { get; set; }
 
+        public virtual DbSet<PhotoContent> TblPhotoContent { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            /* Accounts */
             modelBuilder.Entity<AquariumUser>(entity =>
             {
                 entity.ToTable("tblAccount");
@@ -64,7 +68,24 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(o => o.Account).WithOne()
                     .HasForeignKey<AquariumUser>(o => o.Id);
             });
+            modelBuilder.Entity<AquariumProfile>(e =>
+            {
+                e.HasOne(ef => ef.Account).WithOne(ef => ef.Profile);
+            });
+            modelBuilder.Entity<Activity>(entity =>
+            {
+                entity.ToTable("tblAccountActivity");
 
+            });
+            modelBuilder.Entity<AccountRelationship>(entity =>
+            {
+                entity.ToTable("tblAccountRelationship");
+
+            });
+
+
+
+            /* Aquariums */
             modelBuilder.Entity<Aquarium>(entity =>
             {
 
@@ -93,14 +114,37 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblSnapshot");
                 entity.HasKey(e => new { e.Id });
-                entity.HasOne(e => e.Photo).WithOne(e => e.Snapshot);
+                entity.HasOne(e => e.Photo);
             });
-            modelBuilder.Entity<Feeding>(entity =>
+            modelBuilder.Entity<AquariumDevice>(entity =>
             {
-                entity.ToTable("tblFeeding");
-                entity.HasOne(e => e.Aquarium);
-                entity.HasOne(e => e.Fish).WithMany(f => f.Feedings);
+                entity.ToTable("tblDevice");
+                entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
+                entity.HasOne(e => e.CameraConfiguration);
+
             });
+            modelBuilder.Entity<CameraConfiguration>(entity =>
+            {
+                entity.ToTable("tblCameraConfiguration");
+                //entity.HasOne(e => e.Device).WithOne(e => e.CameraConfiguration);
+            });
+
+            modelBuilder.Entity<AquariumPhoto>(entity =>
+            {
+                entity.HasOne(e => e.Aquarium);
+                entity.HasOne(e => e.Photo);
+            });
+
+
+            /* Species */
+            modelBuilder.Entity<Species>(entity =>
+            {
+                entity.ToTable("tblSpecies");
+            });
+
+
+
+            /* Fish */
             modelBuilder.Entity<Fish>(entity =>
             {
                 entity.ToTable("tblFish");
@@ -110,10 +154,7 @@ namespace AquariumApi.DataAccess
                 entity.HasMany(e => e.Disease).WithOne(d => d.Fish);
                 entity.HasOne(e => e.Death);
             });
-            modelBuilder.Entity<Species>(entity =>
-            {
-                entity.ToTable("tblSpecies");
-            });
+            
             modelBuilder.Entity<FishDeath>(entity =>
             {
             });
@@ -131,8 +172,10 @@ namespace AquariumApi.DataAccess
             });
             modelBuilder.Entity<FishPhoto>(entity =>
             {
-                entity.ToTable("tblFishPhoto");
                 entity.HasOne(e => e.Fish).WithMany(e => e.Photos);
+                entity.HasOne(e => e.Photo);
+                entity.HasOne(e => e.Photo);
+                //todo ensure cascade
             });
             modelBuilder.Entity<FishSnapshot>(entity =>
             {
@@ -141,49 +184,19 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(e => e.AquariumSnapshot);
                 entity.HasOne(e => e.FishPhoto);
             });
-
-            modelBuilder.Entity<AquariumDevice>(entity =>
+            modelBuilder.Entity<Feeding>(entity =>
             {
-                entity.ToTable("tblDevice");
-                entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
-                entity.HasOne(e => e.CameraConfiguration);
-
-            });
-            modelBuilder.Entity<CameraConfiguration>(entity =>
-            {
-                entity.ToTable("tblCameraConfiguration");
-                //entity.HasOne(e => e.Device).WithOne(e => e.CameraConfiguration);
-            });
-
-            modelBuilder.Entity<AquariumPhoto>(entity =>
-            {
-                entity.ToTable("tblAquariumPhoto");
+                entity.ToTable("tblFeeding");
                 entity.HasOne(e => e.Aquarium);
+                entity.HasOne(e => e.Fish).WithMany(f => f.Feedings);
             });
-            modelBuilder.Entity<FishPhoto>(entity =>
-            {
-                entity.ToTable("tblFishPhoto");
-                entity.HasOne(e => e.Aquarium);
-                entity.HasOne(e => e.Fish);
-            });
+
+
+            
             modelBuilder.Entity<BugReport>(entity =>
             {
                 entity.ToTable("tblBugReports");
                 entity.HasOne(e => e.ImpactedUser);
-            });
-            modelBuilder.Entity<AquariumProfile>(e =>
-            {
-                e.HasOne(ef => ef.Account).WithOne(ef => ef.Profile);
-            });
-            modelBuilder.Entity<Activity>(entity =>
-            {
-                entity.ToTable("tblAccountActivity");
-
-            });
-            modelBuilder.Entity<AccountRelationship>(entity =>
-            {
-                entity.ToTable("tblAccountRelationship");
-
             });
 
             /* Posts */
@@ -211,7 +224,11 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblPostReaction");
 
             });
+            modelBuilder.Entity<PhotoContent>(entity =>
+            {
+                entity.ToTable("tblPhotoContent");
 
+            });
             modelBuilder.Query<PostBoardView>().ToView("vw_PostBoards");
         }
     }

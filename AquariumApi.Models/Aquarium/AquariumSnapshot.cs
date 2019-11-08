@@ -12,11 +12,9 @@ namespace AquariumApi.Models
     {
         [Required]
         public int Id { get; set; }
-        [ForeignKey("AquariumId")]
         public Aquarium Aquarium { get; set; }
         public int AquariumId { get; set; }
-        [ForeignKey("PhotoId")]
-        public AquariumPhoto Photo { get; set; }
+        public PhotoContent Photo { get; set; }
         public int? PhotoId { get; set; }
         public DateTime Date { get; set; }
         [Column(TypeName = "decimal(18,2)")]

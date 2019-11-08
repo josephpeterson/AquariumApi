@@ -1,4 +1,5 @@
-﻿using AquariumApi.Models;
+﻿using AquariumApi.DataAccess;
+using AquariumApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -14,85 +15,133 @@ namespace AquariumApi.Core
 {
     public interface IPhotoManager
     {
-        void DeletePhoto(string path);
         Dictionary<string, string> GetImageSizes(string path);
-        AquariumPhoto StoreAquariumPhoto(int aquariumId, byte[] buffer);
-        FishPhoto StoreFishPhoto(int fishId,int aquariumId,Stream file);
-        byte[] GetPhoto(string path);
+        FishPhoto AddFishPhoto(int fishId, byte[] buffer);
+        FishPhoto AddFishPhoto(int fishId, Stream stream);
+        AquariumPhoto AddAquariumPhoto(int aquariumId, byte[] buffer);
+        void DeletePhoto(int photoId);
+        byte[] GetPhoto(int photoId);
     }
     public class PhotoManager: IPhotoManager
     {
+        private readonly IAquariumDao _aquariumDao;
         private readonly IAzureService _azureService;
         private IConfiguration _config;
 
-        public PhotoManager(IConfiguration config,IAzureService azureService)
+        public PhotoManager(IConfiguration config,IAzureService azureService,IAquariumDao aquariumDao)
         {
+            _aquariumDao = aquariumDao;
             _azureService = azureService;
             _config = config;
         }
-        public AquariumPhoto StoreAquariumPhoto(int aquariumId,byte[] buffer)
+        public AquariumPhoto AddAquariumPhoto(int aquariumId, byte[] buffer)
         {
-            var now = DateTime.Now.ToUniversalTime();
-            var path = $"{_config["Photos:Path"]}/aquarium/{aquariumId}/" + now.Ticks + ".jpg";
 
-            var exists = StorePhoto(path, buffer).Result;
-            if (!exists)
-                throw new FileNotFoundException();
-
-            return new AquariumPhoto()
+            var content = StorePhoto(buffer).Result;
+            if (!content.Exists)
             {
-                Date = now,
+                //todo delete reference
+                throw new Exception("Could not store photo in storage location");
+            }
+            return _aquariumDao.AddAquariumPhoto(new AquariumPhoto
+            {
                 AquariumId = aquariumId,
-                Filepath = path
-            };
+                PhotoId = content.Id
+            });
         }
-        public FishPhoto StoreFishPhoto(int fishId, int aquariumId, Stream file)
+        public FishPhoto AddFishPhoto(int fishId, byte[] buffer)
+        {
+
+            var content = StorePhoto(buffer).Result;
+            if (!content.Exists)
+            {
+                //todo delete reference
+                throw new Exception("Could not store photo in storage location");
+            }
+            return _aquariumDao.AddFishPhoto(new FishPhoto
+            {
+                FishId = fishId,
+                PhotoId = content.Id
+            });
+        }
+        public FishPhoto AddFishPhoto(int fishId, Stream stream)
+        {
+
+            var content = StorePhoto(stream).Result;
+            if (!content.Exists)
+            {
+                //todo delete reference
+                throw new Exception("Could not store photo in storage location");
+            }
+            return _aquariumDao.AddFishPhoto(new FishPhoto
+            {
+                FishId = fishId,
+                PhotoId = content.Id
+            });
+        }
+        public void DeletePhoto(int photoId)
+        {
+            var photo = _aquariumDao.GetPhoto(photoId);
+            _aquariumDao.DeletePhoto(photoId);
+            DeletePhotoByPath(photo.Filepath);
+        }
+        public byte[] GetPhoto(int photoId)
+        {
+            var photo = _aquariumDao.GetPhoto(photoId);
+            if (!photo.Exists)
+                throw new Exception("Photo does not exist");
+            try
+            {
+                return _azureService.GetFileFromStorage(photo.Filepath).Result;
+            }
+            catch
+            {
+                photo.Exists = false;
+                _aquariumDao.UpdatePhotoReference(photo);
+                throw new Exception("Photo does not exist");
+            }
+        }
+
+        private async Task<PhotoContent> StorePhoto(byte[] buffer)
         {
             var now = DateTime.Now.ToUniversalTime();
-            var path = $"{_config["Photos:Path"]}/fish/{fishId}/" + now.Ticks + ".jpg";
-            //StorePhoto(path, file);
-            return new FishPhoto()
-            {
-                Date = now,
-                FishId = fishId,
-                Filepath = path,
-                AquariumId = aquariumId
-            };
-        }
-        public async Task<bool> StorePhoto(string path, byte[] buffer)
-        {
+            var path = $"{_config["Photos:Path"]}/" + now.Ticks + ".jpg";
+
+            var content = _aquariumDao.CreatePhotoReference();
+            content.Date = now;
+            content.Filepath = path;
+            content.Exists = true;
+
             await _azureService.UploadFileToStorage(buffer, path);
             if(Convert.ToBoolean(_config["Photos:ExpandSizes"]))
             {
                 ExpandPhotoSizes(buffer, path);
             }
-            //StorePhotoLocally(file, path);
-            /*
-            var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
-            foreach (var s in sizes)
-            {
-                var destination = Path.GetDirectoryName(path) + "/" + s + "/";
-
-                using (var ms = new MemoryStream(buffer))
-                {
-                    using (var img = Image.FromStream(ms))
-                    {
-                        Directory.CreateDirectory(destination);
-                        string filepath = destination + Path.GetFileName(path);
-                        var w = Convert.ToInt16(img.Width * s);
-                        var h = Convert.ToInt16(img.Height * s);
-                        var downsized = ResizeImage(img, w, h);
-                        var newImage = new MemoryStream();
-                        downsized.Save(newImage, ImageFormat.Jpeg);
-                        await _azureService.UploadFileToStorage(newImage.ToArray(), filepath);
-                    }
-                }
-
-            }
-            */           
-            return  _azureService.Exists(path);
+            if(_azureService.Exists(path))
+                _aquariumDao.UpdatePhotoReference(content);
+            return content;
         }
-        public async void ExpandPhotoSizes(byte[] buffer,string path)
+        private async Task<PhotoContent> StorePhoto(Stream stream)
+        {
+            var now = DateTime.Now.ToUniversalTime();
+            var path = $"{_config["Photos:Path"]}/" + now.Ticks + ".jpg";
+
+            var content = _aquariumDao.CreatePhotoReference();
+            content.Date = now;
+            content.Filepath = path;
+            content.Exists = true;
+
+            await _azureService.UploadFileToStorage(stream, path);
+            if (Convert.ToBoolean(_config["Photos:ExpandSizes"]))
+            {
+                var p = await _azureService.GetFileFromStorage(path);
+                ExpandPhotoSizes(p, path);
+            }
+            if (_azureService.Exists(path))
+                _aquariumDao.UpdatePhotoReference(content);
+            return content;
+        }
+        private async void ExpandPhotoSizes(byte[] buffer,string path)
         {
             var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
             foreach (var s in sizes)
@@ -117,7 +166,7 @@ namespace AquariumApi.Core
             }
         }
 
-        public void DeletePhoto(string path)
+        private void DeletePhotoByPath(string path)
         {
             var basePath = Path.GetDirectoryName(path);
             var filename = Path.GetFileName(path);
@@ -130,11 +179,7 @@ namespace AquariumApi.Core
             _azureService.DeleteFileFromStorage(path);
         }
 
-        public byte[] GetPhoto(string path)
-        {
-            return _azureService.GetFileFromStorage(path).Result;
-        }
-
+        
         //deprecated, needs to be updated to support azure
         public Dictionary<string, string> GetImageSizes(string path)
         {

@@ -31,7 +31,7 @@ namespace AquariumApi.Controllers
             _logger = logger;
         }
         [HttpGet]
-        [ProducesResponseType(typeof(List<Aquarium>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Fish), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         [Route("/v1/Fish/{fishId}")]
         public IActionResult GetFishById(int fishId)
@@ -44,6 +44,23 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Fish/{fishId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpGet]
+        [ProducesResponseType(typeof(List<Fish>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        [Route("/v1/Fish")]
+        public IActionResult GetAllFish()
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Fish called");
+                return new OkObjectResult(_fishService.GetAllFishByAccount(_accountService.GetCurrentUserId()));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Fish endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -115,45 +132,6 @@ namespace AquariumApi.Controllers
             }
         }
 
-
-        [HttpPost, DisableRequestSizeLimit]
-        [Route("/v1/Fish/{fishId}/UploadPhoto")]
-        public IActionResult UploadPhoto(int fishId, IFormFile photoData)
-        {
-            try
-            {
-                //Access level
-                var id = _accountService.GetCurrentUserId();
-                var fish = _fishService.GetFishById(fishId);
-                var access = _accountService.CanModify(id, fish);
-                if (!access) return Unauthorized();
-
-                _logger.LogInformation($"POST /v1/Fish/{fishId}/UploadPhoto called");
-                FishPhoto fishPhoto = _aquariumService.AddFishPhoto(fishId, photoData);
-                return CreatedAtAction(nameof(GetFishById), fishPhoto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Fish/{fishId}/UploadPhoto: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-        [HttpPost,Route("/v1/Fish/Photo/Delete")]
-        public IActionResult DeleteFishPhoto([FromBody] int fishPhotoId)
-        {
-            try
-            {
-                //todo access
-                _logger.LogInformation($"POST /v1/Fish/Photo/Delete called");
-                _aquariumService.DeleteFishPhoto(fishPhotoId);
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Fish/Photo/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
         [HttpPost, Route("/v1/Fish/Death")]
         public IActionResult MarkFishDeath([FromBody] FishDeath death)
         {
@@ -237,6 +215,30 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Fish/Disease endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Fish/{fishId}/UpdateThumbnail")]
+        public IActionResult UpdateThumbnail(int fishId,[FromBody] PhotoContent photo)
+        {
+            try
+            {
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                var fish = _fishService.GetFishById(fishId);
+                var access = _accountService.CanModify(id, fish);
+                if (!access) return Unauthorized();
+                //todo check if user has access to this photo
+
+                _logger.LogInformation("POST /v1/Fish/{fishId}/UpdateThumbnail called");
+                fish.ThumbnailPhotoId = photo.Id;
+                fish=  _aquariumService.UpdateFish(fish);
+                return new OkObjectResult(fish);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Fish/{fishId}/UpdateThumbnail endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

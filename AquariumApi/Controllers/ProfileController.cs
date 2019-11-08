@@ -17,11 +17,14 @@ namespace AquariumApi.Controllers
 {
     public class ProfileController : Controller
     {
+        private IAccountService _accountService;
         public readonly IAquariumService _aquariumService;
         private readonly IPhotoManager _photoManager;
         public readonly ILogger<PhotoController> _logger;
-        public ProfileController(IAquariumService aquariumService, ILogger<PhotoController> logger,IPhotoManager photoManager)
+        public ProfileController(IAquariumService aquariumService, ILogger<PhotoController> logger,IPhotoManager photoManager,
+            IAccountService accountService)
         {
+            _accountService = accountService;
             _aquariumService = aquariumService;
             _photoManager = photoManager;
             _logger = logger;
@@ -58,6 +61,29 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
 
+        }
+        [HttpPost]
+        [Route("/v1/Profile/UpdateThumbnail")]
+        public IActionResult UpdateThumbnail([FromBody] PhotoContent photo)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Profile/UpdateThumbnail called");
+
+                //Access level
+                var id = _accountService.GetCurrentUserId();
+                //todo check if user has access to this photo
+
+                var profile = _aquariumService.GetProfileById(id);
+                profile.Thumbnail = photo.Id;
+                var p = _accountService.UpdateProfile(profile);
+                return new OkObjectResult(p);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Profile/UpdateThumbnail endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
         }
         public class FollowRequest
         {

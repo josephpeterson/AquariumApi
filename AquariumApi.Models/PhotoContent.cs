@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
-    [Table("tblPhotoAquarium")]
-    public class AquariumPhoto
+    [Table("tblPhotoContent")]
+    public class PhotoContent
     {
         [Required]
         public int Id { get; set; }
-        public int AquariumId { get; set; }
-        public int PhotoId { get; set; }
-        public virtual Aquarium Aquarium { get; set; }
-        public virtual PhotoContent Photo { get; set; }
+        public string Filepath { get; set; }
+        public bool Exists { get; set; } = false;
+        public DateTime Date { get; set; }
+
     }
 }

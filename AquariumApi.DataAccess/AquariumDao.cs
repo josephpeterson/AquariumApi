@@ -20,7 +20,7 @@ namespace AquariumApi.DataAccess
         void DeleteAquarium(int aquariumId);
 
         AquariumSnapshot AddSnapshot(AquariumSnapshot snapshot);
-        List<AquariumSnapshot> GetSnapshots();
+        List<AquariumSnapshot> GetSnapshotsByAquarium(int aquariumId);
         AquariumSnapshot GetSnapshotById(int snapshotId);
         AquariumSnapshot DeleteSnapshot(int snapshotId);
 
@@ -71,10 +71,13 @@ namespace AquariumApi.DataAccess
         Fish TransferFish(int fishId, int aquariumId);
         AquariumUser GetUserByUsername(string username);
         AquariumUser GetUserByEmail(string email);
+        List<Fish> GetAllFishByAccount(int accountId);
         FishPhoto GetFishPhotoById(int photoId);
         BugReport AddBugReport(BugReport report);
         List<BugReport> GetAllBugs();
         AquariumProfile GetProfileById(int targetId);
+        AquariumProfile UpdateProfile(AquariumProfile profile);
+
         List<Activity> GetRecentAccountActivity(int accountId);
         Activity GetAccountActivity(int activityId);
         AquariumUser UpdateUser(AquariumUser user);
@@ -97,6 +100,10 @@ namespace AquariumApi.DataAccess
         void UpdatePasswordForUser(int uId, string newPassword);
         List<AquariumSnapshot> GetAquariumTemperatureHistogram(int aquariumId);
         List<Aquarium> GetAquariumsByAccountId(int userId);
+        PhotoContent CreatePhotoReference();
+        PhotoContent UpdatePhotoReference(PhotoContent content);
+        void DeletePhoto(int photoId);
+        PhotoContent GetPhoto(int photoId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -188,9 +195,11 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return model;
         }
-        public List<AquariumSnapshot> GetSnapshots()
+        public List<AquariumSnapshot> GetSnapshotsByAquarium(int aquariumId)
         {
-            return _dbAquariumContext.TblSnapshot.Include(s => s.Photo).AsNoTracking().ToList();
+            return _dbAquariumContext.TblSnapshot.AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId)
+                .Include(s => s.Photo).ToList();
         }
         public AquariumSnapshot GetSnapshotById(int id)
         {
@@ -201,7 +210,7 @@ namespace AquariumApi.DataAccess
         }
         public List<AquariumSnapshot> DeleteSnapshotsByAquarium(int aquariumId)
         {
-            var snapshots = GetSnapshots().Where(snap => snap.AquariumId == aquariumId);
+            var snapshots = GetSnapshotsByAquarium(aquariumId);
             _dbAquariumContext.TblSnapshot.RemoveRange(snapshots);
             _dbAquariumContext.SaveChanges();
 
@@ -270,10 +279,10 @@ namespace AquariumApi.DataAccess
                 .Include(f => f.Species)
                 .Include(f => f.Aquarium)
                 .Include(f => f.Feedings)
-                .Include(f => f.Photos)
                 .Include(f => f.Thumbnail)
                 .Include(f => f.Death)
                 .Include(f => f.Disease).ThenInclude(d => d.Treatment)
+                .Include(f => f.Photos).ThenInclude(p => p.Photo)
                 .FirstOrDefault();
         }
         public Fish AddFish(Fish fish)
@@ -552,6 +561,12 @@ namespace AquariumApi.DataAccess
             var profile = results.First();
             return profile;
         }
+        public AquariumProfile UpdateProfile(AquariumProfile profile)
+        {
+            _dbAquariumContext.TblAquariumProfiles.Update(profile);
+            _dbAquariumContext.SaveChanges();
+            return profile;
+        }
 
         public void RegisterActivity(Activity newActivity)
         {
@@ -560,7 +575,8 @@ namespace AquariumApi.DataAccess
         }
         public List<Activity> GetRecentAccountActivity(int accountId)
         {
-            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.AccountId == accountId)
+            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.AccountId == accountId 
+            &&  activity.ActivityType != ActivityTypes.LoginAccountActivity)
             .OrderByDescending(act => act.Timestamp)
             .Take(100)
             .ToList();
@@ -852,6 +868,48 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.Add(diseaseDiagnois);
             _dbAquariumContext.SaveChanges();
             return diseaseDiagnois;
+        }
+
+
+
+        public PhotoContent CreatePhotoReference()
+        {
+            var content = new PhotoContent();
+            _dbAquariumContext.TblPhotoContent.Add(content);
+            _dbAquariumContext.SaveChanges();
+            return content;
+        }
+        public PhotoContent UpdatePhotoReference(PhotoContent content)
+        {
+            _dbAquariumContext.TblPhotoContent.Update(content);
+            _dbAquariumContext.SaveChanges();
+            return content;
+        }
+        public void DeletePhoto(int photoId)
+        {
+            var photo = _dbAquariumContext.TblPhotoContent.Where(p => p.Id == photoId).First();
+            _dbAquariumContext.TblPhotoContent.Remove(photo);
+
+            var fishPhoto = _dbAquariumContext.TblFishPhoto.Where(p => p.PhotoId == photoId).FirstOrDefault();
+            if (fishPhoto != null)
+                _dbAquariumContext.TblFishPhoto.Remove(fishPhoto);
+
+            var aquariumPhoto = _dbAquariumContext.TblAquariumPhoto.Where(p => p.PhotoId == photoId).FirstOrDefault();
+            if (aquariumPhoto != null)
+                _dbAquariumContext.TblAquariumPhoto.Remove(aquariumPhoto);
+
+            _dbAquariumContext.SaveChanges();
+        }
+        public PhotoContent GetPhoto(int photoId)
+        {
+            var photo = _dbAquariumContext.TblPhotoContent.AsNoTracking()
+                .Where(p => p.Id == photoId).First();
+            return photo;
+        }
+
+        public List<Fish> GetAllFishByAccount(int accountId)
+        {
+            return _dbAquariumContext.TblFish.Where(f => f.Aquarium.OwnerId == accountId).ToList();
         }
     }
 }

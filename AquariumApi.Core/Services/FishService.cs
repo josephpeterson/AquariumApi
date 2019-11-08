@@ -24,6 +24,7 @@ namespace AquariumApi.Core
     {
         Fish CreateFish(Fish fish);
         Fish GetFishById(int fishId);
+        List<Fish> GetAllFishByAccount(int accountId);
         void DeleteFishById(int fishId);
         Fish UpdateFish(Fish fish);
         Feeding FeedFish(Feeding fish);
@@ -31,6 +32,7 @@ namespace AquariumApi.Core
         Fish MarkDeseased(FishDeath death);
         FishBreeding Breed(FishBreeding breeding);
         FishDisease AddDiseaseDiagnosis(FishDisease diseaseDiagnois);
+
     }
     public class FishService : IFishService
     {
@@ -84,6 +86,11 @@ namespace AquariumApi.Core
             return _aquariumDao.AddFeeding(feed);
         }
 
+        public List<Fish> GetAllFishByAccount(int accountId)
+        {
+            return _aquariumDao.GetAllFishByAccount(accountId);
+        }
+
         public Fish GetFishById(int fishId)
         {
             return _aquariumDao.GetFishById(fishId);
@@ -103,5 +110,6 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.UpdateFish(fish);
         }
+        
     }
 }

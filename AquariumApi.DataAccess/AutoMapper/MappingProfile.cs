@@ -14,6 +14,8 @@ namespace AquariumApi.DataAccess.AutoMapper
             CreateMap<Aquarium, Aquarium>();
             CreateMap<Activity, Activity>();
             CreateMap<AquariumUser, AquariumUser>();
+            CreateMap<AquariumProfile, AquariumProfile>()
+                .ForMember(c => c.Account, opt => opt.Ignore());
             CreateMap<Fish, Fish>();
             CreateMap<CameraConfiguration, CameraConfiguration>();
 
