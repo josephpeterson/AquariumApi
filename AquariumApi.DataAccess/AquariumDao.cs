@@ -181,9 +181,12 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Plan)
                 .Include(aq => aq.Device)
                 .Include(aq => aq.Fish).First();
+
             _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
-            if(aquarium.Device != null)
-                _dbAquariumContext.TblDevice.Remove(aquarium.Device);
+            _dbAquariumContext.TblAquariumPhoto.RemoveRange(_dbAquariumContext.TblAquariumPhoto.Where(aq => aq.AquariumId == aquariumId));
+            _dbAquariumContext.TblAquariumEquipment.RemoveRange(aquarium.Equipment);
+
+            if (aquarium.Device != null) _dbAquariumContext.TblDevice.Remove(aquarium.Device);
             _dbAquariumContext.TblAquarium.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
         }

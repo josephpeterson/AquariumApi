@@ -51,11 +51,19 @@ namespace AquariumApi.Controllers
             try
             {
                 string website = speciesSource.Website;
+
+                var i = website.IndexOf("://");
+                if (i == -1)
+                    website = "https://" + website;
+
                 Uri websiteUri = new Uri(website);
                 _logger.LogInformation($"GET /v1/Scraper/Scrape/ called");
                 _logger.LogInformation($"- Resource: {website}");
 
-                var definition = _webScraperService.GetDefinitions().Where(d => d.Host == websiteUri.Host).First();
+                var definitions = _webScraperService.GetDefinitions();
+                var definition = definitions
+                    .Where(d => d.Host.ToLower().Contains(websiteUri.Host))
+                    .First();
                 var species = new Species();
                 definition.ApplyToSpecies(websiteUri, species);
 
