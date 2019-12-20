@@ -31,7 +31,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Scan endpoint caught ebxception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/Scan endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

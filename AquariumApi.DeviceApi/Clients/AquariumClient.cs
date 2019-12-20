@@ -62,7 +62,6 @@ namespace AquariumApi.DeviceApi.Clients
             _logger.LogInformation("Sending snapshot: " + path);
 
 
-            snapshot.Date = DateTime.UtcNow;
             var j = JsonConvert.SerializeObject(snapshot, new JsonSerializerSettings
             {
                 DateFormatHandling = DateFormatHandling.MicrosoftDateFormat

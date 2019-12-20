@@ -39,6 +39,7 @@ namespace AquariumApi.DeviceApi
                 while (true)
                 {
                     ticks++;
+                    _deviceService.CheckAvailableHardware();
                     TakeSnapshot();
                     Thread.Sleep(15 * 60000);
                 }

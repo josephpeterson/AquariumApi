@@ -37,7 +37,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                return System.IO.File.ReadAllText(_config["DashboardLogFilePath"]);
+                return System.IO.File.ReadAllText("AquariumApi.log");
             }
             catch(FileNotFoundException) {
                 return "No error log found";

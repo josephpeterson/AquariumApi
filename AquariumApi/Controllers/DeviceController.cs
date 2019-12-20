@@ -187,5 +187,23 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        //Retrieve AquariumDeviceApi.log
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Device/{deviceId}/Log")]
+        public IActionResult GetDeviceLog(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Log called");
+                var deviceLog = _deviceService.GetDeviceLog(deviceId);
+                return new OkObjectResult(deviceLog);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Log: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
     }
 }

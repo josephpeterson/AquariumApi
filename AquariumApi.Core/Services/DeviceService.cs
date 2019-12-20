@@ -22,6 +22,7 @@ namespace AquariumApi.Core
         AquariumSnapshot TakeSnapshot(int deviceId);
         byte[] TakePhoto(int deviceId);
         bool SetAquarium(int deviceId, int aquariumId);
+        string GetDeviceLog(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -98,6 +99,16 @@ namespace AquariumApi.Core
                     throw new Exception("Could not take photo");
                 return result.Content.ReadAsByteArrayAsync().Result;
             }
+        }
+        public string GetDeviceLog(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/Log";
+            HttpClient client = new HttpClient();
+            HttpResponseMessage response = client.GetAsync(path).Result;
+            if (response.IsSuccessStatusCode)
+                return response.Content.ReadAsAsync<string>().Result;
+            throw new KeyNotFoundException();
         }
     }
 }
