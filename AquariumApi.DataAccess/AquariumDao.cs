@@ -807,8 +807,7 @@ namespace AquariumApi.DataAccess
         public List<AquariumSnapshot> GetAquariumTemperatureHistogram(int aquariumId)
         {
             return _dbAquariumContext.TblSnapshot.AsNoTracking()
-                .Where(s => s.AquariumId == aquariumId)
-                .TakeLast(30)
+                .Where(s => s.AquariumId == aquariumId && s.Temperature != null)
                 .ToList();
         }
 

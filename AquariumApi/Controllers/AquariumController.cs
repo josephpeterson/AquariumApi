@@ -156,5 +156,19 @@ namespace AquariumApi.Controllers
 
             return new OkObjectResult(temps);
         }
+        [Route("/v1/Aquarium/TemperatureHistogram/All")]
+        public IActionResult GetTemperatureHistogramAll()
+        {
+            var id = _accountService.GetCurrentUserId();
+
+            //var temps = new List<List<AquariumSnapshot>>();
+            var aquariums = _aquariumService.GetAquariumsByAccountId(id).Select(aquarium =>
+            {
+                var snapshots = _aquariumService.GetAquariumTemperatureHistogram(aquarium.Id);
+                aquarium.Snapshots = snapshots;
+                return aquarium;
+            }).ToList();
+            return new OkObjectResult(aquariums);
+        }
     }
 }
