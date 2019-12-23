@@ -32,6 +32,7 @@ namespace AquariumApi.Controllers
         [Route("/v1/Snapshot/{id}/All")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        //todo deprecate
         public IActionResult GetSnapshots(int id, [FromQuery] int count, [FromQuery] int offset = 0)
         {
             try

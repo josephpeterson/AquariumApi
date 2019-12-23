@@ -95,6 +95,7 @@ namespace AquariumApi.DeviceApi
             services.AddTransient<IAquariumClient, AquariumClient>();
             services.AddSingleton<IDeviceService, DeviceService>();
             services.AddSingleton<IScheduleService, ScheduleService>();
+            services.AddSingleton<IQueueService, QueueService>();
 
         }
 

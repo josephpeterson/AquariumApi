@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 
 namespace AquariumApi.DeviceApi.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class SettingsController : ControllerBase
     {
@@ -22,7 +21,7 @@ namespace AquariumApi.DeviceApi.Controllers
             _logger = logger;
         }
         [HttpGet]
-        [Route("Log")]
+        [Route("/v1/Log")]
         public IActionResult GetDeviceLog()
         {
             string txt;

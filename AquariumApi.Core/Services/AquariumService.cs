@@ -65,6 +65,7 @@ namespace AquariumApi.Core
         List<SearchResult> PerformSearch(SearchOptions options);
         List<Aquarium> GetAquariumsByAccountId(int userId);
         List<AquariumSnapshot> GetAquariumTemperatureHistogram(int id);
+        List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max);
     }
     public class AquariumService : IAquariumService
     {
@@ -379,6 +380,11 @@ namespace AquariumApi.Core
         public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
         {
             throw new NotImplementedException();
+        }
+
+        public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max)
+        {
+            return _aquariumDao.GetAquariumSnapshots(aquariumId,offset, max);
         }
     }
 }

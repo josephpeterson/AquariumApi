@@ -204,6 +204,41 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        //Retrieve Assigned aquarium/schedule information
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Device/{deviceId}/Information")]
+        public IActionResult GetDeviceInformation(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Information called");
+                var deviceInformation = _deviceService.GetDeviceInformation(deviceId);
+                return new OkObjectResult(deviceInformation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Information: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
+
+        //Retrieve Assigned aquarium/schedule information
+        [Route("/v1/Device/{deviceId}/UpdateConfigurationFile")]
+        public IActionResult UpdateConfigurationFile(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Information called");
+                var deviceInformation = _deviceService.GetDeviceInformation(deviceId);
+                return new OkObjectResult(deviceInformation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Information: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
 
     }
 }

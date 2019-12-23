@@ -20,12 +20,14 @@ namespace AquariumApi.DeviceApi
         private IConfiguration _config;
         private ILogger<ScheduleService> _logger;
         private IDeviceService _deviceService;
+        private IQueueService _queueService;
 
-        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IDeviceService deviceService)
+        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IDeviceService deviceService,IQueueService queueService)
         {
             _config = config;
             _logger = logger;
             _deviceService = deviceService;
+            _queueService = queueService;
         }
 
         public void Start()
@@ -48,13 +50,22 @@ namespace AquariumApi.DeviceApi
 
         private void TakeSnapshot()
         {
-            try
-            {
                 _logger.LogWarning("Taking snapshot...");
                 var device = _deviceService.GetDevice();
+            try
+            {
                 var snapshot = _deviceService.TakeSnapshot();
                 var photo = _deviceService.TakePhoto(device.CameraConfiguration);
-                _deviceService.SendAquariumSnapshot(snapshot, photo);
+
+                try
+                {
+                    _deviceService.SendAquariumSnapshot(snapshot, photo);
+                }
+                catch(Exception e)
+                {
+                    //Queue snapshot
+                    _queueService.QueueAquariumSnapshot(snapshot, photo);
+                }
             }
             catch(Exception ex)
             {

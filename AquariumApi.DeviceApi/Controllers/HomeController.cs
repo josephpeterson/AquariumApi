@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace AquariumApi.DeviceApi.Controllers
@@ -13,11 +14,13 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IDeviceService _deviceService;
         private ILogger<HomeController> _logger;
+        private IConfiguration _config;
 
-        public HomeController(IDeviceService deviceService, ILogger<HomeController> logger)
+        public HomeController(IDeviceService deviceService, ILogger<HomeController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
             _logger = logger;
+            _config = config;
         }
         [HttpGet]
         [Route("/v1/Scan")]
@@ -57,6 +60,26 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             _logger.LogInformation("GET /v1/Ping called");
             return new OkResult();
+        }
+        [HttpGet]
+        [Route("/v1/Information")]
+        public IActionResult GetDeviceInformation()
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Information called");
+                var information = new DeviceInformation()
+                {
+                    Aquarium = _deviceService.GetDevice().Aquarium,
+                    config = System.IO.File.ReadAllText("config.json")
+                };
+                return new OkObjectResult(information);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Information endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
         }
     }
 }

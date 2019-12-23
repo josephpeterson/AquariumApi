@@ -104,6 +104,7 @@ namespace AquariumApi.DataAccess
         PhotoContent UpdatePhotoReference(PhotoContent content);
         void DeletePhoto(int photoId);
         PhotoContent GetPhoto(int photoId);
+        List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max);
     }
 
     public class AquariumDao : IAquariumDao
@@ -912,6 +913,15 @@ namespace AquariumApi.DataAccess
         public List<Fish> GetAllFishByAccount(int accountId)
         {
             return _dbAquariumContext.TblFish.Where(f => f.Aquarium.OwnerId == accountId).ToList();
+        }
+
+        public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max)
+        {
+            return _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId)
+                .OrderByDescending(s => s.Date)
+                .Skip(offset)
+                .Take(max)
+                .ToList();
         }
     }
 }

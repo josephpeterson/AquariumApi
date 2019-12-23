@@ -23,6 +23,7 @@ namespace AquariumApi.Core
         byte[] TakePhoto(int deviceId);
         bool SetAquarium(int deviceId, int aquariumId);
         string GetDeviceLog(int deviceId);
+        DeviceInformation GetDeviceInformation(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -107,8 +108,18 @@ namespace AquariumApi.Core
             HttpClient client = new HttpClient();
             HttpResponseMessage response = client.GetAsync(path).Result;
             if (response.IsSuccessStatusCode)
-                return response.Content.ReadAsAsync<string>().Result;
+                return response.Content.ReadAsStringAsync().Result;
             throw new KeyNotFoundException();
+        }
+
+        public DeviceInformation GetDeviceInformation(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/Information";
+            HttpClient client = new HttpClient();
+            var data = client.GetStringAsync(path).Result;
+            var d = JsonConvert.DeserializeObject<DeviceInformation>(data);
+            return d;
         }
     }
 }

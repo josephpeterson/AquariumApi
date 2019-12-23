@@ -18,7 +18,7 @@ namespace AquariumApi.Controllers
         private readonly IAccountService _accountService;
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public AquariumController(IAccountService accountService,IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        public AquariumController(IAccountService accountService, IAquariumService aquariumService, ILogger<SnapshotController> logger)
         {
             _accountService = accountService;
             _aquariumService = aquariumService;
@@ -79,7 +79,7 @@ namespace AquariumApi.Controllers
                 int id = _accountService.GetCurrentUserId();
                 aquarium.OwnerId = id;
                 var newAquarium = _aquariumService.AddAquarium(aquarium);
-                return CreatedAtAction(nameof(GetAquariumById),new { id = newAquarium.Id }, newAquarium);
+                return CreatedAtAction(nameof(GetAquariumById), new { id = newAquarium.Id }, newAquarium);
             }
             catch (Exception ex)
             {
@@ -127,7 +127,7 @@ namespace AquariumApi.Controllers
         }
         [HttpPost]
         [Route("/v1/Aquarium/{aquariumId}/Device")]
-        public IActionResult SetAquariumDevice(int aquariumId,[FromBody] int deviceId)
+        public IActionResult SetAquariumDevice(int aquariumId, [FromBody] int deviceId)
         {
             try
             {
@@ -170,5 +170,25 @@ namespace AquariumApi.Controllers
             }).ToList();
             return new OkObjectResult(aquariums);
         }
+
+        [HttpPost]
+        [Route("/v1/Aquarium/{aquariumId}/Snapshots")]
+        public IActionResult GetAquariumSnapshots(int aquariumId, [FromBody] SnapshotSelection selection)
+        {
+            var id = _accountService.GetCurrentUserId();
+
+            var aq = _aquariumService.GetAquariumById(aquariumId);
+            if (aq.OwnerId != id) return new UnauthorizedResult();
+
+
+            //var temps = new List<List<AquariumSnapshot>>();
+            var snapshots = _aquariumService.GetAquariumSnapshots(aquariumId,selection.offset, selection.max);
+            return new OkObjectResult(snapshots);
+        }
+    }
+    public class SnapshotSelection
+    {
+        public int offset = 0;
+        public int max = 0;
     }
 }
