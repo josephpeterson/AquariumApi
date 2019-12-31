@@ -1,32 +1,22 @@
 ﻿using AquariumApi.DataAccess;
-using AquariumApi.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.File;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 
 namespace AquariumApi.Core
 {
     public interface IAzureService
     {
-        Task UploadFileToStorage(byte[] buffer, string fileName);
-        Task UploadFileToStorage(Stream stream, string fileName);
-        Task<bool> DeleteFileFromStorage(string path);
-        Task<byte[]> GetFileFromStorage(string path);
-        bool Exists(string path);
+        Task UploadFileToStorageContainer(byte[] buffer, string fileName);
+        Task UploadFileToStorageContainer(Stream stream, string fileName);
+        Task<bool> DeleteFileFromStorageContainer(string path);
+        Task<byte[]> GetFileFromStorageContainer(string path);
+        bool ExistsInStorageContainer(string path);
 
     }
     public class AzureService : IAzureService
@@ -40,9 +30,9 @@ namespace AquariumApi.Core
             _aquariumDao = aquariumDao;
         }
 
-        public async Task UploadFileToStorage(byte[] buffer, string path)
+        public async Task UploadFileToStorageTable(byte[] buffer, string path)
         {
-            var share = await GetFileShare();
+            var share = await GetFileShareTable();
 
             //Expand paths to share
             var directories = Path.GetDirectoryName(path).Split("\\").ToList();
@@ -57,9 +47,9 @@ namespace AquariumApi.Core
             }
             await currentDir.GetFileReference(fileName).UploadFromByteArrayAsync(buffer,0,buffer.Length);
         }
-        public async Task UploadFileToStorage(Stream stream, string path)
+        public async Task UploadFileToStorageTable(Stream stream, string path)
         {
-            var share = await GetFileShare();
+            var share = await GetFileShareTable();
 
             //Expand paths to share
             var directories = Path.GetDirectoryName(path).Split("\\").ToList();
@@ -74,15 +64,15 @@ namespace AquariumApi.Core
             }
             await currentDir.GetFileReference(fileName).UploadFromStreamAsync(stream);
         }
-        public async Task<bool> DeleteFileFromStorage(string path)
+        public async Task<bool> DeleteFileFromStorageTable(string path)
         {
-            var share = await GetFileShare();
+            var share = await GetFileShareTable();
             var currentDir = share.GetRootDirectoryReference();
             return await currentDir.GetFileReference(path).DeleteIfExistsAsync();
         }
-        public async Task<byte[]> GetFileFromStorage(string path)
+        public async Task<byte[]> GetFileFromStorageTable(string path)
         {
-            var share = await GetFileShare();
+            var share = await GetFileShareTable();
             var currentDir = share.GetRootDirectoryReference();
             using (var ms = new MemoryStream())
             {
@@ -90,15 +80,15 @@ namespace AquariumApi.Core
                 return ms.ToArray();
             }
         }
-        public bool Exists(string path)
+        public bool ExistsInStorageTable(string path)
         {
-            var share = GetFileShare().Result;
+            var share = GetFileShareTable().Result;
             var currentDir = share.GetRootDirectoryReference();
             return currentDir.GetFileReference(path).ExistsAsync().Result;
        }
-
-        private async Task<CloudFileShare> GetFileShare()
+        private async Task<CloudFileShare> GetFileShareTable()
         {
+
             string accountName = _configuration["Azure:AccountUsername"];
             string accountKey = _configuration["Azure:AccountKey"];
             string shareName = _configuration["Azure:AquariumPhotosShare"];
@@ -109,6 +99,55 @@ namespace AquariumApi.Core
             var share = storageAccount.CreateCloudFileClient().GetShareReference(shareName);
             await share.CreateIfNotExistsAsync();
             return share;
+        }
+
+
+        private BlobContainerClient GetFileShareContainer()
+        {
+            string connectionString = _configuration["Azure:ConnectionString"];
+            BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+            string containerName = "$web";
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            return containerClient;
+        }
+       
+        public async Task UploadFileToStorageContainer(byte[] buffer, string path)
+        {
+            BlobContainerClient containerClient = GetFileShareContainer();
+            BlobClient blobClient = containerClient.GetBlobClient(path);
+            using (var stream = new MemoryStream(buffer, writable: false))
+            {
+                await blobClient.UploadAsync(stream);
+            }
+        }
+        public async Task UploadFileToStorageContainer(Stream stream, string path)
+        {
+            BlobContainerClient containerClient = GetFileShareContainer();
+            BlobClient blobClient = containerClient.GetBlobClient(path);
+            await blobClient.UploadAsync(stream);
+        }
+        public async Task<bool> DeleteFileFromStorageContainer(string path)
+        {
+            BlobContainerClient containerClient = GetFileShareContainer();
+            BlobClient blobClient = containerClient.GetBlobClient(path);
+            return await blobClient.DeleteIfExistsAsync();
+        }
+        public bool ExistsInStorageContainer(string path)
+        {
+            BlobContainerClient containerClient = GetFileShareContainer();
+            BlobClient blobClient = containerClient.GetBlobClient(path);
+            return blobClient.Download().GetRawResponse().Status == 200;
+        }
+        public async Task<byte[]> GetFileFromStorageContainer(string path)
+        {
+            BlobContainerClient containerClient = GetFileShareContainer();
+            BlobClient blobClient = containerClient.GetBlobClient(path);
+            var data = await blobClient.DownloadAsync();
+            using (var memoryStream = new MemoryStream())
+            {
+                data.Value.Content.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
         }
     }
 }

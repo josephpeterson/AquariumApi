@@ -75,7 +75,7 @@ namespace AquariumApi.Controllers
                 //todo check if user has access to this photo
 
                 var profile = _aquariumService.GetProfileById(id);
-                profile.Thumbnail = photo.Id;
+                profile.ThumbnailId = photo.Id;
                 var p = _accountService.UpdateProfile(profile);
                 return new OkObjectResult(p);
             }

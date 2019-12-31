@@ -26,8 +26,9 @@ namespace AquariumApi.Models
         [NotMapped]
         public virtual ICollection<Activity> Activity { get; set; }
         //[NotMapped]
-        public int? Thumbnail { get; set; }
+        public int? ThumbnailId { get; set; }
         [NotMapped]
         public virtual AccountRelationship Relationship { get; set; }
+        public virtual PhotoContent Thumbnail { get; set; }
     }
 }

@@ -39,6 +39,7 @@ namespace AquariumApi.Controllers
         [Route("/v1/Photo/{photoId}/{size}")]
         public IActionResult GetPhotoContent(int photoId, string size = "")
         {
+            return BadRequest();
             try
             {
 

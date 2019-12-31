@@ -283,7 +283,7 @@ namespace AquariumApi.DataAccess
                 .Include(f => f.Species)
                 .Include(f => f.Aquarium)
                 .Include(f => f.Feedings)
-                .Include(f => f.Thumbnail)
+                .Include(f => f.Thumbnail).ThenInclude(p => p.Photo)
                 .Include(f => f.Death)
                 .Include(f => f.Disease).ThenInclude(d => d.Treatment)
                 .Include(f => f.Photos).ThenInclude(p => p.Photo)
@@ -560,6 +560,7 @@ namespace AquariumApi.DataAccess
         {
             var results = _dbAquariumContext.TblAquariumProfiles.AsNoTracking()
                 .Where(r => r.Id == targetId)
+                .Include(p => p.Thumbnail)
                 .Include(e => e.Aquariums).ThenInclude(e => e.Fish)
                 .Include(e => e.Account );
             var profile = results.First();
@@ -918,6 +919,7 @@ namespace AquariumApi.DataAccess
         public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max)
         {
             return _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId)
+                .Include(s => s.Photo)
                 .OrderByDescending(s => s.Date)
                 .Skip(offset)
                 .Take(max)

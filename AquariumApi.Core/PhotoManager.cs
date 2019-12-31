@@ -92,7 +92,7 @@ namespace AquariumApi.Core
                 throw new Exception("Photo does not exist");
             try
             {
-                return _azureService.GetFileFromStorage(photo.Filepath).Result;
+                return _azureService.GetFileFromStorageContainer(photo.Filepath).Result;
             }
             catch
             {
@@ -112,12 +112,12 @@ namespace AquariumApi.Core
             content.Filepath = path;
             content.Exists = true;
 
-            await _azureService.UploadFileToStorage(buffer, path);
+            await _azureService.UploadFileToStorageContainer(buffer, path);
             if(Convert.ToBoolean(_config["Photos:ExpandSizes"]))
             {
                 ExpandPhotoSizes(buffer, path);
             }
-            if(_azureService.Exists(path))
+            if(_azureService.ExistsInStorageContainer(path))
                 _aquariumDao.UpdatePhotoReference(content);
             return content;
         }
@@ -131,13 +131,13 @@ namespace AquariumApi.Core
             content.Filepath = path;
             content.Exists = true;
 
-            await _azureService.UploadFileToStorage(stream, path);
+            await _azureService.UploadFileToStorageContainer(stream, path);
             if (Convert.ToBoolean(_config["Photos:ExpandSizes"]))
             {
-                var p = await _azureService.GetFileFromStorage(path);
+                var p = await _azureService.GetFileFromStorageContainer(path);
                 ExpandPhotoSizes(p, path);
             }
-            if (_azureService.Exists(path))
+            if (_azureService.ExistsInStorageContainer(path))
                 _aquariumDao.UpdatePhotoReference(content);
             return content;
         }
@@ -159,7 +159,7 @@ namespace AquariumApi.Core
                         var downsized = ResizeImage(img, w, h);
                         var newImage = new MemoryStream();
                         downsized.Save(newImage, ImageFormat.Jpeg);
-                        await _azureService.UploadFileToStorage(newImage.ToArray(), filepath);
+                        await _azureService.UploadFileToStorageContainer(newImage.ToArray(), filepath);
                     }
                 }
 
@@ -174,9 +174,9 @@ namespace AquariumApi.Core
             foreach (var s in sizes)
             {
                 var destination = Path.GetDirectoryName(path) + "/x" + s + "/" + filename;
-                _azureService.DeleteFileFromStorage(destination);
+                _azureService.DeleteFileFromStorageContainer(destination);
             }
-            _azureService.DeleteFileFromStorage(path);
+            _azureService.DeleteFileFromStorageContainer(path);
         }
 
         
