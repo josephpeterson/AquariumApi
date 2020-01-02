@@ -16,6 +16,8 @@ namespace AquariumApi.DeviceApi
 {
     public interface IScheduleService
     {
+        List<DeviceScheduleTask> ExpandSchedule(DeviceSchedule schedule);
+        FutureTask GetNextTask(List<DeviceScheduleTask> scheduledTasks, DateTime? currentTime = null);
         List<DeviceSchedule> LoadAllSchedules();
         void SaveScheduleAssignment(List<DeviceSchedule> deviceSchedules);
         void Start();
@@ -27,7 +29,7 @@ namespace AquariumApi.DeviceApi
         private IDeviceService _deviceService;
         private IQueueService _queueService;
 
-        public List<Task> threads = new List<Task>();
+        public List<Thread> threads = new List<Thread>();
 
         public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IDeviceService deviceService,IQueueService queueService)
         {
@@ -42,52 +44,30 @@ namespace AquariumApi.DeviceApi
             Stop();
 
             var deviceSchedules = LoadAllSchedules();
-            _logger.LogInformation($"{deviceSchedules.Count} schedules have been loaded");
+            _logger.LogWarning($"{deviceSchedules.Count} schedules have been loaded");
 
 
             deviceSchedules.ForEach(schedule =>
             {
-                _logger.LogWarning("Expanding schedule...");
-                var scheduledTasks = ExpandSchedule(schedule);
-
-                var thread = Task.Run(() =>
-                {
-                    var ticks = 0;
-                    while (true)
-                    {
-                        ticks++;
-                        var task = GetNextTask(scheduledTasks);
-                        _logger.LogInformation($"Next task scheduled in {task.eta.TotalMinutes} seconds (Schedule: {task.task.Schedule.Name})");
-                        Thread.Sleep(task.eta);
-
-                        try
-                        {
-                            _logger.LogInformation($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
-                            PerformTask(task.task);
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.LogError($"Could not perform task [taskId:{task.task.TaskId} Schedule: {task.task.Schedule.Name}: Error: {e.Message}");
-                        }
-                    }
-                });
-                thread.Start();
-                threads.Add(thread);
+                BeginSchedule(schedule); 
             });
             
         }
         public void Stop()
         {
-            _logger.LogInformation($"Stopping schedule with {threads.Count} threads...");
-            threads.Where(t => !t.IsCanceled).ToList().ForEach(t =>
+            _logger.LogWarning($"Stopping schedule with {threads.Count} threads...");
+            threads.Where(t => !t.IsAlive).ToList().ForEach(t =>
             {
-                t.Dispose();
+                t.Abort();
             });
         }
 
-        public void BeginSchedule()
+        public void BeginSchedule(DeviceSchedule schedule)
         {
-
+            var thread = new ScheduleThread(schedule, this, _logger, _deviceService, _queueService);
+            var thr = new Thread(new ThreadStart(thread.Main));
+            thr.Start();
+            threads.Add(thr);
         }
 
         
@@ -98,7 +78,7 @@ namespace AquariumApi.DeviceApi
             var filepath = _config["ScheduleAssignmentPath"];
             var json = JsonConvert.SerializeObject(deviceSchedules);
             System.IO.File.WriteAllText(filepath, json);
-            _logger.LogInformation($"Schedule assignments saved ({deviceSchedules.Count} schedules written)");
+            _logger.LogWarning($"Schedule assignments saved ({deviceSchedules.Count} schedules written)");
         }
         public List<DeviceSchedule> LoadAllSchedules()
         {
@@ -166,9 +146,55 @@ namespace AquariumApi.DeviceApi
             };
         }
 
+        }
+
+    public class ScheduleThread
+    {
+        private IConfiguration _config;
+        private ILogger<ScheduleService> _logger;
+        private IDeviceService _deviceService;
+        private IScheduleService _scheduleService;
+        private IQueueService _queueService;
+
+        private List<DeviceScheduleTask> scheduledTasks;
+        private DeviceSchedule _schedule;
+
+        public ScheduleThread(DeviceSchedule schedule,IScheduleService scheduleService, ILogger<ScheduleService> logger, IDeviceService deviceService, IQueueService queueService)
+        {
+            _logger = logger;
+            _deviceService = deviceService;
+            _scheduleService = scheduleService;
+            _queueService = queueService;
+            _queueService = queueService;
+            _schedule = schedule;
+
+            _logger.LogWarning("Expanding schedule...");
+            scheduledTasks = _scheduleService.ExpandSchedule(schedule);
+        }
+        public void Main()
+        {
+            var ticks = 0;
+            while (true)
+            {
+                ticks++;
+                var task = _scheduleService.GetNextTask(scheduledTasks);
+                _logger.LogWarning($"Next task scheduled in {task.eta.TotalMinutes} seconds (Schedule: {task.task.Schedule.Name})");
+                Thread.Sleep(task.eta);
+
+                try
+                {
+                    _logger.LogWarning($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
+                    PerformTask(task.task);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Could not perform task [taskId:{task.task.TaskId} Schedule: {task.task.Schedule.Name}: Error: {e.Message}");
+                }
+            }
+        }
         public void PerformTask(DeviceScheduleTask task)
         {
-            switch(task.Id)
+            switch (task.Id)
             {
                 case 1:
                     TakeSnapshotTask(task);
@@ -194,7 +220,7 @@ namespace AquariumApi.DeviceApi
                         .Where(sa => sa.ScheduleId == task.ScheduleId)
                         .Select(sa => sa.DeviceId)
                         .First();
-                    _deviceService.SendAquariumSnapshotToHost(task.Schedule.Host,deviceId,snapshot, photo);
+                    _deviceService.SendAquariumSnapshotToHost(task.Schedule.Host, deviceId, snapshot, photo);
                 }
                 catch (Exception e)
                 {
@@ -207,6 +233,7 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError($"TakeSnapshot: { ex.Message } Details: { ex.ToString() }");
             }
         }
+
     }
 
     public class FutureTask
