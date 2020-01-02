@@ -16,6 +16,7 @@ namespace AquariumApi.DeviceApi
 {
     public interface IScheduleService
     {
+        List<DeviceSchedule> LoadAllSchedules();
         void SaveScheduleAssignment(List<DeviceSchedule> deviceSchedules);
         void Start();
     }

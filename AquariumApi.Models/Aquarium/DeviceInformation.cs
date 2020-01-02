@@ -10,7 +10,7 @@ namespace AquariumApi.Models
     public class DeviceInformation
     {
         public Aquarium Aquarium;
-        public object Schedule;
         public object config;
+        public List<DeviceSchedule> Schedules;
     }
 }

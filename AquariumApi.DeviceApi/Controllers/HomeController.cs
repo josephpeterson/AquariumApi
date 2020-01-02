@@ -75,7 +75,8 @@ namespace AquariumApi.DeviceApi.Controllers
                 var information = new DeviceInformation()
                 {
                     Aquarium = _deviceService.GetDevice().Aquarium,
-                    config = System.IO.File.ReadAllText("config.json")
+                    config = System.IO.File.ReadAllText("config.json"),
+                    Schedules = _scheduleService.LoadAllSchedules()
                 };
                 return new OkObjectResult(information);
             }
