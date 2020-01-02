@@ -27,7 +27,7 @@ namespace AquariumApi.DeviceApi
         private IDeviceService _deviceService;
         private IQueueService _queueService;
 
-        public List<Task> threads;
+        public List<Task> threads = new List<Task>();
 
         public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IDeviceService deviceService,IQueueService queueService)
         {
@@ -74,7 +74,7 @@ namespace AquariumApi.DeviceApi
         }
         public void Stop()
         {
-            _logger.LogWarning($"Stopping schedule with {threads.Count} threads...");
+            _logger.LogInformation($"Stopping schedule with {threads.Count} threads...");
             threads.Where(t => !t.IsCanceled).ToList().ForEach(t =>
             {
                 t.Dispose();
@@ -94,6 +94,7 @@ namespace AquariumApi.DeviceApi
             var filepath = _config["ScheduleAssignmentPath"];
             var json = JsonConvert.SerializeObject(deviceSchedules);
             System.IO.File.WriteAllText(filepath, json);
+            _logger.LogInformation($"Schedule assignments saved ({deviceSchedules.Count} schedules written)");
         }
         public List<DeviceSchedule> LoadAllSchedules()
         {
