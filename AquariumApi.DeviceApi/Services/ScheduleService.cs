@@ -49,9 +49,16 @@ namespace AquariumApi.DeviceApi
 
             deviceSchedules.ForEach(schedule =>
             {
+                try
+                {
                 BeginSchedule(schedule); 
+                }
+                catch(Exception e)
+                {
+                    _logger.LogWarning($"Could not start schedule (Schedule: {schedule.Name}) Exception: {e.Message}");
+                }
             });
-            
+            _logger.LogWarning($"{threads.Count} schedules have started");
         }
         public void Stop()
         {
