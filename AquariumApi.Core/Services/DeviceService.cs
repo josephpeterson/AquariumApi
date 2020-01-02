@@ -134,10 +134,11 @@ namespace AquariumApi.Core
                 jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 var config = device.CameraConfiguration;
                 //config.Device = null;
+
                 var httpContent = new StringContent(JsonConvert.SerializeObject(deviceSchedules, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not take photo");
+                    throw new Exception("Could not apply schedule assignment to device");
             }
         }
     }
