@@ -20,7 +20,7 @@ namespace AquariumApi.Models
         public DeviceSchedule Schedule { get; set; }
 
         [ForeignKey("DeviceId")]
-        public DeviceSchedule Device { get; set; }
+        public AquariumDevice Device { get; set; }
 
     }
 }

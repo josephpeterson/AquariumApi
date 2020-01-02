@@ -13,12 +13,16 @@ namespace AquariumApi.DeviceApi.Controllers
     public class HomeController : Controller
     {
         private IDeviceService _deviceService;
+        private IScheduleService _scheduleService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
 
-        public HomeController(IDeviceService deviceService, ILogger<HomeController> logger, IConfiguration config)
+        public HomeController(IDeviceService deviceService,
+            IScheduleService scheduleService,
+            ILogger<HomeController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
+            _scheduleService = scheduleService;
             _logger = logger;
             _config = config;
         }
@@ -87,7 +91,13 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
+                deviceSchedules.ForEach(s =>
+                {
+                    s.Host = HttpContext.Request.Headers["Referer"];
+                });
                 _logger.LogInformation("POST /v1/ApplyScheduleAssignment called");
+                _scheduleService.SaveScheduleAssignment(deviceSchedules);
+                _scheduleService.Start();
                 return new OkResult();
             }
             catch (Exception ex)

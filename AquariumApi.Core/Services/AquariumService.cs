@@ -404,7 +404,21 @@ namespace AquariumApi.Core
 
         public void DeleteDeviceSchedule(int scheduleId)
         {
+            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
             _aquariumDao.DeleteDeviceSchedule(scheduleId);
+            affectedDevices.ForEach(device =>
+            {
+                try
+                {
+
+                    _deviceService.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
+                }
+                catch (Exception e)
+                {
+                    //todo could not update schedule assignment (pi is offline maybe)
+                }
+            });
+
         }
 
         public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
@@ -437,7 +451,7 @@ namespace AquariumApi.Core
             try
             {
 
-            _deviceService.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+             _deviceService.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
             }
             catch(Exception e)
             {
@@ -450,7 +464,25 @@ namespace AquariumApi.Core
 
         public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
         {
-            return _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
+            var updatedSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
+            UpdateDeviceSchedulesByScheduleId(deviceSchedule.Id);
+            return updatedSchedule;
+        }
+        public void UpdateDeviceSchedulesByScheduleId(int scheduleId)
+        {
+            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
+            affectedDevices.ForEach(device =>
+            {
+                try
+                {
+
+                _deviceService.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
+                }
+                catch(Exception e)
+                {
+                    //todo could not update schedule assignment (pi is offline maybe)
+                }
+            });
         }
     }
 }

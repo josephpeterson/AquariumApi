@@ -114,6 +114,7 @@ namespace AquariumApi.DataAccess
         void UnassignDeviceSchedule(int scheduleId, int deviceId);
         DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
         List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId);
+        List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1017,7 +1018,15 @@ namespace AquariumApi.DataAccess
                 .ToList();
         }
 
-        
+        public List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId)
+        {
+            var devices = _dbAquariumContext.TblDeviceScheduleAssignment
+                .Where(sa => sa.ScheduleId == scheduleId)
+                .Include(sa => sa.Device)
+                .Select(sa => sa.Device)
+                .ToList();
+            return devices;
+        }
     }
 }
 
