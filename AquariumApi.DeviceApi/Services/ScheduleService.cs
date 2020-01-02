@@ -50,7 +50,7 @@ namespace AquariumApi.DeviceApi
                 _logger.LogWarning("Expanding schedule...");
                 var scheduledTasks = ExpandSchedule(schedule);
 
-                threads.Add(Task.Run(() =>
+                var thread = Task.Run(() =>
                 {
                     var ticks = 0;
                     while (true)
@@ -65,12 +65,14 @@ namespace AquariumApi.DeviceApi
                             _logger.LogInformation($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
                             PerformTask(task.task);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             _logger.LogError($"Could not perform task [taskId:{task.task.TaskId} Schedule: {task.task.Schedule.Name}: Error: {e.Message}");
                         }
                     }
-                }));
+                });
+                thread.Start();
+                threads.Add(thread);
             });
             
         }
