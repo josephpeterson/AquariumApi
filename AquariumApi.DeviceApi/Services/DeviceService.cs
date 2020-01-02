@@ -23,7 +23,7 @@ namespace AquariumApi.DeviceApi
         AquariumDevice GetDevice();
         void SetDevice(AquariumDevice device);
         AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo);
-        AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo);
+        AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId, AquariumSnapshot snapshot, byte[] photo);
     }
     public class DeviceService : IDeviceService
     {
@@ -98,7 +98,7 @@ namespace AquariumApi.DeviceApi
         {
             return _aquariumClient.SendAquariumSnapshot(Device.Id, snapshot, photo);
         }
-        public AquariumSnapshot SendAquariumSnapshotToHost(string host,AquariumSnapshot snapshot, byte[] photo)
+        public AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId,AquariumSnapshot snapshot, byte[] photo)
         {
             return _aquariumClient.SendAquariumSnapshotToHost(host,Device.Id, snapshot, photo);
         }

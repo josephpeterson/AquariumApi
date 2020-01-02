@@ -24,5 +24,8 @@ namespace AquariumApi.Models
 
         [ForeignKey("ScheduleId")]
         public ICollection<DeviceScheduleAssignment> ScheduleAssignments { get; set; }
+
+        [NotMapped]
+        public bool Running { get; set; }
     }
 }

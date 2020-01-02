@@ -58,7 +58,15 @@ namespace AquariumApi.DeviceApi
                         ticks++;
                         var task = GetNextTask(scheduledTasks);
                         Thread.Sleep(task.eta);
-                        PerformTask(task.task);
+
+                        try
+                        {
+                            PerformTask(task.task);
+                        }
+                        catch(Exception e)
+                        {
+                            _logger.LogError($"Could not perform task [taskId:{task.task.TaskId} Schedule: {task.task.Schedule.Name}: Error: {e.Message}");
+                        }
                     }
                 }));
             });
@@ -177,7 +185,11 @@ namespace AquariumApi.DeviceApi
 
                 try
                 {
-                    _deviceService.SendAquariumSnapshotToHost(task.Schedule.Host,snapshot, photo);
+                    var deviceId = task.Schedule.ScheduleAssignments
+                        .Where(sa => sa.ScheduleId == task.ScheduleId)
+                        .Select(sa => sa.DeviceId)
+                        .First();
+                    _deviceService.SendAquariumSnapshotToHost(task.Schedule.Host,deviceId,snapshot, photo);
                 }
                 catch (Exception e)
                 {
