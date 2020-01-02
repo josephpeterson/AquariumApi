@@ -19,6 +19,7 @@ namespace AquariumApi.DeviceApi.Clients
     {
         AquariumSnapshot SendAquariumSnapshot(int deviceId,AquariumSnapshot snapshot, byte[] photo);
         Task<AquariumDevice> GetDeviceInformation(AquariumDevice aquariumDevice);
+        AquariumSnapshot SendAquariumSnapshotToHost(string host, int deviceId, AquariumSnapshot snapshot, byte[] photo);
     }
     public class AquariumClient: IAquariumClient
     {
@@ -77,6 +78,35 @@ namespace AquariumApi.DeviceApi.Clients
 
             //var httpContent = new StringContent(JsonConvert.SerializeObject(snapshot), Encoding.UTF8, "application/json");
             multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)),"Snapshot");
+            HttpClient client = new HttpClient();
+            var result = client.PostAsync(path, multiContent).Result;
+            if (!result.IsSuccessStatusCode)
+                throw new Exception("Could not upload aquarium snapshot");
+            var actualSnapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(result.Content.ReadAsStringAsync().Result);
+            _logger.LogInformation($"Snapshot saved successfully (SnapshotId: {actualSnapshot.Id})");
+            return actualSnapshot;
+        }
+        public AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId, AquariumSnapshot snapshot, byte[] photo)
+        {
+            var path = $"{host}/ Device/{deviceId}/Snapshot";
+            _logger.LogInformation("Sending snapshot: " + path);
+
+
+            var j = JsonConvert.SerializeObject(snapshot, new JsonSerializerSettings
+            {
+                DateFormatHandling = DateFormatHandling.MicrosoftDateFormat
+            });
+
+            _logger.LogInformation("\n\n\n\n\n\n\n\n");
+            _logger.LogInformation(j);
+
+
+            MultipartFormDataContent multiContent = new MultipartFormDataContent();
+
+            multiContent.Add(new ByteArrayContent(photo), "snapshotImage", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString());
+
+            //var httpContent = new StringContent(JsonConvert.SerializeObject(snapshot), Encoding.UTF8, "application/json");
+            multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)), "Snapshot");
             HttpClient client = new HttpClient();
             var result = client.PostAsync(path, multiContent).Result;
             if (!result.IsSuccessStatusCode)

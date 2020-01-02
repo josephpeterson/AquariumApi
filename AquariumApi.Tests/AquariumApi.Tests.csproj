@@ -25,6 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\AquariumApi.Core\AquariumApi.Core.csproj" />
     <ProjectReference Include="..\AquariumApi.DataAccess\AquariumApi.DataAccess.csproj" />
+    <ProjectReference Include="..\AquariumApi.DeviceApi\AquariumApi.DeviceApi.csproj" />
+    <ProjectReference Include="..\AquariumApi.Models\AquariumApi.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -93,7 +93,7 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 deviceSchedules.ForEach(s =>
                 {
-                    s.Host = HttpContext.Request.Headers["Referer"];
+                    s.Host = HttpContext.Request.Host.Value;
                 });
                 _logger.LogInformation("POST /v1/ApplyScheduleAssignment called");
                 _scheduleService.SaveScheduleAssignment(deviceSchedules);
