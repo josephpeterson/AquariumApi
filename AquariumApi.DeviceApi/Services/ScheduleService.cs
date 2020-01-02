@@ -57,10 +57,12 @@ namespace AquariumApi.DeviceApi
                     {
                         ticks++;
                         var task = GetNextTask(scheduledTasks);
+                        _logger.LogInformation($"Next task scheduled in {task.eta.TotalMinutes} seconds (Schedule: {task.task.Schedule.Name})");
                         Thread.Sleep(task.eta);
 
                         try
                         {
+                            _logger.LogInformation($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
                             PerformTask(task.task);
                         }
                         catch(Exception e)
