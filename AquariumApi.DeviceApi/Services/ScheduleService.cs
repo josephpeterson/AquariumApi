@@ -72,5 +72,7 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError($"TakeSnapshot: { ex.Message } Details: { ex.ToString() }");
             }
         }
+
+
     }
 }

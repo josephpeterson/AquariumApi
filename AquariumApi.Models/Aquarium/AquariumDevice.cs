@@ -29,5 +29,8 @@ namespace AquariumApi.Models
         public bool EnabledLighting { get; set; }
 
         public CameraConfiguration CameraConfiguration { get; set; }
+
+        [ForeignKey("DeviceId")]
+        public ICollection<DeviceScheduleAssignment> ScheduleAssignments { get; set; }
     }
 }

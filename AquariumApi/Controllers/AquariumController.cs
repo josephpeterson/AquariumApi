@@ -145,6 +145,7 @@ namespace AquariumApi.Controllers
             }
         }
 
+        [HttpGet]
         [Route("/v1/Aquarium/TemperatureHistogram")]
         public IActionResult GetTemperatureHistogram(int aquariumId)
         {
@@ -156,6 +157,7 @@ namespace AquariumApi.Controllers
 
             return new OkObjectResult(temps);
         }
+        [HttpGet]
         [Route("/v1/Aquarium/TemperatureHistogram/All")]
         public IActionResult GetTemperatureHistogramAll()
         {

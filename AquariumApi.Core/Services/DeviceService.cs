@@ -24,6 +24,8 @@ namespace AquariumApi.Core
         bool SetAquarium(int deviceId, int aquariumId);
         string GetDeviceLog(int deviceId);
         DeviceInformation GetDeviceInformation(int deviceId);
+
+        void ApplyScheduleAssignment(int deviceId,List<DeviceSchedule> deviceSchedules);
     }
     public class DeviceService : IDeviceService
     {
@@ -120,6 +122,23 @@ namespace AquariumApi.Core
             var data = client.GetStringAsync(path).Result;
             var d = JsonConvert.DeserializeObject<DeviceInformation>(data);
             return d;
+        }
+
+        public void ApplyScheduleAssignment(int deviceId, List<DeviceSchedule> deviceSchedules)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/ApplyScheduleAssignment";
+            using (var client2 = new HttpClient())
+            {
+                JsonSerializerSettings jss = new JsonSerializerSettings();
+                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                var config = device.CameraConfiguration;
+                //config.Device = null;
+                var httpContent = new StringContent(JsonConvert.SerializeObject(deviceSchedules, jss), Encoding.UTF8, "application/json");
+                var result = client2.PostAsync(path, httpContent).Result;
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not take photo");
+            }
         }
     }
 }

@@ -81,5 +81,20 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost]
+        [Route("/v1/ApplyScheduleAssignment")]
+        public IActionResult ApplyScheduleAssignment([FromBody] List<DeviceSchedule> deviceSchedules)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/ApplyScheduleAssignment called");
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/ApplyScheduleAssignment endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }

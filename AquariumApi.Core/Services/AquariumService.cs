@@ -34,6 +34,7 @@ namespace AquariumApi.Core
         Fish AddFish(Fish fish);
         Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
+        List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id);
         AquariumProfile GetProfileById(int profileId);
         BugReport SubmitBugReport(BugReport report);
         void DeleteFish(int fishId);
@@ -49,6 +50,7 @@ namespace AquariumApi.Core
         AquariumDevice AddAquariumDevice(AquariumDevice device);
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice DeleteAquariumDevice(int deviceId);
+        void DeleteDeviceSchedule(int scheduleId);
         AquariumDevice UpdateAquariumDevice(AquariumDevice deviceId);
         void SetAquariumDevice(int aquariumId,int deviceId);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
@@ -58,6 +60,7 @@ namespace AquariumApi.Core
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
         AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
         AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
+        DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
         FishPhoto AddFishPhoto(int fishId,IFormFile photo);
         FishPhoto GetFishPhotoById(int photoId);
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
@@ -66,6 +69,9 @@ namespace AquariumApi.Core
         List<Aquarium> GetAquariumsByAccountId(int userId);
         List<AquariumSnapshot> GetAquariumTemperatureHistogram(int id);
         List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max);
+        DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
+        List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId);
+        List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId);
     }
     public class AquariumService : IAquariumService
     {
@@ -385,6 +391,66 @@ namespace AquariumApi.Core
         public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max)
         {
             return _aquariumDao.GetAquariumSnapshots(aquariumId,offset, max);
+        }
+
+
+
+
+        /* Device Schedule */
+        public List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id)
+        {
+            return _aquariumDao.GetDeviceSchedulesByAccount(id);
+        }
+
+        public void DeleteDeviceSchedule(int scheduleId)
+        {
+            _aquariumDao.DeleteDeviceSchedule(scheduleId);
+        }
+
+        public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            return _aquariumDao.AddDeviceSchedule(deviceSchedule);
+        }
+
+        public List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId)
+        {
+            _aquariumDao.AssignDeviceSchedule(scheduleId, deviceId);
+            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
+            try
+            {
+
+                _deviceService.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Could not apply schedule assignment");
+            }
+            return assignments;
+
+        }
+
+        public List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId)
+        {
+            _aquariumDao.UnassignDeviceSchedule(scheduleId, deviceId);
+            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
+
+            try
+            {
+
+            _deviceService.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+            }
+            catch(Exception e)
+            {
+                _logger.LogError("Could not apply schedule assignment");
+            }
+
+
+            return assignments;
+        }
+
+        public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            return _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
         }
     }
 }

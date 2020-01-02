@@ -105,6 +105,15 @@ namespace AquariumApi.DataAccess
         void DeletePhoto(int photoId);
         PhotoContent GetPhoto(int photoId);
         List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max);
+
+        /* Device Schedules */
+        DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
+        void DeleteDeviceSchedule(int scheduleId);
+        List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId);
+        DeviceScheduleAssignment AssignDeviceSchedule(int scheduleId, int deviceId);
+        void UnassignDeviceSchedule(int scheduleId, int deviceId);
+        DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
+        List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -150,6 +159,8 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Fish).ThenInclude(d => d.Thumbnail)
                 .Include(aq => aq.Feedings)
                 .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
+                .Include(aq => aq.Device).ThenInclude(d => d.ScheduleAssignments)
+                    .ThenInclude(sa => sa.Schedule)
                 .FirstOrDefault();
             if (aquarium == null) return aquarium;
 
@@ -378,6 +389,7 @@ namespace AquariumApi.DataAccess
             var device = _dbAquariumContext.TblDevice.AsNoTracking()
                 .Where(s => s.Id == deviceId)
                 .Include(e => e.CameraConfiguration)
+                .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule)
                 .First();
             if (device.CameraConfiguration == null)
                 device.CameraConfiguration = new CameraConfiguration();
@@ -445,6 +457,85 @@ namespace AquariumApi.DataAccess
             d.EnabledNitrate = updatedDevice.EnabledNitrate;
             return UpdateAquariumDevice(d);
         }
+
+
+        /* Aquarium Device Schedule */
+        public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            _dbAquariumContext.Add(deviceSchedule);
+            _dbAquariumContext.SaveChanges();
+            return deviceSchedule;
+        }
+        public void UnassignDeviceSchedule(int scheduleId,int deviceId)
+        {
+            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
+            if(res.Any())
+            {
+                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
+                _dbAquariumContext.SaveChanges();
+            }
+        }
+        public DeviceScheduleAssignment AssignDeviceSchedule(int scheduleId, int deviceId)
+        {
+            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
+            if (res.Any())
+            {
+                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
+            }
+            var assignment = new DeviceScheduleAssignment()
+            {
+                 DeviceId = deviceId,
+                 ScheduleId = scheduleId
+            };
+            _dbAquariumContext.TblDeviceScheduleAssignment.Add(assignment);
+            _dbAquariumContext.SaveChanges();
+            return assignment;
+        }
+        public List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId)
+        {
+            var deviceSchedules = _dbAquariumContext.TblDeviceSchedule.AsNoTracking()
+                .Include(s => s.Tasks)
+                .Where(s => s.AuthorId == accountId);
+            return deviceSchedules.ToList();
+        }
+        public void DeleteDeviceSchedule(int scheduleId)
+        {
+            var  scheduleAssignments = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.ScheduleId == scheduleId);
+            _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(scheduleAssignments);
+
+            var scheduleTasks = _dbAquariumContext.TblDeviceScheduleTask.Where(st => st.ScheduleId == scheduleId);
+            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleTasks);
+
+
+            var schedule = _dbAquariumContext.TblDeviceSchedule.Where(s => s.Id == scheduleId).First();
+            _dbAquariumContext.TblDeviceSchedule.Remove(schedule);
+
+            _dbAquariumContext.SaveChanges();
+        }
+        public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+
+            var scheduleToUpdate = _dbAquariumContext.TblDeviceSchedule
+                .Include(d => d.Tasks)
+                .First(s => s.Id == deviceSchedule.Id);
+
+            //Truncate schedule tasks
+            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleToUpdate.Tasks);
+
+            _mapper.Map(deviceSchedule, scheduleToUpdate);
+
+            _dbAquariumContext.SaveChanges();
+            return deviceSchedule;
+        }
+        public List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId)
+        {
+            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId)
+                .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
+                .ToList();
+            return schedules;
+        }
+
+
 
         /* Aquarium Photos */
         public AquariumPhoto GetAquariumPhotoById(int photoId)
@@ -925,6 +1016,8 @@ namespace AquariumApi.DataAccess
                 .Take(max)
                 .ToList();
         }
+
+        
     }
 }
 

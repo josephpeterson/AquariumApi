@@ -7,13 +7,22 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
-    [Table("tblDeviceSchdules")]
+    [Table("tblDeviceSchedule")]
     public class DeviceSchedule
     {
         [Required]
         public int Id { get; set; }
-        public int DeviceId { get; set; }
-        [ForeignKey("DeviceId")]
-        public AquariumDevice Device { get; set; }
+        public int AuthorId { get; set; }
+        public string Name { get; set; }
+        public string Host { get; set; }
+
+        [ForeignKey("AuthorId")]
+        public AquariumUser Author { get; set; }
+
+        [ForeignKey("ScheduleId")]
+        public ICollection<DeviceScheduleTask> Tasks { get; set; }
+
+        [ForeignKey("ScheduleId")]
+        public ICollection<DeviceScheduleAssignment> ScheduleAssignments { get; set; }
     }
 }

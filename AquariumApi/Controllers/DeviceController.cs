@@ -22,6 +22,22 @@ namespace AquariumApi.Controllers
             _deviceService = deviceService;
             _logger = logger;
         }
+        [HttpGet]
+        [Route("/v1/Device/{deviceId}")]
+        public IActionResult GetDeviceById(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId} called");
+                var device = _aquariumService.GetAquariumDeviceById(deviceId);
+                return new OkObjectResult(device);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
         [HttpPost]
         [Route("/v1/Device/{deviceId}/Delete")]
         public IActionResult DeleteAquariumDevice(int deviceId)
@@ -224,6 +240,7 @@ namespace AquariumApi.Controllers
 
 
         //Retrieve Assigned aquarium/schedule information
+        [HttpGet]
         [Route("/v1/Device/{deviceId}/UpdateConfigurationFile")]
         public IActionResult UpdateConfigurationFile(int deviceId)
         {
@@ -240,5 +257,41 @@ namespace AquariumApi.Controllers
             }
         }
 
+
+
+
+        //Deploy/Remove Device Schedules
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/DeploySchedule/{scheduleId}")]
+        public IActionResult DeploySchedule(int deviceId,int scheduleId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/DeploySchedule/{scheduleId} called");
+                var scheduleAssignment = _aquariumService.DeployDeviceSchedule(deviceId, scheduleId);
+                return new OkObjectResult(scheduleAssignment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/DeploySchedule/{scheduleId}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/RemoveSchedule/{scheduleId}")]
+        public IActionResult RemoveSchedule(int deviceId, int scheduleId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/RemoveSchedule/{scheduleId} called");
+                var scheduleAssignment = _aquariumService.RemoveDeviceSchedule(deviceId, scheduleId);
+                return new OkObjectResult(scheduleAssignment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/RemoveSchedule/{scheduleId}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
     }
 }
