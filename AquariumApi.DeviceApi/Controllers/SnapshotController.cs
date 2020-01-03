@@ -14,13 +14,11 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IDeviceService _deviceService;
         private ILogger<SnapshotController> _logger;
-        private IScheduleService _scheduleService;
 
         public SnapshotController(ILogger<SnapshotController> logger,IDeviceService deviceService)
         {
             _deviceService = deviceService;
             _logger = logger;
-            //_scheduleService = scheduleService;
         }
         [HttpGet]
         [Route("/v1/Snapshot/Take")]

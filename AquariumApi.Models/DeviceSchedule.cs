@@ -27,5 +27,43 @@ namespace AquariumApi.Models
 
         [NotMapped]
         public bool Running { get; set; }
+
+
+        public List<DeviceScheduleTask> ExpandTasks()
+        {
+                var tasks = new List<DeviceScheduleTask>();
+                var indvidualTasks = Tasks.ToList();
+                indvidualTasks.ForEach(t =>
+                {
+                    tasks.Add(new DeviceScheduleTask()
+                    {
+                        TaskId = t.TaskId,
+                        StartTime = t.StartTime,
+                        ScheduleId = Id,
+                        Schedule = this
+                    });
+                    if (t.Interval != null)
+                    {
+                        var endTime = t.EndTime;
+                        if (endTime < t.StartTime)
+                            endTime = t.StartTime.AddDays(1);
+                        TimeSpan length = endTime.Subtract(t.StartTime);
+                        var lengthInMinutes = length.TotalMinutes;
+                        var mod = lengthInMinutes % t.Interval;
+
+                        for (var i = 1; i < (lengthInMinutes - mod) / t.Interval; i++)
+                        {
+                            tasks.Add(new DeviceScheduleTask()
+                            {
+                                TaskId = t.TaskId,
+                                StartTime = t.StartTime.AddMinutes(i * t.Interval.Value),
+                                ScheduleId = Id,
+                                Schedule = this
+                            });
+                        }
+                    }
+                });
+                return tasks.OrderBy(t => t.StartTime).ToList();
+        }
     }
 }

@@ -13,12 +13,12 @@ namespace AquariumApi.DeviceApi.Controllers
     public class HomeController : Controller
     {
         private IDeviceService _deviceService;
-        private IScheduleService _scheduleService;
+        private ScheduleService _scheduleService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
 
         public HomeController(IDeviceService deviceService,
-            IScheduleService scheduleService,
+            ScheduleService scheduleService,
             ILogger<HomeController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
@@ -76,34 +76,13 @@ namespace AquariumApi.DeviceApi.Controllers
                 {
                     Aquarium = _deviceService.GetDevice().Aquarium,
                     config = System.IO.File.ReadAllText("config.json"),
-                    Schedules = _scheduleService.LoadAllSchedules()
+                    Schedules = _scheduleService.GetAllSchedules()
                 };
                 return new OkObjectResult(information);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Information endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
-        [HttpPost]
-        [Route("/v1/ApplyScheduleAssignment")]
-        public IActionResult ApplyScheduleAssignment([FromBody] List<DeviceSchedule> deviceSchedules)
-        {
-            try
-            {
-                deviceSchedules.ForEach(s =>
-                {
-                    s.Host = _config["AquariumServiceUrl"];
-                });
-                _logger.LogInformation("POST /v1/ApplyScheduleAssignment called");
-                _scheduleService.SaveScheduleAssignment(deviceSchedules);
-                _scheduleService.Start();
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/ApplyScheduleAssignment endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

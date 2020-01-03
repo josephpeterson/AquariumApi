@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
@@ -22,7 +23,6 @@ namespace AquariumApi.DeviceApi
     public class Startup
     {
         private IDeviceService _deviceService;
-        private IScheduleService _scheduleService;
 
         public IConfigurationRoot Configuration { get; }
         private ILogger<Startup> _logger;
@@ -41,9 +41,6 @@ namespace AquariumApi.DeviceApi
 
         private async void DeviceBootstrap()
         {
-            //Start schedule service
-            _scheduleService.Start();
-
             try
             {
                 var device = await _deviceService.PingAquariumService();
@@ -86,6 +83,7 @@ namespace AquariumApi.DeviceApi
 
 
             RegisterServices(services);
+            RegisterHostedServices(services);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -96,17 +94,21 @@ namespace AquariumApi.DeviceApi
             services.AddTransient<ISerialService, SerialService>();
             services.AddTransient<IAquariumClient, AquariumClient>();
             services.AddSingleton<IDeviceService, DeviceService>();
-            services.AddSingleton<IScheduleService, ScheduleService>();
             services.AddSingleton<IQueueService, QueueService>();
 
         }
 
+        /* Background services */
+        private void RegisterHostedServices(IServiceCollection services)
+        {
+            services.AddSingleton<IHostedService,ScheduleService>();
+        }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IDeviceService deviceService, ILogger<Startup> logger,IScheduleService scheduleService)
+        public void Configure(IApplicationBuilder app, Microsoft.Extensions.Hosting.IHostingEnvironment env, IDeviceService deviceService, ILogger<Startup> logger)
         {
             _deviceService = deviceService;
-            _scheduleService = scheduleService;
             _logger = logger;
 
             if (env.IsDevelopment())

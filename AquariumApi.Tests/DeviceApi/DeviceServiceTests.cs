@@ -56,7 +56,7 @@ public class AquariumDeviceServiceTests
             }
         };
 
-        var scheduledTasks = _scheduleService.ExpandSchedule(schedule);
+        var scheduledTasks = _scheduleService.GetTasksFromSchedule(schedule);
         Assert.Equal(24*3, scheduledTasks.Count);
     }
     [Fact]
@@ -76,7 +76,7 @@ public class AquariumDeviceServiceTests
                 }
             }
         };
-        var scheduledTasks = _scheduleService.ExpandSchedule(schedule);
+        var scheduledTasks = _scheduleService.GetTasksFromSchedule(schedule);
 
         var futureTask = _scheduleService.GetNextTask(scheduledTasks, date);
 
@@ -102,7 +102,7 @@ public class AquariumDeviceServiceTests
                 }
             }
         };
-        var scheduledTasks = _scheduleService.ExpandSchedule(schedule);
+        var scheduledTasks = _scheduleService.GetTasksFromSchedule(schedule);
 
         var futureTask = _scheduleService.GetNextTask(scheduledTasks, date);
 
