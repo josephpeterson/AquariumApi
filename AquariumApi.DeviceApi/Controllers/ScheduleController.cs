@@ -19,12 +19,12 @@ namespace AquariumApi.DeviceApi.Controllers
         private ScheduleService _scheduleService;
 
         public ScheduleController(IConfiguration config, 
-            ILogger<ScheduleController> logger, 
-            IHostedService scheduleManagerService)
+            ILogger<ScheduleController> logger,
+            ScheduleService scheduleManagerService)
         {
             _config = config;
             _logger = logger;
-            _scheduleService = scheduleManagerService as ScheduleService;
+            _scheduleService = scheduleManagerService;
 
         }
         // GET schedule/ - Retrieve all schedules on this device

@@ -101,7 +101,7 @@ namespace AquariumApi.DeviceApi
         /* Background services */
         private void RegisterHostedServices(IServiceCollection services)
         {
-            services.AddSingleton<IHostedService,ScheduleService>();
+            services.AddSingleton<ScheduleService>();
         }
 
 
