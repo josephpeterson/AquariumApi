@@ -494,7 +494,8 @@ namespace AquariumApi.DataAccess
         }
         public List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId)
         {
-            var deviceSchedules = _dbAquariumContext.TblDeviceSchedule.AsNoTracking()
+            var deviceSchedules = _dbAquariumContext.TblDeviceSchedule
+                .AsNoTracking()
                 .Include(s => s.Tasks)
                 .Where(s => s.AuthorId == accountId);
             return deviceSchedules.ToList();
@@ -530,7 +531,9 @@ namespace AquariumApi.DataAccess
         }
         public List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId)
         {
-            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId)
+            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
+                .AsNoTracking()
+                .Where(sa => sa.DeviceId == deviceId)
                 .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .ToList();
             return schedules;

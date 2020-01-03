@@ -206,7 +206,7 @@ namespace AquariumApi.Controllers
         //Retrieve AquariumDeviceApi.log
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Device/{deviceId}/Log")]
-        public IActionResult GetDeviceLog(int deviceId)
+        public IActionResult ClearDeviceLog(int deviceId)
         {
             try
             {
@@ -217,6 +217,22 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Device/{deviceId}/Log: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Device/{deviceId}/Log/Clear")]
+        public IActionResult GetDeviceLog(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Log/Clear called");
+                _deviceService.ClearDeviceLog(deviceId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Log/Clear: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

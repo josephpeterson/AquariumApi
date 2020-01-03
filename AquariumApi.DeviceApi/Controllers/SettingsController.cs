@@ -35,5 +35,19 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             return new OkObjectResult(txt);
         }
+        [HttpPost]
+        [Route("/v1/Log/Clear")]
+        public IActionResult ClearDeviceLog()
+        {
+            try
+            {
+                 System.IO.File.Delete("AquariumDeviceApi.log");
+            }
+            catch (Exception e)
+            {
+                return new NotFoundResult();
+            }
+            return new OkResult();
+        }
     }
 }

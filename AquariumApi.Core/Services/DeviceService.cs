@@ -26,6 +26,7 @@ namespace AquariumApi.Core
         DeviceInformation GetDeviceInformation(int deviceId);
 
         void ApplyScheduleAssignment(int deviceId,List<DeviceSchedule> deviceSchedules);
+        void ClearDeviceLog(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -113,6 +114,18 @@ namespace AquariumApi.Core
                 return response.Content.ReadAsStringAsync().Result;
             throw new KeyNotFoundException();
         }
+        public void ClearDeviceLog(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/Log/Clear";
+            HttpClient client = new HttpClient();
+
+
+            var httpContent = new StringContent("", Encoding.UTF8, "application/json");
+            HttpResponseMessage response = client.PostAsync(path, httpContent).Result;
+            if (!response.IsSuccessStatusCode)
+                throw new KeyNotFoundException();
+        }
 
         public DeviceInformation GetDeviceInformation(int deviceId)
         {
@@ -141,5 +154,7 @@ namespace AquariumApi.Core
                     throw new Exception("Could not apply schedule assignment to device");
             }
         }
+
+        
     }
 }
