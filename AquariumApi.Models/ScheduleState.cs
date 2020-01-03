@@ -1,7 +1,7 @@
 ﻿using AquariumApi.Models;
 using System.Collections.Generic;
 
-namespace AquariumApi.DeviceApi
+namespace AquariumApi.Models
 {
     public class ScheduleState {
         public bool Running;

@@ -34,7 +34,7 @@ namespace AquariumApi.DeviceApi
             token = stoppingToken;
             //stoppingToken.Register(() => Cleanup());
 
-            _logger.LogDebug($"Schedule job starting...");
+            _logger.LogInformation($"Schedule job starting...");
             _schedules = LoadSchedulesFromCache();
             _logger.LogInformation($"{_schedules.Count} schedules have been found");
             try
@@ -78,7 +78,7 @@ namespace AquariumApi.DeviceApi
 
         private void Cleanup()
         {
-            _logger.LogDebug($"Schedule job stopped");
+            _logger.LogInformation($"Schedule job stopped");
             Running = false;
         }
 

@@ -27,6 +27,7 @@ namespace AquariumApi.Core
 
         void ApplyScheduleAssignment(int deviceId,List<DeviceSchedule> deviceSchedules);
         void ClearDeviceLog(int deviceId);
+        ScheduleState GetDeviceScheduleStatus(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -155,6 +156,14 @@ namespace AquariumApi.Core
             }
         }
 
-        
+        public ScheduleState GetDeviceScheduleStatus(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/Schedule/Status";
+            HttpClient client = new HttpClient();
+            var data = client.GetStringAsync(path).Result;
+            var state = JsonConvert.DeserializeObject<ScheduleState>(data);
+            return state;
+        }
     }
 }

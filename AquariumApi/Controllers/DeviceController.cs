@@ -309,5 +309,22 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/Schedule/Status")]
+        public IActionResult GetScheduleStatus(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Schedule/Status called");
+                ScheduleState scheduleState = _deviceService.GetDeviceScheduleStatus(deviceId);
+                return new OkObjectResult(scheduleState);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Schedule/Status: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
     }
 }

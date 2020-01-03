@@ -1,7 +1,7 @@
 ﻿using AquariumApi.Models;
 using System;
 
-namespace AquariumApi.DeviceApi
+namespace AquariumApi.Models
 {
     public class FutureTask
     {
