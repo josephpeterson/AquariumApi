@@ -140,7 +140,7 @@ namespace AquariumApi.Core
         public void ApplyScheduleAssignment(int deviceId, List<DeviceSchedule> deviceSchedules)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/ApplyScheduleAssignment";
+            var path = $"http://{device.Address}:{device.Port}/v1/Schedule";
             using (var client2 = new HttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
