@@ -40,7 +40,10 @@ namespace AquariumApi.DeviceApi
         }
 
         private async void DeviceBootstrap()
-        {   
+        {
+            //Start schedule service
+            _scheduleService.Start();
+
             try
             {
                 var device = await _deviceService.PingAquariumService();
@@ -52,8 +55,7 @@ namespace AquariumApi.DeviceApi
                     + $"\nEnabled Temperature: {device.EnabledTemperature}"
                     );
 
-                //Start schedule service
-                _scheduleService.Start();
+                
             }
             catch(Exception ex)
             {

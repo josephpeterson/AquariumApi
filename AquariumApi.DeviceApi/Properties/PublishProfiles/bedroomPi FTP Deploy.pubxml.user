@@ -7,7 +7,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   <PropertyGroup>
     <TimeStampOfAssociatedLegacyPublishXmlFile />
     <EncryptedPassword>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAuKOWy0ddT0uWipLQaXYeLAAAAAACAAAAAAAQZgAAAAEAACAAAAB/+d+PsURu0ENQRrZQufQryf4BtyxAf6v4dHSoKK9S2QAAAAAOgAAAAAIAACAAAABDEzyhuiOcxktRXNnijqoQew8mc2IBLnDm38NOMncbZiAAAAA7mxRyO9hFN94HZH4khx/BUOtdMYM147c20dP0oZrQ5kAAAAD5//kZByWisXV6zBxqG3FQ8yAo+kGWjmtudz4+NsftnXRcnC8g573G/XznqEiDQt6MUad3digXXUPW19PqBAy0</EncryptedPassword>
-    <_PublishTargetUrl>ftp://192.168.1.2/Desktop/DeviceApi/</_PublishTargetUrl>
+    <_PublishTargetUrl>ftp://raspberrypi/var/DeviceApi/</_PublishTargetUrl>
   </PropertyGroup>
   <ItemGroup>
     <File Include="appsettings.Development.json">

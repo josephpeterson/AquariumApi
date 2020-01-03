@@ -4,6 +4,8 @@ using Bifrost.IO.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NLog;
+using SimpleInjector;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,7 +33,7 @@ namespace AquariumApi.DeviceApi
 
         public List<Thread> threads = new List<Thread>();
 
-        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IDeviceService deviceService,IQueueService queueService)
+        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger, IDeviceService deviceService, IQueueService queueService)
         {
             _config = config;
             _logger = logger;
@@ -51,9 +53,9 @@ namespace AquariumApi.DeviceApi
             {
                 try
                 {
-                BeginSchedule(schedule); 
+                    BeginSchedule(schedule);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     _logger.LogWarning($"Could not start schedule (Schedule: {schedule.Name}) Exception: {e.Message}");
                 }
@@ -71,13 +73,13 @@ namespace AquariumApi.DeviceApi
 
         public void BeginSchedule(DeviceSchedule schedule)
         {
-            var thread = new ScheduleThread(schedule, this, _logger, _deviceService, _queueService);
+            var thread = new ScheduleThread(schedule, this, _deviceService, _queueService);
             var thr = new Thread(new ThreadStart(thread.Main));
             thr.Start();
             threads.Add(thr);
         }
 
-        
+
 
 
         public void SaveScheduleAssignment(List<DeviceSchedule> deviceSchedules)
@@ -109,7 +111,7 @@ namespace AquariumApi.DeviceApi
                     ScheduleId = t.ScheduleId,
                     Schedule = t.Schedule
                 });
-                if(t.Interval != null)
+                if (t.Interval != null)
                 {
                     var endTime = t.EndTime;
                     if (endTime < t.StartTime)
@@ -118,12 +120,12 @@ namespace AquariumApi.DeviceApi
                     var lengthInMinutes = length.TotalMinutes;
                     var mod = lengthInMinutes % t.Interval;
 
-                    for(var i=1;i<(lengthInMinutes - mod)/t.Interval;i++)
+                    for (var i = 1; i < (lengthInMinutes - mod) / t.Interval; i++)
                     {
                         tasks.Add(new DeviceScheduleTask()
                         {
                             TaskId = t.TaskId,
-                            StartTime = t.StartTime.AddMinutes(i*t.Interval.Value),
+                            StartTime = t.StartTime.AddMinutes(i * t.Interval.Value),
                             ScheduleId = t.ScheduleId,
                             Schedule = t.Schedule
                         });
@@ -133,7 +135,7 @@ namespace AquariumApi.DeviceApi
             return tasks.OrderBy(t => t.StartTime).ToList();
         }
 
-        public FutureTask GetNextTask(List<DeviceScheduleTask> scheduledTasks,DateTime? currentTime = null)
+        public FutureTask GetNextTask(List<DeviceScheduleTask> scheduledTasks, DateTime? currentTime = null)
         {
             var now = DateTime.Now.TimeOfDay;
             if (currentTime != null)
@@ -153,12 +155,16 @@ namespace AquariumApi.DeviceApi
             };
         }
 
+
+        public void ThreadLoop()
+        {
+
         }
+}
 
     public class ScheduleThread
     {
-        private IConfiguration _config;
-        private ILogger<ScheduleService> _logger;
+        public IConfiguration _config;
         private IDeviceService _deviceService;
         private IScheduleService _scheduleService;
         private IQueueService _queueService;
@@ -166,17 +172,41 @@ namespace AquariumApi.DeviceApi
         private List<DeviceScheduleTask> scheduledTasks;
         private DeviceSchedule _schedule;
 
-        public ScheduleThread(DeviceSchedule schedule,IScheduleService scheduleService, ILogger<ScheduleService> logger, IDeviceService deviceService, IQueueService queueService)
+        private static readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
+
+        public ScheduleThread(DeviceSchedule schedule)
         {
-            _logger = logger;
-            _deviceService = deviceService;
-            _scheduleService = scheduleService;
-            _queueService = queueService;
-            _queueService = queueService;
             _schedule = schedule;
 
-            _logger.LogWarning("Expanding schedule...");
+            RegisterServices();
+
+            _logger.Info("Expanding schedule...");
             scheduledTasks = _scheduleService.ExpandSchedule(schedule);
+        }
+
+        public void RegisterServices()
+        {
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile($"config.json", optional: false)
+                .AddEnvironmentVariables();
+            _config = builder.Build();
+
+
+            // 1. Create a new Simple Injector container
+            var container = new Container();
+
+            // 2. Configure the container (register)
+            //container.Register<IConfiguration, null>();
+            container.Register<NLog.ILogger, Logger>(Lifestyle.Singleton);
+            container.Register<IHardwareService, HardwareService>();
+            container.Register<ISerialService, SerialService>();
+            container.Register<IAquariumClient, AquariumClient>();
+            container.Register<IDeviceService, DeviceService>();
+            container.Register<IScheduleService, ScheduleService>();
+            container.Register<IQueueService, QueueService>();
+
+            // 3. Optionally verify the container's configuration.
+            container.Verify();
         }
         public void Main()
         {
@@ -185,17 +215,17 @@ namespace AquariumApi.DeviceApi
             {
                 ticks++;
                 var task = _scheduleService.GetNextTask(scheduledTasks);
-                _logger.LogWarning($"Next task scheduled in {task.eta.TotalMinutes} seconds (Schedule: {task.task.Schedule.Name})");
+                _logger.Info($"Next task scheduled in {task.eta.TotalMinutes} seconds (Schedule: {task.task.Schedule.Name})");
                 Thread.Sleep(task.eta);
 
                 try
                 {
-                    _logger.LogWarning($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
+                    _logger.Info($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
                     PerformTask(task.task);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"Could not perform task [taskId:{task.task.TaskId} Schedule: {task.task.Schedule.Name}: Error: {e.Message}");
+                    _logger.Error($"Could not perform task [taskId:{task.task.TaskId} Schedule: {task.task.Schedule.Name}: Error: {e.Message}");
                 }
             }
         }
@@ -207,14 +237,14 @@ namespace AquariumApi.DeviceApi
                     TakeSnapshotTask(task);
                     break;
                 default:
-                    _logger.LogError($"Invalid task type id '{task.Id}");
+                    _logger.Error($"Invalid task type id '{task.Id}");
                     break;
             }
         }
 
         private void TakeSnapshotTask(DeviceScheduleTask task)
         {
-            _logger.LogWarning("Taking snapshot...");
+            _logger.Info("Taking snapshot...");
             var device = _deviceService.GetDevice();
             try
             {
@@ -237,7 +267,7 @@ namespace AquariumApi.DeviceApi
             }
             catch (Exception ex)
             {
-                _logger.LogError($"TakeSnapshot: { ex.Message } Details: { ex.ToString() }");
+                _logger.Error($"TakeSnapshot: { ex.Message } Details: { ex.ToString() }");
             }
         }
 
