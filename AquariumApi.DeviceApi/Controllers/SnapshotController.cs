@@ -32,6 +32,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Take endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }
@@ -53,6 +54,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/TakePhoto endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }

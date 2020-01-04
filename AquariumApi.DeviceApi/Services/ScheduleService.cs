@@ -49,7 +49,7 @@ namespace AquariumApi.DeviceApi
                         await Task.Delay(task.eta, stoppingToken);
                         try
                         {
-                            _logger.LogInformation($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name}");
+                            _logger.LogInformation($"Performing task (TaskId: {task.task.TaskId} Schedule: {task.task.Schedule.Name})");
                             PerformTask(task.task);
                         }
                         catch (Exception e)
@@ -113,31 +113,38 @@ namespace AquariumApi.DeviceApi
             {
                 Running = Running,
                 NextTask = GetNextTask(_schedules, DateTime.Now),
-                Schedules = _schedules
+                Schedules = _schedules,
+                TaskCount = _schedules.SelectMany(s => s.ExpandTasks()).Count()
             };
         }
         public FutureTask GetNextTask(List<DeviceSchedule> schedules, DateTime? currentTime = null)
         {
-            var now = DateTime.Now.TimeOfDay;
+            var now = DateTime.Now;
             if (currentTime != null)
-                now = currentTime.Value.TimeOfDay;
+                now = currentTime.Value;
 
-            var allScheduledTasks = schedules.SelectMany(s => s.ExpandTasks());
+            var allScheduledTasks = schedules.SelectMany(s => s.ExpandTasks()).ToList();
+
+
 
 
             var remainingTasks = allScheduledTasks.Where(task =>
             {
                 var taskTime = task.StartTime.TimeOfDay;
-                return taskTime > now;
-            });
+                var nowTime = now.TimeOfDay;
+                if (taskTime > nowTime)
+                    return true;
+                return false;
+            }).OrderBy(t => t.StartTime);
 
             var nextTask = remainingTasks.FirstOrDefault();
             if (nextTask == null)
                 return null;
             return new FutureTask
             {
+                Index = allScheduledTasks.IndexOf(nextTask),
                 task = nextTask,
-                eta = nextTask.StartTime.TimeOfDay.Subtract(now)
+                eta = nextTask.StartTime.TimeOfDay.Subtract(now.TimeOfDay)
             };
         }
 

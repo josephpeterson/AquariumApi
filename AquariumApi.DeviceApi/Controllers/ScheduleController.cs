@@ -40,6 +40,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Schedule endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
             
@@ -56,6 +57,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Schedule endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
 
@@ -78,9 +80,26 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Schedule endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }
+        [HttpPost("PerformTask")]
+        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
+        {
+            try
+            {
+                _scheduleService.PerformTask(deviceScheduleTask);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
+
         [HttpGet("Start")]
         public IActionResult Start()
         {
@@ -94,6 +113,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Schedule/Start endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }
@@ -109,6 +129,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Schedule/Stop caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }

@@ -67,7 +67,7 @@ namespace AquariumApi.DeviceApi
             //Path.GetDirectoryName(config.Output);
             if (File.Exists(config.Output))
                 File.Delete(config.Output);
-            _logger.LogInformation($"Taking Photo: " + config);
+            _logger.LogInformation($"Taking Photo...");
             $"/usr/bin/raspistill {config}".Bash();
             return System.IO.File.ReadAllBytes(config.Output);
         }

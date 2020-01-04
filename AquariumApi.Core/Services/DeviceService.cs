@@ -28,6 +28,7 @@ namespace AquariumApi.Core
         void ApplyScheduleAssignment(int deviceId,List<DeviceSchedule> deviceSchedules);
         void ClearDeviceLog(int deviceId);
         ScheduleState GetDeviceScheduleStatus(int deviceId);
+        void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
     }
     public class DeviceService : IDeviceService
     {
@@ -164,6 +165,24 @@ namespace AquariumApi.Core
             var data = client.GetStringAsync(path).Result;
             var state = JsonConvert.DeserializeObject<ScheduleState>(data);
             return state;
+        }
+
+        public void PerformScheduleTask(int deviceId,DeviceScheduleTask deviceScheduleTask)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/Schedule";
+            using (var client2 = new HttpClient())
+            {
+                JsonSerializerSettings jss = new JsonSerializerSettings();
+                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                var config = device.CameraConfiguration;
+                //config.Device = null;
+
+                var httpContent = new StringContent(JsonConvert.SerializeObject(deviceScheduleTask, jss), Encoding.UTF8, "application/json");
+                var result = client2.PostAsync(path, httpContent).Result;
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not perform task on device");
+            }
         }
     }
 }

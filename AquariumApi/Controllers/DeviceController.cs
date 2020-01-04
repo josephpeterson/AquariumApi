@@ -187,7 +187,7 @@ namespace AquariumApi.Controllers
         //Recieve snapshot from device
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Device/{deviceId}/Snapshot")]
-        public IActionResult UploadSnapshot(int deviceId,IFormFile snapshotImage,AquariumSnapshot snapshot)
+        public IActionResult UploadSnapshot(int deviceId,IFormFile snapshotImage,[FromBody] AquariumSnapshot snapshot)
         {
             try
             {
@@ -318,6 +318,23 @@ namespace AquariumApi.Controllers
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Schedule/Status called");
                 ScheduleState scheduleState = _deviceService.GetDeviceScheduleStatus(deviceId);
                 return new OkObjectResult(scheduleState);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Schedule/Status: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/Schedule/PerformTask")]
+        public IActionResult PerformScheduleTask(int deviceId,[FromBody] DeviceScheduleTask deviceScheduleTask)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Schedule/PerformTask called");
+                _deviceService.PerformScheduleTask(deviceId,deviceScheduleTask);
+                return new OkResult();
             }
             catch (Exception ex)
             {

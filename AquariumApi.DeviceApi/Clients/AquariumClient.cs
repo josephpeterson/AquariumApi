@@ -88,7 +88,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId, AquariumSnapshot snapshot, byte[] photo)
         {
-            var path = $"{host}/ Device/{deviceId}/Snapshot";
+            var path = $"{host}/Device/{deviceId}/Snapshot";
             _logger.LogInformation("Sending snapshot: " + path);
 
 
@@ -96,10 +96,6 @@ namespace AquariumApi.DeviceApi.Clients
             {
                 DateFormatHandling = DateFormatHandling.MicrosoftDateFormat
             });
-
-            _logger.LogInformation("\n\n\n\n\n\n\n\n");
-            _logger.LogInformation(j);
-
 
             MultipartFormDataContent multiContent = new MultipartFormDataContent();
 

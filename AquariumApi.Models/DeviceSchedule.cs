@@ -35,6 +35,7 @@ namespace AquariumApi.Models
                 var indvidualTasks = Tasks.ToList();
                 indvidualTasks.ForEach(t =>
                 {
+                    //Reset the day
                     tasks.Add(new DeviceScheduleTask()
                     {
                         TaskId = t.TaskId,
@@ -44,14 +45,13 @@ namespace AquariumApi.Models
                     });
                     if (t.Interval != null)
                     {
-                        var endTime = t.EndTime;
-                        if (endTime < t.StartTime)
-                            endTime = t.StartTime.AddDays(1);
-                        TimeSpan length = endTime.Subtract(t.StartTime);
-                        var lengthInMinutes = length.TotalMinutes;
-                        var mod = lengthInMinutes % t.Interval;
+                        var lengthInMinutes = TimeSpan.FromDays(1).TotalMinutes;
 
-                        for (var i = 1; i < (lengthInMinutes - mod) / t.Interval; i++)
+                        if (t.EndTime.HasValue)
+                            lengthInMinutes = t.EndTime.Value.TimeOfDay.Subtract(t.StartTime.TimeOfDay).TotalMinutes;
+
+                        var mod = lengthInMinutes % t.Interval;
+                        for (var i = 1; i < ((lengthInMinutes - mod) / t.Interval); i++)
                         {
                             tasks.Add(new DeviceScheduleTask()
                             {

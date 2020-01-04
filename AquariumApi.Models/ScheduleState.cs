@@ -7,7 +7,8 @@ namespace AquariumApi.Models
         public bool Running;
         public FutureTask NextTask;
         public List<DeviceSchedule> Schedules;
-        }
+        public int TaskCount;
+    }
 }
 
 

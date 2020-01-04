@@ -39,6 +39,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Scan endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }
@@ -55,6 +56,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }
@@ -83,6 +85,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Information endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
         }

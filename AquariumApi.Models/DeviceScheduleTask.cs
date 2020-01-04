@@ -15,7 +15,7 @@ namespace AquariumApi.Models
         public ScheduleTaskTypes TaskId { get; set; }
         public int ScheduleId { get; set; }
         public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
+        public DateTime? EndTime { get; set; }
         public int? Interval { get; set; }
 
         [ForeignKey("ScheduleId")]
