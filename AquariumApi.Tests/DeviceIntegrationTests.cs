@@ -63,7 +63,7 @@ public class DeviceIntegrationTests
         var logger = new NullLogger<AquariumClient>();
         var aquariumClient = new AquariumClient(logger, null);
 
-        var host = "http://localhost:5000";
+        var host = "http://localhost:5000/v1";
         var deviceId = 18;
         AquariumSnapshot snapshot = new AquariumSnapshot()
         {

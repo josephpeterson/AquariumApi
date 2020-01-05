@@ -29,7 +29,8 @@
   "Azure": {
     "AccountUsername": "",
     "AccountKey": "",
-    "AquariumPhotosShare": "aquarium-photos"
+    "ConnectionString": "",
+    "AquariumPhotosShare": "aquarium-photos",
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",

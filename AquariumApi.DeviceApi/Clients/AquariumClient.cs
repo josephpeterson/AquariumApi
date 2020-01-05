@@ -88,7 +88,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId, AquariumSnapshot snapshot, byte[] photo)
         {
-            var path = $"{host}/v1/Device/{deviceId}/Snapshot";
+            var path = $"{host}/Device/{deviceId}/Snapshot";
             _logger.LogInformation("Sending snapshot: " + path);
 
 
