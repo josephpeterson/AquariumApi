@@ -30,7 +30,7 @@
     "AccountUsername": "",
     "AccountKey": "",
     "ConnectionString": "",
-    "AquariumPhotosShare": "aquarium-photos",
+    "AquariumPhotosShare": "aquarium-photos"
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",
