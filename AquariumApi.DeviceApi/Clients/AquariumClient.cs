@@ -88,21 +88,17 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId, AquariumSnapshot snapshot, byte[] photo)
         {
-            var path = $"{host}/Device/{deviceId}/Snapshot";
+            var path = $"{host}/v1/Device/{deviceId}/Snapshot";
             _logger.LogInformation("Sending snapshot: " + path);
 
 
-            var j = JsonConvert.SerializeObject(snapshot, new JsonSerializerSettings
-            {
-                DateFormatHandling = DateFormatHandling.MicrosoftDateFormat
-            });
 
             MultipartFormDataContent multiContent = new MultipartFormDataContent();
 
-            multiContent.Add(new ByteArrayContent(photo), "snapshotImage", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString());
+            multiContent.Add(new ByteArrayContent(photo), "SnapshotImage", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString());
 
             //var httpContent = new StringContent(JsonConvert.SerializeObject(snapshot), Encoding.UTF8, "application/json");
-            multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)), "Snapshot");
+            multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)), String.Format("\"{0}\"","Snapshot"));
             HttpClient client = new HttpClient();
             var result = client.PostAsync(path, multiContent).Result;
             if (!result.IsSuccessStatusCode)

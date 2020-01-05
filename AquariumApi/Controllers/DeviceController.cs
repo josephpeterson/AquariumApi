@@ -8,6 +8,7 @@ using AquariumApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace AquariumApi.Controllers
 {
@@ -187,15 +188,17 @@ namespace AquariumApi.Controllers
         //Recieve snapshot from device
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Device/{deviceId}/Snapshot")]
-        public IActionResult UploadSnapshot(int deviceId,IFormFile snapshotImage,[FromBody] AquariumSnapshot snapshot)
+        public IActionResult UploadSnapshot(int deviceId,RequestModel data)
         {
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Snapshot called");
-                _logger.LogInformation($"Test: {snapshot.Date.ToString()}");
+                var snapshotImage = data.SnapshotImage;
+                var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data.Snapshot);
+
                 var device = _aquariumService.GetAquariumDeviceById(deviceId);
                 AquariumSnapshot s = _aquariumService.AddSnapshot(device.AquariumId, snapshot,snapshotImage);
-                return new OkObjectResult(s);
+                return new OkObjectResult(data);
             }
             catch (Exception ex)
             {
@@ -343,5 +346,11 @@ namespace AquariumApi.Controllers
             }
         }
 
+    }
+
+    public class RequestModel
+    {
+        public IFormFile SnapshotImage { get; set; }
+        public string Snapshot { get; set; }
     }
 }

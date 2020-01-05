@@ -38,4 +38,10 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="temp.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@ using AquariumApi.Core;
 using AquariumApi.DataAccess;
 using AquariumApi.DataAccess.AutoMapper;
 using AquariumApi.DeviceApi;
+using AquariumApi.DeviceApi.Clients;
 using AquariumApi.Models;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
