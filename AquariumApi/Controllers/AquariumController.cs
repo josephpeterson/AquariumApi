@@ -187,6 +187,25 @@ namespace AquariumApi.Controllers
             var snapshots = _aquariumService.GetAquariumSnapshots(aquariumId,selection.offset, selection.max);
             return new OkObjectResult(snapshots);
         }
+        [HttpDelete]
+        [Route("/v1/Aquarium/{aquariumId}/Snapshots")]
+        public IActionResult DeleteAllAquariumSnapshsots(int aquariumId)
+        {
+            try
+            {
+                _logger.LogInformation($"DELETE /v1/Aquarium/{aquariumId}/Snapshots called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                _aquariumService.DeleteAllSnapshots(aquariumId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"DELETE /v1/Aquarium/{aquariumId}/Snapshots endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
     public class SnapshotSelection
     {

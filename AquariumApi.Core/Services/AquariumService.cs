@@ -72,6 +72,7 @@ namespace AquariumApi.Core
         DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
         List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId);
         List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId);
+        void DeleteAllSnapshots(int aquariumId);
     }
     public class AquariumService : IAquariumService
     {
@@ -483,6 +484,11 @@ namespace AquariumApi.Core
                     //todo could not update schedule assignment (pi is offline maybe)
                 }
             });
+        }
+
+        public void DeleteAllSnapshots(int aquariumId)
+        {
+            _aquariumDao.DeleteAllSnapshots(aquariumId);
         }
     }
 }

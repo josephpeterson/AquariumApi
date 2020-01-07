@@ -115,6 +115,7 @@ namespace AquariumApi.DataAccess
         DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
         List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId);
         List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId);
+        void DeleteAllSnapshots(int aquariumId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1029,6 +1030,13 @@ namespace AquariumApi.DataAccess
                 .Select(sa => sa.Device)
                 .ToList();
             return devices;
+        }
+
+        public void DeleteAllSnapshots(int aquariumId)
+        {
+            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId);
+            _dbAquariumContext.RemoveRange(snapshots);
+            _dbAquariumContext.SaveChanges();
         }
     }
 }
