@@ -138,8 +138,27 @@ namespace AquariumApi.DeviceApi
             }).OrderBy(t => t.StartTime);
 
             var nextTask = remainingTasks.FirstOrDefault();
+
+
+            //No tasks left for today, check tomorrow
             if (nextTask == null)
-                return null;
+            {
+                var firstTask = allScheduledTasks[0];
+                var eta = firstTask.StartTime.AddDays(1).Subtract(now.TimeOfDay).TimeOfDay;
+                if (allScheduledTasks.Count() > 0)
+
+                    return new FutureTask
+                    {
+                        Index = 0,
+                        task = firstTask,
+                        eta = eta
+                    };
+                else
+                    return null;
+            }
+
+
+
             return new FutureTask
             {
                 Index = allScheduledTasks.IndexOf(nextTask),

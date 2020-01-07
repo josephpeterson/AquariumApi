@@ -132,6 +132,40 @@ public class AquariumDeviceServiceTests
         Assert.Equal(expectedEta, futureTask.eta.TotalHours);
     }
     [Fact]
+    public void GivenExpandedScheduleAtEndOfDay_GetFutureTask_ReturnsTaskRepeatedCorrectly()
+    {
+        var scheduleStart = Convert.ToDateTime("05/05/2005 06:00:00");
+        var date = Convert.ToDateTime("05/05/2005 23:40:00");
+        var schedules =
+            new List<DeviceSchedule>()
+            {
+                new DeviceSchedule()
+                {
+                    Tasks = new List<DeviceScheduleTask>()
+                    {
+                        new DeviceScheduleTask()
+                        {
+                            Id = 0,
+                            TaskId = ScheduleTaskTypes.Snapshot,
+                            Interval = 20,
+                            StartTime = scheduleStart
+                        }
+                    }
+                }
+            };
+
+        var futureTask = _scheduleService.GetNextTask(schedules, date);
+
+        var expected = 0;
+        var expectedEta = 380;
+
+        var tasks = schedules.SelectMany(s => s.ExpandTasks());
+
+        Assert.True(futureTask.task.Id == expected);
+        Assert.Equal(expectedEta, futureTask.eta.TotalMinutes);
+    }
+
+    [Fact]
     public void GivenScheduleStarted_TaskRunsIntermittently()
     {
         var scheduleStart = Convert.ToDateTime("05/05/2005 06:00:00");
