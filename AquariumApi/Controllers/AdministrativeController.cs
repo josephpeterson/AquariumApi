@@ -32,19 +32,25 @@ namespace AquariumApi.Controllers
             _azureService = azureService;
         }
         [HttpGet]
-        [Route("Log")]
-        public string GetApplicationLog()
+        [Route("ApplicationLog")]
+        public IActionResult GetApplicationLog()
         {
             try
             {
-                return System.IO.File.ReadAllText("AquariumApi.log");
+                var text = System.IO.File.ReadAllText(_config["DashboardLogFilePath"]);
+                return new OkObjectResult(text);
             }
-            catch(FileNotFoundException) {
-                return "No error log found";
+            catch (FileNotFoundException)
+            {
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
             }
         }
-        [HttpGet]
-        [Route("Log/Delete")]
+        [HttpDelete]
+        [Route("ApplicationLog")]
         public IActionResult DeleteApplicationLog()
         {
             try
@@ -61,6 +67,7 @@ namespace AquariumApi.Controllers
                 return new BadRequestResult();
             }
         }
+        
 
         [HttpGet]
         [Route("Users")]
