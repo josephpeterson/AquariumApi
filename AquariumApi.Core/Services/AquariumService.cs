@@ -74,6 +74,8 @@ namespace AquariumApi.Core
         List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId);
         void DeleteAllSnapshots(int aquariumId);
         void DeleteSnapshots(List<int> snapshotIds);
+        void DeleteAquariumPhotos(List<int> aquariumPhotoIds);
+        List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
     }
     public class AquariumService : IAquariumService
     {
@@ -138,6 +140,7 @@ namespace AquariumApi.Core
             };
             _activityService.RegisterActivity(activity);
         }
+
 
         /* Device Camera configuration */
         public AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config)
@@ -322,7 +325,11 @@ namespace AquariumApi.Core
         /* Aquarium Photos */
         public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
         {
-            return _aquariumDao.GetAquariumPhotos(aquariumId).Where(s => s.AquariumId == aquariumId).ToList();
+            return _aquariumDao.GetAquariumPhotos(aquariumId).ToList();
+        }
+        public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
+        {
+            return _aquariumDao.GetAquariumPhotosByAccount(accountId).ToList();
         }
 
         public AquariumPhoto GetAquariumPhotoById(int photoId)
@@ -495,6 +502,10 @@ namespace AquariumApi.Core
         public void DeleteSnapshots(List<int> snapshotIds)
         {
             _aquariumDao.DeleteSnapshots(snapshotIds);
+        }
+        public void DeleteAquariumPhotos(List<int> aquariumPhotoIds)
+        {
+            _aquariumDao.DeleteAquariumPhotos(aquariumPhotoIds);
         }
     }
 }

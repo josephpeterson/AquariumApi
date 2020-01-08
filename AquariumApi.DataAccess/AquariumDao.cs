@@ -57,7 +57,6 @@ namespace AquariumApi.DataAccess
         void DeleteAquariumPhoto(int photoId);
         FishBreeding AddBreeding(FishBreeding breeding);
         void DeleteFishPhoto(int photoId);
-        AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
 
@@ -117,6 +116,9 @@ namespace AquariumApi.DataAccess
         List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId);
         void DeleteAllSnapshots(int aquariumId);
         void DeleteSnapshots(List<int> snapshotIds);
+        AquariumPhoto GetAquariumPhotoById(int photoId);
+        List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
+        void DeleteAquariumPhotos(List<int> photoIds);
     }
 
     public class AquariumDao : IAquariumDao
@@ -554,6 +556,15 @@ namespace AquariumApi.DataAccess
         {
             return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
                 .Where(p => p.AquariumId == aquariumId)
+                .Include(p => p.Photo)
+                .ToList();
+        }
+        public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
+        {
+            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
+                .Include(p => p.Photo)
+                .Include(p => p.Aquarium)
+                .Where(p => p.Aquarium.OwnerId == accountId)
                 .ToList();
         }
         public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
@@ -566,6 +577,13 @@ namespace AquariumApi.DataAccess
         {
             var photo = GetAquariumPhotoById(photoId);
             _dbAquariumContext.TblAquariumPhoto.Remove(photo);
+            _dbAquariumContext.SaveChanges();
+        }
+        public void DeleteAquariumPhotos(List<int> photoIds)
+        {
+            var photos = _dbAquariumContext.TblAquariumPhoto.Where(s => photoIds.Contains(s.Id))
+                .Include(p => p.Photo);
+            _dbAquariumContext.RemoveRange(photos);
             _dbAquariumContext.SaveChanges();
         }
         public void DeleteFishPhoto(int photoId)

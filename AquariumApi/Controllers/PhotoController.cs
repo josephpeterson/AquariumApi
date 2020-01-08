@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AquariumApi.Controllers
 {
+    [Authorize]
     public class PhotoController : Controller
     {
         private IAccountService _accountService;
@@ -99,6 +101,56 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Photo/{photoId}/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+
+
+        [HttpPost]
+        [Route("/v1/Photo/Aquarium/Delete")]
+        [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult DeleteAquariumPhotos([FromBody] List<int> photoIds)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Photo/Aquarium/Delete called");
+
+
+                //Verify access
+                var id = _accountService.GetCurrentUserId();
+                var validPhotoIds = _aquariumService.GetAquariumPhotosByAccount(id).Select(p => p.Id);
+                var delete = photoIds.Where(pId => validPhotoIds.Contains(pId)).ToList();
+                _aquariumService.DeleteAquariumPhotos(delete);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Photo/Aquarium/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpGet]
+        [Route("/v1/Photo/Aquarium/{aquariumId}")]
+        [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult GetAquariumPhotos(int aquariumId)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Photo/Aquarium/{aquariumId} called");
+
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+
+
+                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId);
+                return new OkObjectResult(aquariumPhotos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Photo/Aquarium/{aquariumId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
