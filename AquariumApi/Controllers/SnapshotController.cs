@@ -81,18 +81,18 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Snapshot/Delete")]
+        [Route("/v1/Snapshot/DeleteMultiple")]
         public IActionResult DeleteSnapshots([FromBody] List<int> snapshotIds)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Snapshot/Delete called");
+                _logger.LogInformation("POST /v1/Snapshot/DeleteMultiple called");
                 _aquariumService.DeleteSnapshots(snapshotIds);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Snapshot/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Snapshot/DeleteMultiple endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
