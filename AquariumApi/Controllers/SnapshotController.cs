@@ -70,13 +70,29 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                _logger.LogInformation("POST /v1/Snapshot/Delete called");
                 _aquariumService.DeleteSnapshot(removeSnapshotId);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Snapshot/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Snapshot/Delete")]
+        public IActionResult DeleteSnapshots([FromBody] List<int> snapshotIds)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Snapshot/Delete called");
+                _aquariumService.DeleteSnapshots(snapshotIds);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Snapshot/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

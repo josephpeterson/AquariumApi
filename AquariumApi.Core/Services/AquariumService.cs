@@ -73,6 +73,7 @@ namespace AquariumApi.Core
         List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId);
         List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId);
         void DeleteAllSnapshots(int aquariumId);
+        void DeleteSnapshots(List<int> snapshotIds);
     }
     public class AquariumService : IAquariumService
     {
@@ -489,6 +490,11 @@ namespace AquariumApi.Core
         public void DeleteAllSnapshots(int aquariumId)
         {
             _aquariumDao.DeleteAllSnapshots(aquariumId);
+        }
+
+        public void DeleteSnapshots(List<int> snapshotIds)
+        {
+            _aquariumDao.DeleteSnapshots(snapshotIds);
         }
     }
 }

@@ -116,6 +116,7 @@ namespace AquariumApi.DataAccess
         List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId);
         List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId);
         void DeleteAllSnapshots(int aquariumId);
+        void DeleteSnapshots(List<int> snapshotIds);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1035,6 +1036,13 @@ namespace AquariumApi.DataAccess
         public void DeleteAllSnapshots(int aquariumId)
         {
             var snapshots = _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId);
+            _dbAquariumContext.RemoveRange(snapshots);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        public void DeleteSnapshots(List<int> snapshotIds)
+        {
+            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id));
             _dbAquariumContext.RemoveRange(snapshots);
             _dbAquariumContext.SaveChanges();
         }
