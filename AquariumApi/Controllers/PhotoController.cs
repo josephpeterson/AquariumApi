@@ -154,6 +154,29 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpGet]
+        [Route("/v1/Photo/Snapshot/{aquariumId}")]
+        [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult GetAquariumSnapshotPhotos(int aquariumId)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Photo/Snapshot/{aquariumId} called");
 
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+
+
+                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId);
+                return new OkObjectResult(aquariumPhotos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Photo/Snapshot/{aquariumId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }
