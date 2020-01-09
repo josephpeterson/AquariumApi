@@ -130,11 +130,11 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet]
+        [HttpPost]
         [Route("/v1/Photo/Aquarium/{aquariumId}")]
         [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult GetAquariumPhotos(int aquariumId)
+        public IActionResult GetAquariumPhotos(int aquariumId,[FromBody] PaginationSliver pagination)
         {
             try
             {
@@ -145,7 +145,7 @@ namespace AquariumApi.Controllers
                 if (aq.OwnerId != id) return new UnauthorizedResult();
 
 
-                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId);
+                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId, pagination);
                 return new OkObjectResult(aquariumPhotos);
             }
             catch (Exception ex)
@@ -154,11 +154,11 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet]
+        [HttpPost]
         [Route("/v1/Photo/Snapshot/{aquariumId}")]
         [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult GetAquariumSnapshotPhotos(int aquariumId)
+        public IActionResult GetAquariumSnapshotPhotos(int aquariumId, [FromBody] PaginationSliver pagination)
         {
             try
             {
@@ -169,7 +169,7 @@ namespace AquariumApi.Controllers
                 if (aq.OwnerId != id) return new UnauthorizedResult();
 
 
-                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId);
+                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId,pagination);
                 return new OkObjectResult(aquariumPhotos);
             }
             catch (Exception ex)

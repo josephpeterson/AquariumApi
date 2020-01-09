@@ -53,7 +53,7 @@ namespace AquariumApi.DataAccess
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
 
-        List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
+        IEnumerable<AquariumPhoto> GetAquariumPhotos(int aquariumId);
         void DeleteAquariumPhoto(int photoId);
         FishBreeding AddBreeding(FishBreeding breeding);
         void DeleteFishPhoto(int photoId);
@@ -552,12 +552,11 @@ namespace AquariumApi.DataAccess
                 .Where(p => p.Id == photoId)
                 .First();
         }
-        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
+        public IEnumerable<AquariumPhoto> GetAquariumPhotos(int aquariumId)
         {
             return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
                 .Where(p => p.AquariumId == aquariumId)
-                .Include(p => p.Photo)
-                .ToList();
+                .Include(p => p.Photo);
         }
         public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
         {

@@ -56,7 +56,7 @@ namespace AquariumApi.Core
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
-        List<AquariumPhoto> GetAquariumPhotos(int aquariumId);
+        List<AquariumPhoto> GetAquariumPhotos(int aquariumId,PaginationSliver pagination);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
         AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
         AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
@@ -323,9 +323,13 @@ namespace AquariumApi.Core
 
         /* Photos */
         /* Aquarium Photos */
-        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId)
+        public List<AquariumPhoto> GetAquariumPhotos(int aquariumId,PaginationSliver pagination)
         {
-            return _aquariumDao.GetAquariumPhotos(aquariumId).ToList();
+            var photos = _aquariumDao.GetAquariumPhotos(aquariumId);
+            if (pagination.Descending)
+                photos = photos.OrderByDescending(p => p.Photo.Date);
+            var sliver = photos.Skip(pagination.Start).Take(pagination.Count);
+            return sliver.ToList();
         }
         public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
         {
