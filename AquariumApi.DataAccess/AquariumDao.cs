@@ -119,6 +119,7 @@ namespace AquariumApi.DataAccess
         AquariumPhoto GetAquariumPhotoById(int photoId);
         List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
         void DeleteAquariumPhotos(List<int> photoIds);
+        IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -557,6 +558,12 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
                 .Where(p => p.AquariumId == aquariumId)
                 .Include(p => p.Photo);
+        }
+        public IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId)
+        {
+            return _dbAquariumContext.TblFishPhoto.AsNoTracking()
+                .Include(f => f.Fish)
+                .Where(p => p.Fish.AquariumId == aquariumId);
         }
         public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
         {

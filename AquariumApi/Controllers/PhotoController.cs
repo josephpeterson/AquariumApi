@@ -155,26 +155,50 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Photo/Snapshot/{aquariumId}")]
+        [Route("/v1/Photo/Aquarium/{aquariumId}/Snapshot")]
         [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetAquariumSnapshotPhotos(int aquariumId, [FromBody] PaginationSliver pagination)
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Photo/Snapshot/{aquariumId} called");
+                _logger.LogInformation($"GET /v1/Photo/Aquarium/{aquariumId}/Snapshot called");
 
                 var id = _accountService.GetCurrentUserId();
                 var aq = _aquariumService.GetAquariumById(aquariumId);
                 if (aq.OwnerId != id) return new UnauthorizedResult();
 
 
-                var aquariumPhotos = _aquariumService.GetAquariumPhotos(aquariumId,pagination);
+                var aquariumPhotos = _aquariumService.GetAquariumSnapshotPhotos(aquariumId, pagination);
                 return new OkObjectResult(aquariumPhotos);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Photo/Snapshot/{aquariumId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/Photo/Aquarium/{aquariumId}/Snapshot endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Photo/Aquarium/{aquariumId}/Fish")]
+        [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult GetAquariumFishPhotos(int aquariumId, [FromBody] PaginationSliver pagination)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Photo/Aquarium/{aquariumId}/Fish called");
+
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+
+
+                var aquariumPhotos = _aquariumService.GetAquariumFishPhotos(aquariumId, pagination);
+                return new OkObjectResult(aquariumPhotos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Photo/Aquarium/{aquariumId}/Fish endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

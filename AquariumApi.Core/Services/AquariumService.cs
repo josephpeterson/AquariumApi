@@ -76,6 +76,8 @@ namespace AquariumApi.Core
         void DeleteSnapshots(List<int> snapshotIds);
         void DeleteAquariumPhotos(List<int> aquariumPhotoIds);
         List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
+        List<AquariumSnapshot> GetAquariumSnapshotPhotos(int aquariumId, PaginationSliver pagination);
+        List<FishPhoto> GetAquariumFishPhotos(int aquariumId, PaginationSliver pagination);
     }
     public class AquariumService : IAquariumService
     {
@@ -326,6 +328,23 @@ namespace AquariumApi.Core
         public List<AquariumPhoto> GetAquariumPhotos(int aquariumId,PaginationSliver pagination)
         {
             var photos = _aquariumDao.GetAquariumPhotos(aquariumId);
+            if (pagination.Descending)
+                photos = photos.OrderByDescending(p => p.Photo.Date);
+            var sliver = photos.Skip(pagination.Start).Take(pagination.Count);
+            return sliver.ToList();
+        }
+        public List<AquariumSnapshot> GetAquariumSnapshotPhotos(int aquariumId, PaginationSliver pagination)
+        {
+            var photos = _aquariumDao.GetSnapshotsByAquarium(aquariumId)
+                .Where(s => s.PhotoId != null);
+            if (pagination.Descending)
+                photos = photos.OrderByDescending(p => p.Photo.Date);
+            var sliver = photos.Skip(pagination.Start).Take(pagination.Count);
+            return sliver.ToList();
+        }
+        public List<FishPhoto> GetAquariumFishPhotos(int aquariumId, PaginationSliver pagination)
+        {
+            var photos = _aquariumDao.GetAquariumFishPhotos(aquariumId);
             if (pagination.Descending)
                 photos = photos.OrderByDescending(p => p.Photo.Date);
             var sliver = photos.Skip(pagination.Start).Take(pagination.Count);
