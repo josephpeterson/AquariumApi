@@ -136,7 +136,144 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext = dbAquariumContext;
             _logger = logger;
         }
+
+        /* Aquarium Accounts */
+        public AquariumUser GetAccountByLogin(int userId, string password)
+        {
+            var acc = _dbAquariumContext.TblSignupRequests.AsNoTracking()
+                 .Where(p => p.Id == userId && p.Password == password)
+                 .First();
+            return GetAccountById(acc.Id);
+        }
+        public AquariumUser GetAccountById(int userId)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Id == userId)
+                .SingleOrDefault();
+        }
+        public List<AquariumUser> GetAllAccounts()
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking().ToList();
+        }
+        public AquariumUser GetUserByUsername(string username)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Username == username)
+                .SingleOrDefault();
+        }
+        public AquariumUser GetUserByEmail(string email)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Email == email)
+                .SingleOrDefault();
+        }
+        public AquariumUser UpdateUser(AquariumUser user)
+        {
+            var userToUpdate = _dbAquariumContext.TblAccounts.SingleOrDefault(u => user.Id == u.Id);
+            if (userToUpdate == null)
+                throw new KeyNotFoundException();
+
+            userToUpdate = _mapper.Map(user, userToUpdate);
+            _dbAquariumContext.SaveChanges();
+            return GetUserByEmail(userToUpdate.Email);
+        }
+        public AquariumUser GetUserByUsernameOrEmail(string email)
+        {
+            return _dbAquariumContext.TblAccounts.AsNoTracking()
+                .Where(p => p.Username == email || p.Email == email)
+                .SingleOrDefault();
+        }
+        public AquariumUser AddAccount(SignupRequest signupRequest)
+        {
+            _dbAquariumContext.TblSignupRequests.Add(signupRequest);
+            _dbAquariumContext.SaveChanges();
+            return GetAccountById(signupRequest.Id);
+        }
+        public void UpdatePasswordForUser(int uId, string newPassword)
+        {
+            var acc = _dbAquariumContext.TblSignupRequests.Where(s => s.Id == uId).First();
+            acc.Password = newPassword;
+            _dbAquariumContext.SaveChanges();
+        }
+        public AquariumProfile GetProfileById(int targetId)
+        {
+            var results = _dbAquariumContext.TblAquariumProfiles.AsNoTracking()
+                .Where(r => r.Id == targetId)
+                .Include(p => p.Thumbnail)
+                .Include(e => e.Aquariums).ThenInclude(e => e.Fish)
+                .Include(e => e.Account);
+            var profile = results.First();
+            return profile;
+        }
+        public AquariumProfile UpdateProfile(AquariumProfile profile)
+        {
+            _dbAquariumContext.TblAquariumProfiles.Update(profile);
+            _dbAquariumContext.SaveChanges();
+            return profile;
+        }
+        public AccountRelationship GetAccountRelationship(int aquariumId, int targetId)
+        {
+            if (aquariumId == targetId)
+                return null;
+
+            var relationship = _dbAquariumContext.TblAccountRelationship.Where(rel => rel.AccountId == aquariumId && rel.TargetId == targetId).FirstOrDefault();
+            if (relationship == null)
+            {
+                relationship = new AccountRelationship()
+                {
+                    AccountId = aquariumId,
+                    TargetId = targetId,
+                    Relationship = 0
+                };
+            }
+            return relationship;
+        }
+        public AccountRelationship UpsertFollowUser(int aquariumId, int targetId)
+        {
+            if (aquariumId == targetId)
+                return null;
+            var rel = _dbAquariumContext.TblAccountRelationship.Where(r => r.AccountId == aquariumId && r.TargetId == targetId).FirstOrDefault();
+            if (rel == null)
+                _dbAquariumContext.TblAccountRelationship.Add(rel = new AccountRelationship()
+                {
+                    AccountId = aquariumId,
+                    TargetId = targetId,
+                    Relationship = RelationshipTypes.Following
+                });
+            else if (rel.Relationship == RelationshipTypes.Following)
+                rel.Relationship = RelationshipTypes.None;
+            else
+                rel.Relationship = RelationshipTypes.Following;
+            _dbAquariumContext.SaveChanges();
+            return rel;
+        }
+
+        /* Account Activity */
+        public void RegisterActivity(Activity newActivity)
+        {
+            _dbAquariumContext.TblAccountActivity.Add(newActivity);
+            _dbAquariumContext.SaveChanges();
+        }
+        public List<Activity> GetRecentAccountActivity(int accountId)
+        {
+            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.AccountId == accountId
+            && activity.ActivityType != ActivityTypes.LoginAccountActivity)
+            .OrderByDescending(act => act.Timestamp)
+            .Take(100)
+            .ToList();
+        }
+        public Activity GetAccountActivity(int activityId)
+        {
+            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.Id == activityId).First();
+        }
+
         /* Aquarium */
+        public List<Aquarium> GetAquariumsByAccountId(int userId)
+        {
+            return _dbAquariumContext.TblAquarium
+                .Where(aq => aq.OwnerId == userId)
+                .ToList();
+        }
         public List<Aquarium> GetAquariums()
         {
             return _dbAquariumContext.TblAquarium.AsNoTracking()
@@ -208,7 +345,7 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblAquarium.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
         }
-
+       
         /* Aquarium Snapshots */
         public AquariumSnapshot AddSnapshot(AquariumSnapshot model)
         {
@@ -248,6 +385,251 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblSnapshot.Remove(snapshot);
             _dbAquariumContext.SaveChanges();
             return snapshot;
+        }
+        public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId, int offset, int max)
+        {
+            return _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId)
+                .Include(s => s.Photo)
+                .OrderByDescending(s => s.Date)
+                .Skip(offset)
+                .Take(max)
+                .ToList();
+        }
+        public void DeleteAllSnapshots(int aquariumId)
+        {
+            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId);
+            _dbAquariumContext.RemoveRange(snapshots);
+            _dbAquariumContext.SaveChanges();
+        }
+        public void DeleteSnapshots(List<int> snapshotIds)
+        {
+            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id));
+            _dbAquariumContext.RemoveRange(snapshots);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        /* Aquarium Device */
+        public AquariumDevice AddAquariumDevice(AquariumDevice device)
+        {
+            _dbAquariumContext.TblDevice.Add(device);
+            if (device.CameraConfiguration == null) device.CameraConfiguration = new CameraConfiguration();
+            _dbAquariumContext.TblCameraConfiguration.Add(device.CameraConfiguration);
+            _dbAquariumContext.SaveChanges();
+            return device;
+        }
+        public AquariumDevice GetAquariumDeviceById(int deviceId)
+        {
+            var device = _dbAquariumContext.TblDevice.AsNoTracking()
+                .Where(s => s.Id == deviceId)
+                .Include(e => e.CameraConfiguration)
+                .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule)
+                .First();
+            if (device.CameraConfiguration == null)
+                device.CameraConfiguration = new CameraConfiguration();
+            return device;
+        }
+        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
+        {
+            if (ipAddress == "::1") ipAddress = "localhost";
+            return _dbAquariumContext.TblDevice.AsNoTracking()
+                .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
+                .Include(e => e.Aquarium)
+                .Include(e => e.CameraConfiguration)
+                .First();
+        }
+        public AquariumDevice DeleteAquariumDevice(int deviceId)
+        {
+            var device = _dbAquariumContext.TblDevice
+                .Include(e => e.CameraConfiguration)
+                .SingleOrDefault(d => d.Id == deviceId);
+            if (device == null)
+                throw new KeyNotFoundException();
+            _dbAquariumContext.TblDevice.Remove(device);
+            if (device.CameraConfiguration != null)
+                _dbAquariumContext.TblCameraConfiguration.Remove(device.CameraConfiguration);
+            _dbAquariumContext.SaveChanges();
+            return device;
+        }
+        public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
+        {
+            var deviceToUpdate = _dbAquariumContext.TblDevice
+                .Include(d => d.CameraConfiguration)
+                .SingleOrDefault(s => s.Id == device.Id);
+            if(deviceToUpdate == null)
+                throw new KeyNotFoundException();
+
+             _mapper.Map(device, deviceToUpdate);
+
+            //Also map modules
+            if(device.CameraConfiguration != null)
+                _mapper.Map(device.CameraConfiguration, deviceToUpdate.CameraConfiguration);
+
+            _dbAquariumContext.SaveChanges();
+            return GetAquariumDeviceById(deviceToUpdate.Id);
+        }
+        public void SetAquariumDevice(int aquariumId, int deviceId)
+        {
+            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
+            if (device == null)
+                throw new KeyNotFoundException();
+            var aquarium = _dbAquariumContext.TblAquarium.Where(s => s.Id == aquariumId).First();
+            if (aquarium == null)
+                throw new KeyNotFoundException();
+
+            device.AquariumId = aquarium.Id;
+            _dbAquariumContext.TblDevice.Update(device);
+            _dbAquariumContext.SaveChanges();
+        }
+        public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
+        {
+            var d = GetAquariumDeviceById(deviceId);
+            d.EnabledPhoto = updatedDevice.EnabledPhoto;
+            d.EnabledTemperature = updatedDevice.EnabledTemperature;
+            d.EnabledLighting = updatedDevice.EnabledLighting;
+            d.EnabledPh = updatedDevice.EnabledPh;
+            d.EnabledNitrate = updatedDevice.EnabledNitrate;
+            return UpdateAquariumDevice(d);
+        }
+        public List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId)
+        {
+            var devices = _dbAquariumContext.TblDeviceScheduleAssignment
+                .Where(sa => sa.ScheduleId == scheduleId)
+                .Include(sa => sa.Device)
+                .Select(sa => sa.Device)
+                .ToList();
+            return devices;
+        }
+
+        /* Aquarium Device Schedule */
+        public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            _dbAquariumContext.Add(deviceSchedule);
+            _dbAquariumContext.SaveChanges();
+            return deviceSchedule;
+        }
+        public void UnassignDeviceSchedule(int scheduleId,int deviceId)
+        {
+            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
+            if(res.Any())
+            {
+                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
+                _dbAquariumContext.SaveChanges();
+            }
+        }
+        public DeviceScheduleAssignment AssignDeviceSchedule(int scheduleId, int deviceId)
+        {
+            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
+            if (res.Any())
+            {
+                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
+            }
+            var assignment = new DeviceScheduleAssignment()
+            {
+                 DeviceId = deviceId,
+                 ScheduleId = scheduleId
+            };
+            _dbAquariumContext.TblDeviceScheduleAssignment.Add(assignment);
+            _dbAquariumContext.SaveChanges();
+            return assignment;
+        }
+        public List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId)
+        {
+            var deviceSchedules = _dbAquariumContext.TblDeviceSchedule
+                .AsNoTracking()
+                .Include(s => s.Tasks)
+                .Where(s => s.AuthorId == accountId);
+            return deviceSchedules.ToList();
+        }
+        public void DeleteDeviceSchedule(int scheduleId)
+        {
+            var  scheduleAssignments = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.ScheduleId == scheduleId);
+            _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(scheduleAssignments);
+
+            var scheduleTasks = _dbAquariumContext.TblDeviceScheduleTask.Where(st => st.ScheduleId == scheduleId);
+            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleTasks);
+
+
+            var schedule = _dbAquariumContext.TblDeviceSchedule.Where(s => s.Id == scheduleId).First();
+            _dbAquariumContext.TblDeviceSchedule.Remove(schedule);
+
+            _dbAquariumContext.SaveChanges();
+        }
+        public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+
+            var scheduleToUpdate = _dbAquariumContext.TblDeviceSchedule
+                .Include(d => d.Tasks)
+                .First(s => s.Id == deviceSchedule.Id);
+
+            //Truncate schedule tasks
+            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleToUpdate.Tasks);
+
+            _mapper.Map(deviceSchedule, scheduleToUpdate);
+
+            _dbAquariumContext.SaveChanges();
+            return deviceSchedule;
+        }
+        public List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId)
+        {
+            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
+                .AsNoTracking()
+                .Where(sa => sa.DeviceId == deviceId)
+                .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
+                .ToList();
+            return schedules;
+        }
+
+        /* Aquarium Photos */
+        public AquariumPhoto GetAquariumPhotoById(int photoId)
+        {
+            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
+                .Where(p => p.Id == photoId)
+                .First();
+        }
+        public IEnumerable<AquariumPhoto> GetAquariumPhotos(int aquariumId)
+        {
+            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
+                .Where(p => p.AquariumId == aquariumId)
+                .Include(p => p.Photo);
+        }
+        public IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId)
+        {
+            return _dbAquariumContext.TblFishPhoto.AsNoTracking()
+                .Include(f => f.Fish)
+                .Where(p => p.Fish.AquariumId == aquariumId);
+        }
+        public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
+        {
+            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
+                .Include(p => p.Photo)
+                .Include(p => p.Aquarium)
+                .Where(p => p.Aquarium.OwnerId == accountId)
+                .ToList();
+        }
+        public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
+        {
+            _dbAquariumContext.TblAquariumPhoto.Add(photo);
+            _dbAquariumContext.SaveChanges();
+            return photo;
+        }
+        public void DeleteAquariumPhoto(int photoId)
+        {
+            var photo = GetAquariumPhotoById(photoId);
+            _dbAquariumContext.TblAquariumPhoto.Remove(photo);
+            _dbAquariumContext.SaveChanges();
+        }
+        public void DeleteAquariumPhotos(List<int> photoIds)
+        {
+            var photos = _dbAquariumContext.TblAquariumPhoto.Where(s => photoIds.Contains(s.Id))
+                .Include(p => p.Photo);
+            _dbAquariumContext.RemoveRange(photos);
+            _dbAquariumContext.SaveChanges();
+        }
+        public void DeleteFishPhoto(int photoId)
+        {
+            var photo = GetFishPhotoById(photoId);
+            _dbAquariumContext.TblFishPhoto.Remove(photo);
+            _dbAquariumContext.SaveChanges();
         }
 
         /* Species */
@@ -335,6 +717,60 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblFish.Remove(fishToUpdate);
             _dbAquariumContext.SaveChanges();
         }
+        public List<Fish> GetAllFishByAccount(int accountId)
+        {
+            return _dbAquariumContext.TblFish.Where(f => f.Aquarium.OwnerId == accountId).ToList();
+        }
+        public Fish TransferFish(int fishId, int aquariumId)
+        {
+            var fish = _dbAquariumContext.TblFish.Where(f => f.Id == fishId).First();
+            fish.AquariumId = aquariumId;
+            _dbAquariumContext.Update(fish);
+            _dbAquariumContext.SaveChanges();
+            return fish;
+        }
+        public Fish MarkDeseased(FishDeath death)
+        {
+            var fish = _dbAquariumContext.TblFish.Where(f => f.Id == death.FishId).First();
+            fish.Death = death;
+            fish.Dead = true;
+            _dbAquariumContext.Update(fish);
+            _dbAquariumContext.SaveChanges();
+            return GetFishById(death.FishId);
+        }
+        public FishBreeding AddBreeding(FishBreeding breeding)
+        {
+            _dbAquariumContext.TblFishBreeds.Add(breeding);
+            _dbAquariumContext.SaveChanges();
+
+            var mother = _dbAquariumContext.TblFish.AsNoTracking()
+                .Where(f => f.Id == breeding.MotherId)
+                .Include(f => f.Species)
+                .First();
+
+            var newFish = new List<Fish>();
+
+            for (var i = 0; i < breeding.Amount; i++)
+            {
+                newFish.Add(new Fish()
+                {
+                    AquariumId = mother.AquariumId,
+                    BreedId = breeding.Id,
+                    SpeciesId = mother.SpeciesId,
+                    Name = mother.Species.Name + $"({i})"
+                });
+            }
+            _dbAquariumContext.UpdateRange(newFish);
+            _dbAquariumContext.SaveChanges();
+            breeding.Fish = newFish;
+            return breeding;
+        }
+        public FishDisease AddDiseaseDiagnosis(FishDisease diseaseDiagnois)
+        {
+            _dbAquariumContext.Add(diseaseDiagnois);
+            _dbAquariumContext.SaveChanges();
+            return diseaseDiagnois;
+        }
 
         /* Feeding */
         public Feeding AddFeeding(Feeding feeding)
@@ -379,415 +815,6 @@ namespace AquariumApi.DataAccess
                 throw new KeyNotFoundException();
             _dbAquariumContext.TblFeeding.Remove(feedingToUpdate);
             _dbAquariumContext.SaveChanges();
-        }
-
-        /* Aquarium Device */
-        public AquariumDevice AddAquariumDevice(AquariumDevice device)
-        {
-            _dbAquariumContext.TblDevice.Add(device);
-            if (device.CameraConfiguration == null) device.CameraConfiguration = new CameraConfiguration();
-            _dbAquariumContext.TblCameraConfiguration.Add(device.CameraConfiguration);
-            _dbAquariumContext.SaveChanges();
-            return device;
-        }
-        public AquariumDevice GetAquariumDeviceById(int deviceId)
-        {
-            var device = _dbAquariumContext.TblDevice.AsNoTracking()
-                .Where(s => s.Id == deviceId)
-                .Include(e => e.CameraConfiguration)
-                .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule)
-                .First();
-            if (device.CameraConfiguration == null)
-                device.CameraConfiguration = new CameraConfiguration();
-            return device;
-        }
-        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
-        {
-            if (ipAddress == "::1") ipAddress = "localhost";
-            return _dbAquariumContext.TblDevice.AsNoTracking()
-                .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
-                .Include(e => e.Aquarium)
-                .Include(e => e.CameraConfiguration)
-                .First();
-        }
-        public AquariumDevice DeleteAquariumDevice(int deviceId)
-        {
-            var device = _dbAquariumContext.TblDevice
-                .Include(e => e.CameraConfiguration)
-                .SingleOrDefault(d => d.Id == deviceId);
-            if (device == null)
-                throw new KeyNotFoundException();
-            _dbAquariumContext.TblDevice.Remove(device);
-            if (device.CameraConfiguration != null)
-                _dbAquariumContext.TblCameraConfiguration.Remove(device.CameraConfiguration);
-            _dbAquariumContext.SaveChanges();
-            return device;
-        }
-        public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
-        {
-            var deviceToUpdate = _dbAquariumContext.TblDevice
-                .Include(d => d.CameraConfiguration)
-                .SingleOrDefault(s => s.Id == device.Id);
-            if(deviceToUpdate == null)
-                throw new KeyNotFoundException();
-
-             _mapper.Map(device, deviceToUpdate);
-
-            //Also map modules
-            if(device.CameraConfiguration != null)
-                _mapper.Map(device.CameraConfiguration, deviceToUpdate.CameraConfiguration);
-
-            _dbAquariumContext.SaveChanges();
-            return GetAquariumDeviceById(deviceToUpdate.Id);
-        }
-        public void SetAquariumDevice(int aquariumId, int deviceId)
-        {
-            var device = _dbAquariumContext.TblDevice.Where(s => s.Id == deviceId).First();
-            if (device == null)
-                throw new KeyNotFoundException();
-            var aquarium = _dbAquariumContext.TblAquarium.Where(s => s.Id == aquariumId).First();
-            if (aquarium == null)
-                throw new KeyNotFoundException();
-
-            device.AquariumId = aquarium.Id;
-            _dbAquariumContext.TblDevice.Update(device);
-            _dbAquariumContext.SaveChanges();
-        }
-        public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
-        {
-            var d = GetAquariumDeviceById(deviceId);
-            d.EnabledPhoto = updatedDevice.EnabledPhoto;
-            d.EnabledTemperature = updatedDevice.EnabledTemperature;
-            d.EnabledLighting = updatedDevice.EnabledLighting;
-            d.EnabledPh = updatedDevice.EnabledPh;
-            d.EnabledNitrate = updatedDevice.EnabledNitrate;
-            return UpdateAquariumDevice(d);
-        }
-
-
-        /* Aquarium Device Schedule */
-        public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
-        {
-            _dbAquariumContext.Add(deviceSchedule);
-            _dbAquariumContext.SaveChanges();
-            return deviceSchedule;
-        }
-        public void UnassignDeviceSchedule(int scheduleId,int deviceId)
-        {
-            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
-            if(res.Any())
-            {
-                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
-                _dbAquariumContext.SaveChanges();
-            }
-        }
-        public DeviceScheduleAssignment AssignDeviceSchedule(int scheduleId, int deviceId)
-        {
-            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
-            if (res.Any())
-            {
-                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
-            }
-            var assignment = new DeviceScheduleAssignment()
-            {
-                 DeviceId = deviceId,
-                 ScheduleId = scheduleId
-            };
-            _dbAquariumContext.TblDeviceScheduleAssignment.Add(assignment);
-            _dbAquariumContext.SaveChanges();
-            return assignment;
-        }
-        public List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId)
-        {
-            var deviceSchedules = _dbAquariumContext.TblDeviceSchedule
-                .AsNoTracking()
-                .Include(s => s.Tasks)
-                .Where(s => s.AuthorId == accountId);
-            return deviceSchedules.ToList();
-        }
-        public void DeleteDeviceSchedule(int scheduleId)
-        {
-            var  scheduleAssignments = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.ScheduleId == scheduleId);
-            _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(scheduleAssignments);
-
-            var scheduleTasks = _dbAquariumContext.TblDeviceScheduleTask.Where(st => st.ScheduleId == scheduleId);
-            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleTasks);
-
-
-            var schedule = _dbAquariumContext.TblDeviceSchedule.Where(s => s.Id == scheduleId).First();
-            _dbAquariumContext.TblDeviceSchedule.Remove(schedule);
-
-            _dbAquariumContext.SaveChanges();
-        }
-        public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
-        {
-
-            var scheduleToUpdate = _dbAquariumContext.TblDeviceSchedule
-                .Include(d => d.Tasks)
-                .First(s => s.Id == deviceSchedule.Id);
-
-            //Truncate schedule tasks
-            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleToUpdate.Tasks);
-
-            _mapper.Map(deviceSchedule, scheduleToUpdate);
-
-            _dbAquariumContext.SaveChanges();
-            return deviceSchedule;
-        }
-        public List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId)
-        {
-            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
-                .AsNoTracking()
-                .Where(sa => sa.DeviceId == deviceId)
-                .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
-                .ToList();
-            return schedules;
-        }
-
-
-
-        /* Aquarium Photos */
-        public AquariumPhoto GetAquariumPhotoById(int photoId)
-        {
-            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
-                .Where(p => p.Id == photoId)
-                .First();
-        }
-        public IEnumerable<AquariumPhoto> GetAquariumPhotos(int aquariumId)
-        {
-            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
-                .Where(p => p.AquariumId == aquariumId)
-                .Include(p => p.Photo);
-        }
-        public IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId)
-        {
-            return _dbAquariumContext.TblFishPhoto.AsNoTracking()
-                .Include(f => f.Fish)
-                .Where(p => p.Fish.AquariumId == aquariumId);
-        }
-        public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
-        {
-            return _dbAquariumContext.TblAquariumPhoto.AsNoTracking()
-                .Include(p => p.Photo)
-                .Include(p => p.Aquarium)
-                .Where(p => p.Aquarium.OwnerId == accountId)
-                .ToList();
-        }
-        public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
-        {
-            _dbAquariumContext.TblAquariumPhoto.Add(photo);
-            _dbAquariumContext.SaveChanges();
-            return photo;
-        }
-        public void DeleteAquariumPhoto(int photoId)
-        {
-            var photo = GetAquariumPhotoById(photoId);
-            _dbAquariumContext.TblAquariumPhoto.Remove(photo);
-            _dbAquariumContext.SaveChanges();
-        }
-        public void DeleteAquariumPhotos(List<int> photoIds)
-        {
-            var photos = _dbAquariumContext.TblAquariumPhoto.Where(s => photoIds.Contains(s.Id))
-                .Include(p => p.Photo);
-            _dbAquariumContext.RemoveRange(photos);
-            _dbAquariumContext.SaveChanges();
-        }
-        public void DeleteFishPhoto(int photoId)
-        {
-            var photo = GetFishPhotoById(photoId);
-            _dbAquariumContext.TblFishPhoto.Remove(photo);
-            _dbAquariumContext.SaveChanges();
-        }
-
-
-        /* Aquarium Accounts */
-        public AquariumUser GetAccountByLogin(int userId, string password)
-        {
-            var acc = _dbAquariumContext.TblSignupRequests.AsNoTracking()
-                 .Where(p => p.Id == userId && p.Password == password)
-                 .First();
-            return GetAccountById(acc.Id);
-        }
-
-        public AquariumUser GetAccountById(int userId)
-        {
-            return _dbAquariumContext.TblAccounts.AsNoTracking()
-                .Where(p => p.Id == userId)
-                .SingleOrDefault();
-        }
-
-        public List<AquariumUser> GetAllAccounts()
-        {
-            return _dbAquariumContext.TblAccounts.AsNoTracking().ToList();
-        }
-
-        public AquariumUser GetUserByUsername(string username)
-        {
-            return _dbAquariumContext.TblAccounts.AsNoTracking()
-                .Where(p => p.Username == username)
-                .SingleOrDefault();
-        }
-
-        public AquariumUser GetUserByEmail(string email)
-        {
-            return _dbAquariumContext.TblAccounts.AsNoTracking()
-                .Where(p => p.Email == email)
-                .SingleOrDefault();
-        }
-
-        public AquariumUser AddAccount(SignupRequest signupRequest)
-        {
-            _dbAquariumContext.TblSignupRequests.Add(signupRequest);
-            _dbAquariumContext.SaveChanges();
-            return GetAccountById(signupRequest.Id);
-        }
-        public void UpdatePasswordForUser(int uId,string newPassword)
-        {
-            var acc = _dbAquariumContext.TblSignupRequests.Where(s => s.Id == uId).First();
-            acc.Password = newPassword;
-            _dbAquariumContext.SaveChanges();
-        }
-
-        public FishPhoto AddFishPhoto(FishPhoto photo)
-        {
-            _dbAquariumContext.TblFishPhoto.Add(photo);
-            _dbAquariumContext.SaveChanges();
-            return photo;
-        }
-
-        public FishPhoto GetFishPhotoById(int photoId)
-        {
-            return _dbAquariumContext.TblFishPhoto.AsNoTracking()
-                .Where(p => p.Id == photoId)
-                .First();
-        }
-
-        public BugReport AddBugReport(BugReport report)
-        {
-            _dbAquariumContext.TblBugReports.Add(report);
-            _dbAquariumContext.SaveChanges();
-            return report;
-        }
-
-        public List<BugReport> GetAllBugs()
-        {
-            var bugs = _dbAquariumContext.TblBugReports.AsNoTracking()
-                .Include(r => r.ImpactedUser)
-                .ToList();
-            return bugs;
-        }
-
-        public AquariumProfile GetProfileById(int targetId)
-        {
-            var results = _dbAquariumContext.TblAquariumProfiles.AsNoTracking()
-                .Where(r => r.Id == targetId)
-                .Include(p => p.Thumbnail)
-                .Include(e => e.Aquariums).ThenInclude(e => e.Fish)
-                .Include(e => e.Account );
-            var profile = results.First();
-            return profile;
-        }
-        public AquariumProfile UpdateProfile(AquariumProfile profile)
-        {
-            _dbAquariumContext.TblAquariumProfiles.Update(profile);
-            _dbAquariumContext.SaveChanges();
-            return profile;
-        }
-
-        public void RegisterActivity(Activity newActivity)
-        {
-            _dbAquariumContext.TblAccountActivity.Add(newActivity);
-            _dbAquariumContext.SaveChanges();
-        }
-        public List<Activity> GetRecentAccountActivity(int accountId)
-        {
-            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.AccountId == accountId 
-            &&  activity.ActivityType != ActivityTypes.LoginAccountActivity)
-            .OrderByDescending(act => act.Timestamp)
-            .Take(100)
-            .ToList();
-        }
-        public Activity GetAccountActivity(int activityId)
-        {
-            return _dbAquariumContext.TblAccountActivity.Where(activity => activity.Id == activityId).First();
-        }
-
-        public AccountRelationship GetAccountRelationship(int aquariumId, int targetId)
-        {
-            if (aquariumId == targetId)
-                return null;
-
-            var relationship = _dbAquariumContext.TblAccountRelationship.Where(rel => rel.AccountId == aquariumId && rel.TargetId == targetId).FirstOrDefault();
-            if(relationship == null)
-            {
-                relationship = new AccountRelationship()
-                {
-                    AccountId = aquariumId,
-                    TargetId = targetId,
-                    Relationship = 0
-                };
-            }
-            return relationship; 
-        }
-        public AccountRelationship UpsertFollowUser(int aquariumId, int targetId)
-        {
-            if (aquariumId == targetId)
-                return null;
-            var rel = _dbAquariumContext.TblAccountRelationship.Where(r => r.AccountId == aquariumId && r.TargetId == targetId).FirstOrDefault();
-            if (rel == null)
-                _dbAquariumContext.TblAccountRelationship.Add(rel = new AccountRelationship()
-                {
-                    AccountId = aquariumId,
-                    TargetId = targetId,
-                    Relationship = RelationshipTypes.Following
-                });
-            else if (rel.Relationship == RelationshipTypes.Following)
-                rel.Relationship = RelationshipTypes.None;
-            else
-                rel.Relationship = RelationshipTypes.Following;
-            _dbAquariumContext.SaveChanges();
-            return rel;
-        }
-
-        public List<SearchResult> PerformSearch(SearchOptions options)
-        {
-            var results = new List<SearchResult>();
-            if (options.Accounts)
-                results.AddRange(_dbAquariumContext.TblAccounts.Where(a =>
-                a.Username.Contains(options.Query) ||
-                a.Email.Contains(options.Query)
-               ).ToList().Select(r => new SearchResult()
-               {
-                   Type = "Account",
-                   Data = new AquariumProfile()
-                   {
-                       Account = r,
-                       Relationship = GetAccountRelationship(options.AccountId, r.Id)
-                   }
-               }));
-            if (options.Aquariums)
-                results.AddRange(_dbAquariumContext.TblAquarium.Where(a =>
-                a.Name.Contains(options.Query)
-               ).Select(r => new SearchResult() { Type = "Aquarium", Data = r }));
-            if (options.Fish)
-                results.AddRange(_dbAquariumContext.TblFish.Where(a =>
-                a.Name.Contains(options.Query)
-               ).Select(r => new SearchResult() { Type = "Fish", Data = r }));
-            if (options.Species)
-                results.AddRange(_dbAquariumContext.TblSpecies.Where(a =>
-                a.Name.Contains(options.Query)
-               ).Select(r => new SearchResult() { Type = "Species", Data = r }));
-            if (options.Posts)
-                results.AddRange(_dbAquariumContext.TblPosts.Where(a =>
-                a.Title.Contains(options.Query) ||
-                a.Content.Contains(options.Query)
-               ).Select(r => new SearchResult() { Type = "Post", Data = r }));
-            if (options.Threads)
-                results.AddRange(_dbAquariumContext.TblPostThreads.Where(a =>
-                a.Title.Contains(options.Query)
-               ).Select(r => new SearchResult() { Type = "Thread", Data = r }));
-
-            return results.Take(10).ToList();
         }
 
         /* Posts */
@@ -867,7 +894,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return post;
         }
-
         public void DeletePostCategory(int categoryId)
         {
             var category = _dbAquariumContext.TblPostCategories.Where(c => c.Id == categoryId)
@@ -909,94 +935,7 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblPosts.Remove(post);
         }
 
-        public AquariumUser UpdateUser(AquariumUser user)
-        {
-            var userToUpdate = _dbAquariumContext.TblAccounts.SingleOrDefault(u => user.Id == u.Id);
-            if (userToUpdate == null)
-                throw new KeyNotFoundException();
-
-            userToUpdate = _mapper.Map(user, userToUpdate);
-            _dbAquariumContext.SaveChanges();
-            return GetUserByEmail(userToUpdate.Email);
-        }
-
-        public AquariumUser GetUserByUsernameOrEmail(string email)
-        {
-            return _dbAquariumContext.TblAccounts.AsNoTracking()
-                .Where(p => p.Username == email || p.Email == email)
-                .SingleOrDefault();
-        }
-
-        public List<AquariumSnapshot> GetAquariumTemperatureHistogram(int aquariumId)
-        {
-            return _dbAquariumContext.TblSnapshot.AsNoTracking()
-                .Where(s => s.AquariumId == aquariumId && s.Temperature != null)
-                .ToList();
-        }
-
-        public List<Aquarium> GetAquariumsByAccountId(int userId)
-        {
-            return _dbAquariumContext.TblAquarium
-                .Where(aq => aq.OwnerId == userId)
-                .ToList();
-        }
-
-        public Fish TransferFish(int fishId, int aquariumId)
-        {
-            var fish = _dbAquariumContext.TblFish.Where(f => f.Id == fishId).First();
-            fish.AquariumId = aquariumId;
-            _dbAquariumContext.Update(fish);
-            _dbAquariumContext.SaveChanges();
-            return fish;
-        }
-
-        public Fish MarkDeseased(FishDeath death)
-        {
-            var fish = _dbAquariumContext.TblFish.Where(f => f.Id == death.FishId).First();
-            fish.Death = death;
-            fish.Dead = true;
-            _dbAquariumContext.Update(fish);
-            _dbAquariumContext.SaveChanges();
-            return GetFishById(death.FishId);
-        }
-
-        public FishBreeding AddBreeding(FishBreeding breeding)
-        {
-            _dbAquariumContext.TblFishBreeds.Add(breeding);
-            _dbAquariumContext.SaveChanges();
-
-            var mother = _dbAquariumContext.TblFish.AsNoTracking()
-                .Where(f => f.Id == breeding.MotherId)
-                .Include(f => f.Species)
-                .First();
-
-            var newFish = new List<Fish>();
-
-            for (var i = 0; i < breeding.Amount; i++)
-            {
-                newFish.Add(new Fish()
-                {
-                    AquariumId = mother.AquariumId,
-                    BreedId = breeding.Id,
-                    SpeciesId = mother.SpeciesId,
-                    Name = mother.Species.Name + $"({i})"
-                });
-            }
-            _dbAquariumContext.UpdateRange(newFish);
-            _dbAquariumContext.SaveChanges();
-            breeding.Fish = newFish;
-            return breeding;
-        }
-
-        public FishDisease AddDiseaseDiagnosis(FishDisease diseaseDiagnois)
-        {
-            _dbAquariumContext.Add(diseaseDiagnois);
-            _dbAquariumContext.SaveChanges();
-            return diseaseDiagnois;
-        }
-
-
-
+        /* Photo Content */
         public PhotoContent CreatePhotoReference()
         {
             var content = new PhotoContent();
@@ -1031,45 +970,81 @@ namespace AquariumApi.DataAccess
                 .Where(p => p.Id == photoId).First();
             return photo;
         }
-
-        public List<Fish> GetAllFishByAccount(int accountId)
+        public FishPhoto AddFishPhoto(FishPhoto photo)
         {
-            return _dbAquariumContext.TblFish.Where(f => f.Aquarium.OwnerId == accountId).ToList();
+            _dbAquariumContext.TblFishPhoto.Add(photo);
+            _dbAquariumContext.SaveChanges();
+            return photo;
+        }
+        public FishPhoto GetFishPhotoById(int photoId)
+        {
+            return _dbAquariumContext.TblFishPhoto.AsNoTracking()
+                .Where(p => p.Id == photoId)
+                .First();
         }
 
-        public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max)
+
+        /* Misc. */
+        public BugReport AddBugReport(BugReport report)
         {
-            return _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId)
-                .Include(s => s.Photo)
-                .OrderByDescending(s => s.Date)
-                .Skip(offset)
-                .Take(max)
+            _dbAquariumContext.TblBugReports.Add(report);
+            _dbAquariumContext.SaveChanges();
+            return report;
+        }
+        public List<BugReport> GetAllBugs()
+        {
+            var bugs = _dbAquariumContext.TblBugReports.AsNoTracking()
+                .Include(r => r.ImpactedUser)
+                .ToList();
+            return bugs;
+        }
+        public List<AquariumSnapshot> GetAquariumTemperatureHistogram(int aquariumId)
+        {
+            return _dbAquariumContext.TblSnapshot.AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId && s.Temperature != null)
                 .ToList();
         }
-
-        public List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId)
+        public List<SearchResult> PerformSearch(SearchOptions options)
         {
-            var devices = _dbAquariumContext.TblDeviceScheduleAssignment
-                .Where(sa => sa.ScheduleId == scheduleId)
-                .Include(sa => sa.Device)
-                .Select(sa => sa.Device)
-                .ToList();
-            return devices;
+            var results = new List<SearchResult>();
+            if (options.Accounts)
+                results.AddRange(_dbAquariumContext.TblAccounts.Where(a =>
+                a.Username.Contains(options.Query) ||
+                a.Email.Contains(options.Query)
+               ).ToList().Select(r => new SearchResult()
+               {
+                   Type = "Account",
+                   Data = new AquariumProfile()
+                   {
+                       Account = r,
+                       Relationship = GetAccountRelationship(options.AccountId, r.Id)
+                   }
+               }));
+            if (options.Aquariums)
+                results.AddRange(_dbAquariumContext.TblAquarium.Where(a =>
+                a.Name.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Aquarium", Data = r }));
+            if (options.Fish)
+                results.AddRange(_dbAquariumContext.TblFish.Where(a =>
+                a.Name.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Fish", Data = r }));
+            if (options.Species)
+                results.AddRange(_dbAquariumContext.TblSpecies.Where(a =>
+                a.Name.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Species", Data = r }));
+            if (options.Posts)
+                results.AddRange(_dbAquariumContext.TblPosts.Where(a =>
+                a.Title.Contains(options.Query) ||
+                a.Content.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Post", Data = r }));
+            if (options.Threads)
+                results.AddRange(_dbAquariumContext.TblPostThreads.Where(a =>
+                a.Title.Contains(options.Query)
+               ).Select(r => new SearchResult() { Type = "Thread", Data = r }));
+
+            return results.Take(10).ToList();
         }
 
-        public void DeleteAllSnapshots(int aquariumId)
-        {
-            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId);
-            _dbAquariumContext.RemoveRange(snapshots);
-            _dbAquariumContext.SaveChanges();
-        }
-
-        public void DeleteSnapshots(List<int> snapshotIds)
-        {
-            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id));
-            _dbAquariumContext.RemoveRange(snapshots);
-            _dbAquariumContext.SaveChanges();
-        }
     }
 }
 

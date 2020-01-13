@@ -78,6 +78,7 @@ namespace AquariumApi.Core
         List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
         List<AquariumSnapshot> GetAquariumSnapshotPhotos(int aquariumId, PaginationSliver pagination);
         List<FishPhoto> GetAquariumFishPhotos(int aquariumId, PaginationSliver pagination);
+        AquariumPhoto AddAquariumPhoto(int aquariumId, IFormFile photo);
     }
     public class AquariumService : IAquariumService
     {
@@ -181,8 +182,8 @@ namespace AquariumApi.Core
             if (takePhoto)
             {
                 var photoData = _deviceService.TakePhoto(deviceId);
-                var photo = _photoManager.AddAquariumPhoto(aquariumId, photoData);
-                snapshot.PhotoId = photo.PhotoId;
+                var photo = _photoManager.StorePhoto(photoData);
+                snapshot.PhotoId = photo.Id;
             }
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
             return newSnapshot;
@@ -315,8 +316,8 @@ namespace AquariumApi.Core
                 {
                     snapshotImage.CopyTo(ms);
                     var buffer = ms.ToArray();
-                    var photo = _photoManager.AddAquariumPhoto(aquariumId, buffer);
-                    snapshot.PhotoId = photo.PhotoId;
+                    var photo = _photoManager.StorePhoto(buffer);
+                    snapshot.PhotoId = photo.Id;
                 }
             }
             snapshot.AquariumId = aquariumId;
@@ -363,6 +364,40 @@ namespace AquariumApi.Core
         public AquariumPhoto AddAquariumPhoto(AquariumPhoto photo)
         {
             return _aquariumDao.AddAquariumPhoto(photo);
+        }
+        public AquariumPhoto AddAquariumPhoto(int aquariumId, IFormFile photo)
+        {
+            var stream = photo.OpenReadStream();
+            PhotoContent photoContent;
+
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                var buffer = ms.ToArray();
+                photoContent = _photoManager.StorePhoto(buffer).Result;
+            }
+            return _aquariumDao.AddAquariumPhoto(new AquariumPhoto
+            {
+                AquariumId = aquariumId,
+                PhotoId = photoContent.Id
+            });
+        }
+        public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
+        {
+            var stream = photo.OpenReadStream();
+            PhotoContent photoContent;
+
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                var buffer = ms.ToArray();
+                photoContent = _photoManager.StorePhoto(buffer).Result;
+            }
+            return _aquariumDao.AddFishPhoto(new FishPhoto
+            {
+                FishId = fishId,
+                PhotoId = photoContent.Id
+            });
         }
         public FishPhoto GetFishPhotoById(int photoId)
         {
@@ -414,12 +449,6 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.GetAquariumTemperatureHistogram(id);
         }
-
-        public FishPhoto AddFishPhoto(int fishId, IFormFile photo)
-        {
-            throw new NotImplementedException();
-        }
-
         public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max)
         {
             return _aquariumDao.GetAquariumSnapshots(aquariumId,offset, max);

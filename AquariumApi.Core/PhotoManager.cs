@@ -16,11 +16,9 @@ namespace AquariumApi.Core
     public interface IPhotoManager
     {
         Dictionary<string, string> GetImageSizes(string path);
-        FishPhoto AddFishPhoto(int fishId, byte[] buffer);
-        FishPhoto AddFishPhoto(int fishId, Stream stream);
-        AquariumPhoto AddAquariumPhoto(int aquariumId, byte[] buffer);
         void DeletePhoto(int photoId);
         byte[] GetPhoto(int photoId);
+        Task<PhotoContent> StorePhoto(byte[] buffer);
     }
     public class PhotoManager: IPhotoManager
     {
@@ -33,51 +31,6 @@ namespace AquariumApi.Core
             _aquariumDao = aquariumDao;
             _azureService = azureService;
             _config = config;
-        }
-        public AquariumPhoto AddAquariumPhoto(int aquariumId, byte[] buffer)
-        {
-
-            var content = StorePhoto(buffer).Result;
-            if (!content.Exists)
-            {
-                //todo delete reference
-                throw new Exception("Could not store photo in storage location");
-            }
-            return _aquariumDao.AddAquariumPhoto(new AquariumPhoto
-            {
-                AquariumId = aquariumId,
-                PhotoId = content.Id
-            });
-        }
-        public FishPhoto AddFishPhoto(int fishId, byte[] buffer)
-        {
-
-            var content = StorePhoto(buffer).Result;
-            if (!content.Exists)
-            {
-                //todo delete reference
-                throw new Exception("Could not store photo in storage location");
-            }
-            return _aquariumDao.AddFishPhoto(new FishPhoto
-            {
-                FishId = fishId,
-                PhotoId = content.Id
-            });
-        }
-        public FishPhoto AddFishPhoto(int fishId, Stream stream)
-        {
-
-            var content = StorePhoto(stream).Result;
-            if (!content.Exists)
-            {
-                //todo delete reference
-                throw new Exception("Could not store photo in storage location");
-            }
-            return _aquariumDao.AddFishPhoto(new FishPhoto
-            {
-                FishId = fishId,
-                PhotoId = content.Id
-            });
         }
         public void DeletePhoto(int photoId)
         {
@@ -102,7 +55,7 @@ namespace AquariumApi.Core
             }
         }
 
-        private async Task<PhotoContent> StorePhoto(byte[] buffer)
+        public async Task<PhotoContent> StorePhoto(byte[] buffer)
         {
             var now = DateTime.Now.ToUniversalTime();
             var path = $"{_config["Photos:Path"]}/" + now.Ticks + ".jpg";

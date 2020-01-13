@@ -37,34 +37,6 @@ namespace AquariumApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
-        [Route("/v1/Photo/{photoId}/{size}")]
-        public IActionResult GetPhotoContent(int photoId, string size = "")
-        {
-            return BadRequest();
-            try
-            {
-
-                /*
-                var data = _aquariumService.GetFishPhotoById(photoId);
-                string destination = data.Filepath;
-                if (size == "medium")
-                    destination = Path.GetDirectoryName(data.Filepath) + "/medium/" + Path.GetFileName(data.Filepath);
-                else if (size == "small")
-                    destination = Path.GetDirectoryName(data.Filepath) + "/thumbnail/" + Path.GetFileName(data.Filepath);
-               */
-                var b = _photoManager.GetPhoto(photoId);
-                return File(b, "image/jpeg");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Snapshot/Photo/{photoId}/ endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                var path = Directory.GetCurrentDirectory();
-                return base.File("~/fish.png", "image/jpeg");
-                //return NotFound();
-            }
-
-        }
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Fish/{fishId}/UploadPhoto")]
         public IActionResult UploadPhoto(int fishId, IFormFile photoData)
@@ -79,7 +51,7 @@ namespace AquariumApi.Controllers
 
                 _logger.LogInformation($"POST /v1/Fish/{fishId}/UploadPhoto called");
 
-                FishPhoto fishPhoto = _photoManager.AddFishPhoto(fishId, photoData.OpenReadStream());
+                FishPhoto fishPhoto = _aquariumService.AddFishPhoto(fishId, photoData);
                 return new OkObjectResult(fishPhoto);
             }
             catch (Exception ex)
