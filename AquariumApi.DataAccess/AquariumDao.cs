@@ -596,6 +596,7 @@ namespace AquariumApi.DataAccess
         {
             return _dbAquariumContext.TblFishPhoto.AsNoTracking()
                 .Include(f => f.Fish)
+                .Include(f => f.Photo)
                 .Where(p => p.Fish.AquariumId == aquariumId);
         }
         public List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId)
