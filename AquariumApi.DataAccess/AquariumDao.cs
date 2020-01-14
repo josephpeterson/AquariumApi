@@ -1123,6 +1123,7 @@ namespace AquariumApi.DataAccess
             return _dbAquariumContext.TblDispatchedNotifications
                 .AsNoTracking()
                 .Include(n => n.Notifications)
+                .Include(n => n.Dispatcher)
                 .ToList();
         }
     }
