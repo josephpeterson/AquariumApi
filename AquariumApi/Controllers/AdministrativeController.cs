@@ -169,12 +169,12 @@ namespace AquariumApi.Controllers
                 if (req.AccountIds != null)
                 {
                     _logger.LogInformation($"Dispatching notification to {req.AccountIds.Count()} accounts");
-                    _notificationService.EmitAsync(notification, req.AccountIds);
+                    _notificationService.EmitAsync(notification, req.AccountIds).Wait();
                 }
                 else
                 {
                     _logger.LogInformation($"Dispatching notification to all accounts");
-                    _notificationService.EmitAsync(notification);
+                    _notificationService.EmitAsync(notification).Wait();
                 }
                 return new OkResult();
             }
