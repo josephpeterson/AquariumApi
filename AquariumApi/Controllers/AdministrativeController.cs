@@ -160,6 +160,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
+                _logger.LogInformation($"POST /v1/admin/Notification endpoint called");
                 var notification = req.Notification;
                 var id = _accountService.GetCurrentUserId();
                 notification.DispatcherId = id;
@@ -170,8 +171,10 @@ namespace AquariumApi.Controllers
                     _notificationService.EmitAsync(notification);
                 return new OkResult();
             }
-            catch
+            catch(Exception ex)
             {
+                _logger.LogError($"POST /v1/admin/Notification endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+
                 return new BadRequestResult();
             }
         }
