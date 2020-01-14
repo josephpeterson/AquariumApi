@@ -11,7 +11,7 @@ namespace AquariumApi.Models
         public DateTime Date { get; set; }
         public DateTime ExpireDate { get; set; }
 
-        public ICollection<Notification> Notifications;
-        public AquariumUser Dispatcher;
+        public ICollection<Notification> Notifications { get; set; }
+        public AquariumUser Dispatcher { get; set; }
     }
 }
