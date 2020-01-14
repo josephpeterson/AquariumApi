@@ -182,7 +182,7 @@ namespace AquariumApi.Core
             if (takePhoto)
             {
                 var photoData = _deviceService.TakePhoto(deviceId);
-                var photo = _photoManager.StorePhoto(photoData);
+                var photo = _photoManager.StorePhoto(photoData).Result;
                 snapshot.PhotoId = photo.Id;
             }
             AquariumSnapshot newSnapshot = _aquariumDao.AddSnapshot(snapshot);
@@ -316,7 +316,7 @@ namespace AquariumApi.Core
                 {
                     snapshotImage.CopyTo(ms);
                     var buffer = ms.ToArray();
-                    var photo = _photoManager.StorePhoto(buffer);
+                    var photo = _photoManager.StorePhoto(buffer).Result;
                     snapshot.PhotoId = photo.Id;
                 }
             }
@@ -337,7 +337,7 @@ namespace AquariumApi.Core
         public List<AquariumSnapshot> GetAquariumSnapshotPhotos(int aquariumId, PaginationSliver pagination)
         {
             var photos = _aquariumDao.GetSnapshotsByAquarium(aquariumId)
-                .Where(s => s.PhotoId != null);
+                .Where(s => s.Photo != null);
             if (pagination.Descending)
                 photos = photos.OrderByDescending(p => p.Photo.Date);
             var sliver = photos.Skip(pagination.Start).Take(pagination.Count);
