@@ -1066,16 +1066,13 @@ namespace AquariumApi.DataAccess
 
         public void DismissDispatchedNotification(int notificationId)
         {
-            var affectedNotifications = _dbAquariumContext.TblNotification.Where(n => n.SourceId == notificationId).ToList();
-            affectedNotifications.ForEach(n => n.Dismissed = true);
-            _dbAquariumContext.Update(affectedNotifications);
-            _dbAquariumContext.SaveChanges();
+            DismissDispatchedNotifications(new List<int>() { notificationId });
         }
         public void DismissDispatchedNotifications(List<int> notificationIds)
         {
             var affectedNotifications = _dbAquariumContext.TblNotification.Where(n => notificationIds.Contains(n.SourceId)).ToList();
             affectedNotifications.ForEach(n => n.Dismissed = true);
-            _dbAquariumContext.Update(affectedNotifications);
+            _dbAquariumContext.UpdateRange(affectedNotifications);
             _dbAquariumContext.SaveChanges();
         }
 
@@ -1091,7 +1088,7 @@ namespace AquariumApi.DataAccess
         {
             var affectedNotifications = _dbAquariumContext.TblNotification.Where(n => notificationIds.Contains(n.Id)).ToList();
             affectedNotifications.ForEach(n => n.Dismissed = true);
-            _dbAquariumContext.Update(affectedNotifications);
+            _dbAquariumContext.UpdateRange(affectedNotifications);
             _dbAquariumContext.SaveChanges();
             throw new NotImplementedException();
         }
