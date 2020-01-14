@@ -1097,15 +1097,17 @@ namespace AquariumApi.DataAccess
         {
             _dbAquariumContext.Add(notif);
             _dbAquariumContext.SaveChanges();
-            _dbAquariumContext.TblAccounts.ForEachAsync(u =>
+            return _dbAquariumContext.TblAccounts.ForEachAsync(u =>
             {
                 _dbAquariumContext.Add(new Notification
                 {
                     SourceId = notif.Id,
                     TargetId = u.Id
                 });
+            }).ContinueWith(t =>
+            {
+                return _dbAquariumContext.SaveChangesAsync();
             });
-            return _dbAquariumContext.SaveChangesAsync();
         }
 
         public Task EmitNotification(DispatchedNotification notif, List<int> aquariumAccountIds)
