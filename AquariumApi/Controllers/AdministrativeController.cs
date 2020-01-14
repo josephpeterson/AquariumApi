@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Core;
-using AquariumApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,14 +20,24 @@ namespace AquariumApi.Controllers
         private readonly IAdministrativeService _administrativeService;
         public readonly ILogger<SnapshotController> _logger;
         private readonly IAzureService _azureService;
+        private readonly IAccountService _accountService;
+        private readonly INotificationService _notificationService;
 
-        public AdministrativeController(IConfiguration config, IAquariumService aquariumService, IAdministrativeService administrativeService, ILogger<SnapshotController> logger,IAzureService azureService)
+        public AdministrativeController(IConfiguration config,
+            IAquariumService aquariumService,
+            IAdministrativeService administrativeService,
+            ILogger<SnapshotController> logger,
+            IAzureService azureService,
+            IAccountService accountService,
+            INotificationService notificationService)
         {
             _config = config;
             _aquariumService = aquariumService;
             _administrativeService = administrativeService;
             _logger = logger;
             _azureService = azureService;
+            _accountService = accountService;
+            _notificationService = notificationService;
         }
         [HttpGet]
         [Route("ApplicationLog")]
@@ -67,7 +75,7 @@ namespace AquariumApi.Controllers
                 return new BadRequestResult();
             }
         }
-        
+
 
         [HttpGet]
         [Route("Users")]
@@ -92,7 +100,7 @@ namespace AquariumApi.Controllers
                 var reports = _administrativeService.GetBugReports();
                 return new OkObjectResult(reports);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Admin/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
@@ -117,5 +125,55 @@ namespace AquariumApi.Controllers
             }
         }
 
+
+        [HttpGet]
+        [Route("Notifications")]
+        public IActionResult GetNotifications()
+        {
+            try
+            {
+                var notifications = _notificationService.GetAllDispatchedNotifications();
+                return new OkObjectResult(notifications);
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
+        [HttpDelete]
+        [Route("Notification/{notificationId}")]
+        public IActionResult DeleteNotification(int notificationId)
+        {
+            try
+            {
+                _notificationService.DeleteDispatchedNotification(notificationId);
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
+        [HttpPost]
+        [Route("Notification")]
+        public IActionResult EmitNotification([FromBody] NotificationDispatchRequest req)
+        {
+            try
+            {
+                var notification = req.Notification;
+                var id = _accountService.GetCurrentUserId();
+                notification.DispatcherId = id;
+                notification.Date = DateTime.Now;
+                if(req.AccountIds != null)
+                    _notificationService.EmitAsync(notification,req.AccountIds);
+                else
+                    _notificationService.EmitAsync(notification);
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
     }
 }

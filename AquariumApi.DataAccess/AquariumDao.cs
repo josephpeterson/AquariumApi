@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.Extensions.Configuration;
 using AutoMapper;
 using System;
+using System.Threading.Tasks;
 
 namespace AquariumApi.DataAccess
 {
@@ -43,18 +44,25 @@ namespace AquariumApi.DataAccess
         List<Feeding> GetFeedingByAquariumId(int aquariumId);
         AquariumUser AddAccount(SignupRequest signupRequest);
         Feeding UpdateFeeding(Feeding feeding);
+        void DeleteDispatchedNotification(int notificationId);
         FishDisease AddDiseaseDiagnosis(FishDisease diseaseDiagnois);
         void DeleteFeeding(int feedingId);
 
         void SetAquariumDevice(int aquariumId,int deviceId);
         AquariumDevice AddAquariumDevice(AquariumDevice device);
         AquariumDevice UpdateAquariumDevice(AquariumDevice device);
+        void DeleteNotification(int notificationId);
+        void DismissDispatchedNotification(int notificationId);
         AquariumDevice DeleteAquariumDevice(int deviceId);
+        void DismissNotifications(List<int> notificationIds);
         AquariumDevice GetAquariumDeviceById(int deviceId);
+        Task EmitNotification(DispatchedNotification notif);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
 
         IEnumerable<AquariumPhoto> GetAquariumPhotos(int aquariumId);
+        Task EmitNotification(DispatchedNotification notif, List<int> aquariumAccountIds);
         void DeleteAquariumPhoto(int photoId);
+        ICollection<DispatchedNotification> GetAllDispatchedNotifications();
         FishBreeding AddBreeding(FishBreeding breeding);
         void DeleteFishPhoto(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
@@ -1046,6 +1054,77 @@ namespace AquariumApi.DataAccess
             return results.Take(10).ToList();
         }
 
+        public void DeleteDispatchedNotification(int notificationId)
+        {
+            var notif = _dbAquariumContext.TblNotification.Where(n => n.Id == notificationId)
+                .Include(n => n.Notifications)
+                .First();
+            _dbAquariumContext.Remove(notif);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        public void DismissDispatchedNotification(int notificationId)
+        {
+            var affectedNotifications = _dbAquariumContext.TblNotificationAssignment.Where(n => n.SourceId == notificationId).ToList();
+            affectedNotifications.ForEach(n => n.Dismissed = true);
+            _dbAquariumContext.Update(affectedNotifications);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        public void DeleteNotification(int notificationId)
+        {
+            var notif = _dbAquariumContext.TblNotificationAssignment.Where(n => n.Id == notificationId)
+                .First();
+            _dbAquariumContext.Remove(notif);
+            _dbAquariumContext.SaveChanges();
+        }
+
+        public void DismissNotifications(List<int> notificationIds)
+        {
+            var affectedNotifications = _dbAquariumContext.TblNotificationAssignment.Where(n => notificationIds.Contains(n.Id)).ToList();
+            affectedNotifications.ForEach(n => n.Dismissed = true);
+            _dbAquariumContext.Update(affectedNotifications);
+            _dbAquariumContext.SaveChanges();
+            throw new NotImplementedException();
+        }
+
+        public Task EmitNotification(DispatchedNotification notif)
+        {
+            _dbAquariumContext.Add(notif);
+            _dbAquariumContext.SaveChanges();
+            _dbAquariumContext.TblAccounts.ForEachAsync(u =>
+            {
+                _dbAquariumContext.Add(new Notification
+                {
+                    SourceId = notif.Id,
+                    TargetId = u.Id
+                });
+            });
+            return _dbAquariumContext.SaveChangesAsync();
+        }
+
+        public Task EmitNotification(DispatchedNotification notif, List<int> aquariumAccountIds)
+        {
+            _dbAquariumContext.Add(notif);
+            _dbAquariumContext.SaveChanges();
+            aquariumAccountIds.ForEach(id =>
+            {
+                _dbAquariumContext.Add(new Notification
+                {
+                    SourceId = notif.Id,
+                    TargetId = id
+                });
+            });
+            return _dbAquariumContext.SaveChangesAsync();
+        }
+
+        public ICollection<DispatchedNotification> GetAllDispatchedNotifications()
+        {
+            return _dbAquariumContext.TblNotification
+                .AsNoTracking()
+                .Include(n => n.Notifications)
+                .ToList();
+        }
     }
 }
 
