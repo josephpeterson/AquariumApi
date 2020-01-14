@@ -166,10 +166,16 @@ namespace AquariumApi.Controllers
                 var id = _accountService.GetCurrentUserId();
                 notification.DispatcherId = id;
                 notification.Date = DateTime.Now;
-                if(req.AccountIds != null)
-                    _notificationService.EmitAsync(notification,req.AccountIds);
+                if (req.AccountIds != null)
+                {
+                    _logger.LogInformation($"Dispatching notification to {req.AccountIds.Count()} accounts");
+                    _notificationService.EmitAsync(notification, req.AccountIds);
+                }
                 else
+                {
+                    _logger.LogInformation($"Dispatching notification to all accounts");
                     _notificationService.EmitAsync(notification);
+                }
                 return new OkResult();
             }
             catch(Exception ex)
