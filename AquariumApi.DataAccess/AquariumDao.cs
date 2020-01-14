@@ -1056,7 +1056,7 @@ namespace AquariumApi.DataAccess
 
         public void DeleteDispatchedNotification(int notificationId)
         {
-            var notif = _dbAquariumContext.TblNotification.Where(n => n.Id == notificationId)
+            var notif = _dbAquariumContext.TblDispatchedNotifications.Where(n => n.Id == notificationId)
                 .Include(n => n.Notifications)
                 .First();
             _dbAquariumContext.Remove(notif);
@@ -1065,7 +1065,7 @@ namespace AquariumApi.DataAccess
 
         public void DismissDispatchedNotification(int notificationId)
         {
-            var affectedNotifications = _dbAquariumContext.TblNotificationAssignment.Where(n => n.SourceId == notificationId).ToList();
+            var affectedNotifications = _dbAquariumContext.TblNotification.Where(n => n.SourceId == notificationId).ToList();
             affectedNotifications.ForEach(n => n.Dismissed = true);
             _dbAquariumContext.Update(affectedNotifications);
             _dbAquariumContext.SaveChanges();
@@ -1073,7 +1073,7 @@ namespace AquariumApi.DataAccess
 
         public void DeleteNotification(int notificationId)
         {
-            var notif = _dbAquariumContext.TblNotificationAssignment.Where(n => n.Id == notificationId)
+            var notif = _dbAquariumContext.TblNotification.Where(n => n.Id == notificationId)
                 .First();
             _dbAquariumContext.Remove(notif);
             _dbAquariumContext.SaveChanges();
@@ -1081,7 +1081,7 @@ namespace AquariumApi.DataAccess
 
         public void DismissNotifications(List<int> notificationIds)
         {
-            var affectedNotifications = _dbAquariumContext.TblNotificationAssignment.Where(n => notificationIds.Contains(n.Id)).ToList();
+            var affectedNotifications = _dbAquariumContext.TblNotification.Where(n => notificationIds.Contains(n.Id)).ToList();
             affectedNotifications.ForEach(n => n.Dismissed = true);
             _dbAquariumContext.Update(affectedNotifications);
             _dbAquariumContext.SaveChanges();
@@ -1120,7 +1120,7 @@ namespace AquariumApi.DataAccess
 
         public ICollection<DispatchedNotification> GetAllDispatchedNotifications()
         {
-            return _dbAquariumContext.TblNotification
+            return _dbAquariumContext.TblDispatchedNotifications
                 .AsNoTracking()
                 .Include(n => n.Notifications)
                 .ToList();
