@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -174,6 +175,23 @@ namespace AquariumApi.Controllers
             catch(Exception ex)
             {
                 _logger.LogError($"POST /v1/admin/Notification endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+
+                return new BadRequestResult();
+            }
+        }
+        [HttpPost]
+        [Route("Notification/Dismiss")]
+        public IActionResult DismissNotifications([FromBody] List<int> notificationIds)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/admin/Notification/Dismiss endpoint called");
+                _notificationService.DismissDispatchedNotifications(notificationIds);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/admin/Notification/Dismiss endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
 
                 return new BadRequestResult();
             }

@@ -53,6 +53,7 @@ namespace AquariumApi.DataAccess
         AquariumDevice UpdateAquariumDevice(AquariumDevice device);
         void DeleteNotification(int notificationId);
         void DismissDispatchedNotification(int notificationId);
+        void DismissDispatchedNotifications(List<int> notificationIds);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         void DismissNotifications(List<int> notificationIds);
         AquariumDevice GetAquariumDeviceById(int deviceId);
@@ -1070,6 +1071,13 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.Update(affectedNotifications);
             _dbAquariumContext.SaveChanges();
         }
+        public void DismissDispatchedNotifications(List<int> notificationIds)
+        {
+            var affectedNotifications = _dbAquariumContext.TblNotification.Where(n => notificationIds.Contains(n.SourceId)).ToList();
+            affectedNotifications.ForEach(n => n.Dismissed = true);
+            _dbAquariumContext.Update(affectedNotifications);
+            _dbAquariumContext.SaveChanges();
+        }
 
         public void DeleteNotification(int notificationId)
         {
@@ -1126,6 +1134,8 @@ namespace AquariumApi.DataAccess
                 .Include(n => n.Dispatcher)
                 .ToList();
         }
+
+        
     }
 }
 
