@@ -141,13 +141,13 @@ namespace AquariumApi.Controllers
                 return new BadRequestResult();
             }
         }
-        [HttpDelete]
-        [Route("Notification/{notificationId}")]
-        public IActionResult DeleteNotification(int notificationId)
+        [HttpPost]
+        [Route("Notification/Delete")]
+        public IActionResult DeleteNotification([FromBody] List<int> notificationIds)
         {
             try
             {
-                _notificationService.DeleteDispatchedNotification(notificationId);
+                _notificationService.DeleteDispatchedNotifications(notificationIds);
                 return new OkResult();
             }
             catch
@@ -165,7 +165,7 @@ namespace AquariumApi.Controllers
                 var notification = req.Notification;
                 var id = _accountService.GetCurrentUserId();
                 notification.DispatcherId = id;
-                notification.Date = DateTime.Now;
+                notification.Date = DateTime.Now.ToUniversalTime();
                 if (req.AccountIds != null)
                 {
                     _logger.LogInformation($"Dispatching notification to {req.AccountIds.Count()} accounts");

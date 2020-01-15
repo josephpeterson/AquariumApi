@@ -54,6 +54,7 @@ namespace AquariumApi.DataAccess
         void DeleteNotification(int notificationId);
         void DismissDispatchedNotification(int notificationId);
         void DismissDispatchedNotifications(List<int> notificationIds);
+        void DeleteDispatchedNotifications(List<int> notificationIds);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         void DismissNotifications(List<int> notificationIds);
         AquariumDevice GetAquariumDeviceById(int deviceId);
@@ -70,9 +71,10 @@ namespace AquariumApi.DataAccess
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
 
         List<AquariumOverviewResponse> GetAquariumOverviews();
-
+        ICollection<Notification> GetNotificationsByAccountId(int id);
 
         AquariumUser GetAccountByLogin(int userId, string password);
+        ICollection<Notification> GetNotificationsById(List<int> notificationIds);
         Fish MarkDeseased(FishDeath death);
         AquariumUser GetAccountById(int userId);
         List<AquariumUser> GetAllAccounts();
@@ -1057,10 +1059,14 @@ namespace AquariumApi.DataAccess
 
         public void DeleteDispatchedNotification(int notificationId)
         {
-            var notif = _dbAquariumContext.TblDispatchedNotifications.Where(n => n.Id == notificationId)
+            DeleteDispatchedNotifications(new List<int>() { notificationId });
+        }
+        public void DeleteDispatchedNotifications(List<int> notificationIds)
+        {
+            var affectedNotifications = _dbAquariumContext.TblDispatchedNotifications
                 .Include(n => n.Notifications)
-                .First();
-            _dbAquariumContext.Remove(notif);
+                .Where(n => notificationIds.Contains(n.Id));
+            _dbAquariumContext.RemoveRange(affectedNotifications);
             _dbAquariumContext.SaveChanges();
         }
 
@@ -1090,24 +1096,21 @@ namespace AquariumApi.DataAccess
             affectedNotifications.ForEach(n => n.Dismissed = true);
             _dbAquariumContext.UpdateRange(affectedNotifications);
             _dbAquariumContext.SaveChanges();
-            throw new NotImplementedException();
         }
 
         public Task EmitNotification(DispatchedNotification notif)
         {
             _dbAquariumContext.Add(notif);
             _dbAquariumContext.SaveChanges();
-            return _dbAquariumContext.TblAccounts.ForEachAsync(u =>
+            _dbAquariumContext.TblAccounts.ToList().ForEach(u =>
             {
                 _dbAquariumContext.Add(new Notification
                 {
                     SourceId = notif.Id,
                     TargetId = u.Id
                 });
-            }).ContinueWith(t =>
-            {
-                return _dbAquariumContext.SaveChangesAsync();
             });
+           return _dbAquariumContext.SaveChangesAsync();
         }
 
         public Task EmitNotification(DispatchedNotification notif, List<int> aquariumAccountIds)
@@ -1134,7 +1137,26 @@ namespace AquariumApi.DataAccess
                 .ToList();
         }
 
-        
+        public ICollection<Notification> GetNotificationsByAccountId(int id)
+        {
+            return _dbAquariumContext.TblNotification
+                .AsNoTracking()
+                .Include(n => n.Source)
+                //.ThenInclude(n => n.Dispatcher)
+                .Where(n => n.TargetId == id)
+                .Take(20)
+                .OrderByDescending(n => n.Source.Date)
+                .ToList();
+        }
+        public ICollection<Notification> GetNotificationsById(List<int> notificationIds)
+        {
+            return _dbAquariumContext.TblNotification
+                .AsNoTracking()
+                .Include(n => n.Source)
+                //.ThenInclude(n => n.Dispatcher)
+                .Where(n => notificationIds.Contains(n.Id))
+                .ToList();
+        }
     }
 }
 

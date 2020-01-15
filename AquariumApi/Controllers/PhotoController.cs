@@ -39,7 +39,7 @@ namespace AquariumApi.Controllers
 
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Fish/{fishId}/UploadPhoto")]
-        public IActionResult UploadPhoto(int fishId, IFormFile photoData)
+        public IActionResult UploadPhoto(int fishId,IFormFile photoData)
         {
             try
             {

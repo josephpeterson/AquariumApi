@@ -32,6 +32,9 @@ namespace AquariumApi.Core
         Task EmitAsync(DispatchedNotification notif);
         Task EmitAsync(DispatchedNotification notif, List<int> aquariumAccountIds);
         ICollection<DispatchedNotification> GetAllDispatchedNotifications();
+        ICollection<Notification> GetNotificationsByAccountId(int id);
+        ICollection<Notification> GetNotificationsById(List<int> notificationIds);
+        void DeleteDispatchedNotifications(List<int> notificationIds);
     }
     public class NotificationService : INotificationService
     {
@@ -47,6 +50,10 @@ namespace AquariumApi.Core
         public void DeleteDispatchedNotification(int notificationId)
         {
             _aquariumDao.DeleteDispatchedNotification(notificationId);
+        }
+        public void DeleteDispatchedNotifications(List<int> notificationIds)
+        {
+            _aquariumDao.DeleteDispatchedNotifications(notificationIds);
         }
         public void DismissDispatchedNotification(int notificationId)
         {
@@ -80,6 +87,14 @@ namespace AquariumApi.Core
             return _aquariumDao.GetAllDispatchedNotifications();
         }
 
-        
+        public ICollection<Notification> GetNotificationsById(List<int> notificationIds)
+        {
+            return _aquariumDao.GetNotificationsById(notificationIds);
+        }
+        public ICollection<Notification> GetNotificationsByAccountId(int id)
+        {
+            return _aquariumDao.GetNotificationsByAccountId(id);
+        }
+
     }
 }
