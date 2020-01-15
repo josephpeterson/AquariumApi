@@ -206,6 +206,124 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+
+
+        //Water change stuff
+        [HttpPost]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
+        public IActionResult PerformWaterChange([FromBody] WaterChange waterChange)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Update called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
+                return new OkObjectResult(aquarium);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPut]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
+        public IActionResult AlterWaterChange([FromBody] WaterChange waterChange)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(removeAquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                _aquariumService.DeleteAquarium(removeAquariumId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Change/Delete")]
+        public IActionResult DeleteWaterChanges(int aquariumId, [FromBody] List<int> waterChangeIds)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                _aquariumService.SetAquariumDevice(aquariumId, deviceId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Dose")]
+        public IActionResult PerformWaterDosing([FromBody] WaterDosing waterDosing)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Update called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
+                return new OkObjectResult(aquarium);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPut]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Dose")]
+        public IActionResult AlterWaterDosing([FromBody] WaterDosing waterDosing)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(removeAquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                _aquariumService.DeleteAquarium(removeAquariumId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Dose/Delete")]
+        public IActionResult DeleteWaterDosings(int aquariumId, [FromBody] List<int> waterDosingIds)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                if (aq.OwnerId != id) return new UnauthorizedResult();
+                _aquariumService.SetAquariumDevice(aquariumId, deviceId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+
     }
     public class SnapshotSelection
     {
