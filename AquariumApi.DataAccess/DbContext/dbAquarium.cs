@@ -49,6 +49,8 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<DeviceScheduleTask> TblDeviceScheduleTask { get; set; }
         public virtual DbSet<DispatchedNotification> TblDispatchedNotifications { get; set; }
         public virtual DbSet<Notification> TblNotification { get; set; }
+        public virtual DbSet<WaterChange> TblWaterChange { get; set; }
+        public virtual DbSet<WaterDosing> TblWaterDosing { get; set; }
 
 
 
@@ -264,6 +266,19 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblNotification");
                 entity.HasOne(e => e.Target);
+
+            });
+
+            modelBuilder.Entity<WaterChange>(entity =>
+            {
+                entity.ToTable("tblWaterChange");
+                entity.HasOne(e => e.Aquarium);
+
+            });
+            modelBuilder.Entity<WaterDosing>(entity =>
+            {
+                entity.ToTable("tblWaterDosing");
+                entity.HasOne(e => e.Aquarium);
 
             });
             modelBuilder.Query<PostBoardView>().ToView("vw_PostBoards");
