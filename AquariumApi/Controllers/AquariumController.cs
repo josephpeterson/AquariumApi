@@ -209,6 +209,27 @@ namespace AquariumApi.Controllers
 
 
         //Water change stuff
+        [HttpGet]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
+        public IActionResult GetWaterChanges(int aquariumId)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Aquarium/{aquariumId}/Water called");
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                var id = _accountService.GetCurrentUserId();
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                var waterChanges = _aquariumService.GetWaterChangesByAquarium(aquariumId);
+                return new OkObjectResult(waterChanges);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquarium/{aquariumId}/Water endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
         [HttpPost]
         [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
         public IActionResult PerformWaterChange(int aquariumId,[FromBody] WaterChange waterChange)
@@ -273,6 +294,27 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Change/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpGet]
+        [Route("/v1/Aquarium/{aquariumId}/Water/Dose")]
+        public IActionResult GetWaterDosing(int aquariumId)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Aquarium/{aquariumId}/Water called");
+                var aq = _aquariumService.GetAquariumById(aquariumId);
+                var id = _accountService.GetCurrentUserId();
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                var waterChanges = _aquariumService.GetWaterDosingsByAquarium(aquariumId);
+                return new OkObjectResult(waterChanges);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Aquarium/{aquariumId}/Water endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
