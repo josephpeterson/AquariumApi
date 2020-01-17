@@ -10,6 +10,7 @@ namespace AquariumApi.Models
         [Required]
         [Key]
         public int Id { get; set; }
+        public bool Additive { get; set; }
         public int AquariumId { get; set; }
         public int Gallons { get; set; }
         public DateTime Date { get; set; }
