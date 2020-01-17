@@ -211,39 +211,45 @@ namespace AquariumApi.Controllers
         //Water change stuff
         [HttpPost]
         [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
-        public IActionResult PerformWaterChange([FromBody] WaterChange waterChange)
+        public IActionResult PerformWaterChange(int aquariumId,[FromBody] WaterChange waterChange)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Update called");
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Water/Change called");
+                var aq = _aquariumService.GetAquariumById(aquariumId);
                 var id = _accountService.GetCurrentUserId();
-                var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
-                return new OkObjectResult(aquarium);
+                if(!_accountService.CanModify(id,aq))
+                    return new UnauthorizedResult();
+
+                waterChange.AquariumId = aquariumId;
+                waterChange = _aquariumService.AddWaterChange(waterChange);
+                return new OkObjectResult(waterChange);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Change endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
         [HttpPut]
         [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
-        public IActionResult AlterWaterChange([FromBody] WaterChange waterChange)
+        public IActionResult AlterWaterChange(int aquariumId,[FromBody] WaterChange waterChange)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                _logger.LogInformation("POST /v1/Aquarium/{aquariumId}/Water/Change called");
+                var aq = _aquariumService.GetAquariumById(aquariumId);
                 var id = _accountService.GetCurrentUserId();
-                var aq = _aquariumService.GetAquariumById(removeAquariumId);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                _aquariumService.DeleteAquarium(removeAquariumId);
-                return new OkResult();
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                waterChange.AquariumId = aquariumId;
+                waterChange = _aquariumService.UpdateWaterChange(waterChange);
+                return new OkObjectResult(waterChange);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Change endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -253,54 +259,64 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
-                var id = _accountService.GetCurrentUserId();
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Water/Change/Delete called");
                 var aq = _aquariumService.GetAquariumById(aquariumId);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                _aquariumService.SetAquariumDevice(aquariumId, deviceId);
+                var id = _accountService.GetCurrentUserId();
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                var validWaterChanges = _aquariumService.GetWaterChangesByAquarium(aquariumId);
+                var ids = validWaterChanges.Where(w => waterChangeIds.Contains(w.Id)).Select(w => w.Id).ToList();
+                _aquariumService.DeleteWaterChanges(ids);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Change/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
         [HttpPost]
         [Route("/v1/Aquarium/{aquariumId}/Water/Dose")]
-        public IActionResult PerformWaterDosing([FromBody] WaterDosing waterDosing)
+        public IActionResult PerformWaterDosing(int aquariumId,[FromBody] WaterDosing waterDosing)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Update called");
+                _logger.LogInformation("POST /v1/Aquarium/{aquariumId}/Water/Dose called");
+                var aq = _aquariumService.GetAquariumById(aquariumId);
                 var id = _accountService.GetCurrentUserId();
-                var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                var aquarium = _aquariumService.UpdateAquarium(updatedAquarium);
-                return new OkObjectResult(aquarium);
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                waterDosing.AquariumId = aquariumId;
+                waterDosing = _aquariumService.AddWaterDosing(waterDosing);
+                return new OkObjectResult(waterDosing);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Dose endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
         [HttpPut]
         [Route("/v1/Aquarium/{aquariumId}/Water/Dose")]
-        public IActionResult AlterWaterDosing([FromBody] WaterDosing waterDosing)
+        public IActionResult AlterWaterDosing(int aquariumId,[FromBody] WaterDosing waterDosing)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                _logger.LogInformation("POST /v1/Aquarium/{aquariumId}/Water/Dose called");
+                var aq = _aquariumService.GetAquariumById(aquariumId);
                 var id = _accountService.GetCurrentUserId();
-                var aq = _aquariumService.GetAquariumById(removeAquariumId);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                _aquariumService.DeleteAquarium(removeAquariumId);
-                return new OkResult();
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                waterDosing.AquariumId = aquariumId;
+                waterDosing = _aquariumService.UpdateWaterDosing(waterDosing);
+                return new OkObjectResult(waterDosing);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Dose endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -310,16 +326,20 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
-                var id = _accountService.GetCurrentUserId();
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Water/Dose/Delete called");
                 var aq = _aquariumService.GetAquariumById(aquariumId);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                _aquariumService.SetAquariumDevice(aquariumId, deviceId);
+                var id = _accountService.GetCurrentUserId();
+                if (!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                var validWaterDosings = _aquariumService.GetWaterDosingsByAquarium(aquariumId);
+                var ids = validWaterDosings.Where(w => waterDosingIds.Contains(w.Id)).Select(w => w.Id).ToList();
+                _aquariumService.DeleteWaterDosings(ids);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water/Dose/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

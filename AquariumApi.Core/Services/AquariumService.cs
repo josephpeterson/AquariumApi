@@ -79,6 +79,14 @@ namespace AquariumApi.Core
         List<AquariumSnapshot> GetAquariumSnapshotPhotos(int aquariumId, PaginationSliver pagination);
         List<FishPhoto> GetAquariumFishPhotos(int aquariumId, PaginationSliver pagination);
         AquariumPhoto AddAquariumPhoto(int aquariumId, IFormFile photo);
+        WaterChange AddWaterChange(WaterChange waterChange);
+        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId);
+        WaterChange UpdateWaterChange(WaterChange waterChange);
+        void DeleteWaterChanges(List<int> waterChangeIds);
+        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId);
+        WaterDosing AddWaterDosing(WaterDosing waterDosing);
+        WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
+        void DeleteWaterDosings(List<int> waterDosingIds);
     }
     public class AquariumService : IAquariumService
     {
@@ -558,6 +566,39 @@ namespace AquariumApi.Core
         public void DeleteAquariumPhotos(List<int> aquariumPhotoIds)
         {
             _aquariumDao.DeleteAquariumPhotos(aquariumPhotoIds);
+        }
+
+        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
+        {
+            return _aquariumDao.GetWaterChangesByAquarium(aquariumId);
+        }
+        public WaterChange AddWaterChange(WaterChange waterChange)
+        {
+            return _aquariumDao.AddWaterChange(waterChange);
+        }
+        public WaterChange UpdateWaterChange(WaterChange waterChange)
+        {
+            return _aquariumDao.UpdateWaterChange(waterChange);
+        }
+        public void DeleteWaterChanges(List<int> waterChangeIds)
+        {
+            _aquariumDao.DeleteWaterChanges(waterChangeIds);
+        }
+        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId)
+        {
+            return _aquariumDao.GetWaterDosingsByAquarium(aquariumId);
+        }
+        public WaterDosing AddWaterDosing(WaterDosing waterDosing)
+        {
+            return _aquariumDao.AddWaterDosing(waterDosing);
+        }
+        public WaterDosing UpdateWaterDosing(WaterDosing waterDosing)
+        {
+            return _aquariumDao.UpdateWaterDosing(waterDosing);
+        }
+        public void DeleteWaterDosings(List<int> waterDosingIds)
+        {
+             _aquariumDao.DeleteWaterDosings(waterDosingIds);
         }
     }
 }

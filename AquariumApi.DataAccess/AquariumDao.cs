@@ -131,6 +131,14 @@ namespace AquariumApi.DataAccess
         List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
         void DeleteAquariumPhotos(List<int> photoIds);
         IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId);
+        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId);
+        WaterChange AddWaterChange(WaterChange waterChange);
+        WaterChange UpdateWaterChange(WaterChange waterChange);
+        void DeleteWaterChanges(List<int> waterChangeIds);
+        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId);
+        WaterDosing AddWaterDosing(WaterDosing waterDosing);
+        WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
+        void DeleteWaterDosings(List<int> waterDosingIds);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1156,6 +1164,52 @@ namespace AquariumApi.DataAccess
                 //.ThenInclude(n => n.Dispatcher)
                 .Where(n => notificationIds.Contains(n.Id))
                 .ToList();
+        }
+        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
+        {
+            var waterChanges = _dbAquariumContext.TblWaterChange.Where(n => n.AquariumId == aquariumId).ToList();
+            return waterChanges;
+        }
+        public WaterChange AddWaterChange(WaterChange waterChange)
+        {
+            _dbAquariumContext.TblWaterChange.Add(waterChange);
+            _dbAquariumContext.SaveChanges();
+            return waterChange;
+        }
+        public WaterChange UpdateWaterChange(WaterChange waterChange)
+        {
+            _dbAquariumContext.TblWaterChange.Update(waterChange);
+            _dbAquariumContext.SaveChanges();
+            return waterChange;
+        }
+        public void DeleteWaterChanges(List<int> waterChangeIds)
+        {
+            var removedWaterChanges = _dbAquariumContext.TblWaterChange.Where(n => waterChangeIds.Contains(n.Id)).ToList();
+            _dbAquariumContext.RemoveRange(removedWaterChanges);
+            _dbAquariumContext.SaveChanges();
+        }
+        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId)
+        {
+            var waterDosings = _dbAquariumContext.TblWaterDosing.Where(n => n.AquariumId == aquariumId).ToList();
+            return waterDosings;
+        }
+        public WaterDosing AddWaterDosing(WaterDosing waterDosing)
+        {
+            _dbAquariumContext.TblWaterDosing.Add(waterDosing);
+            _dbAquariumContext.SaveChanges();
+            return waterDosing;
+        }
+        public WaterDosing UpdateWaterDosing(WaterDosing waterDosing)
+        {
+            _dbAquariumContext.TblWaterDosing.Update(waterDosing);
+            _dbAquariumContext.SaveChanges();
+            return waterDosing;
+        }
+        public void DeleteWaterDosings(List<int> waterDosingIds)
+        {
+            var removedWaterDosings = _dbAquariumContext.TblWaterDosing.Where(n => waterDosingIds.Contains(n.Id)).ToList();
+            _dbAquariumContext.RemoveRange(removedWaterDosings);
+            _dbAquariumContext.SaveChanges();
         }
     }
 }
