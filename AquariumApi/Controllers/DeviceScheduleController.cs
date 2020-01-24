@@ -27,6 +27,7 @@ namespace AquariumApi.Controllers
             _deviceService = deviceService;
             _logger = logger;
         }
+        /* Retrieve all user created schedules. */
         [HttpGet]
         [Route("/v1/Schedule")]
         public IActionResult GetDeviceSchedulesByAccountId()

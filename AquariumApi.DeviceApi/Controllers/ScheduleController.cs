@@ -50,13 +50,13 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Status called");
+                _logger.LogInformation($"GET /v1/Schedule/Status called");
                 var scheduleStatus = _scheduleService.GetStatus();
                 return new OkObjectResult(scheduleStatus);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Schedule endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/Schedule/Status endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return NotFound();
             }

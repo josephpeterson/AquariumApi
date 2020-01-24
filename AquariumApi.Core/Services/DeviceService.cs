@@ -143,6 +143,7 @@ namespace AquariumApi.Core
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             var path = $"http://{device.Address}:{device.Port}/v1/Schedule";
+
             using (var client2 = new HttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();

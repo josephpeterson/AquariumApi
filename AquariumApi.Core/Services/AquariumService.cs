@@ -470,7 +470,6 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.GetDeviceSchedulesByAccount(id);
         }
-
         public void DeleteDeviceSchedule(int scheduleId)
         {
             var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
@@ -489,12 +488,10 @@ namespace AquariumApi.Core
             });
 
         }
-
         public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
         {
             return _aquariumDao.AddDeviceSchedule(deviceSchedule);
         }
-
         public List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId)
         {
             _aquariumDao.AssignDeviceSchedule(scheduleId, deviceId);
@@ -511,7 +508,6 @@ namespace AquariumApi.Core
             return assignments;
 
         }
-
         public List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId)
         {
             _aquariumDao.UnassignDeviceSchedule(scheduleId, deviceId);
@@ -530,7 +526,6 @@ namespace AquariumApi.Core
 
             return assignments;
         }
-
         public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
         {
             var updatedSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);

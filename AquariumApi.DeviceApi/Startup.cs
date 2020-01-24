@@ -23,6 +23,7 @@ namespace AquariumApi.DeviceApi
     public class Startup
     {
         private IDeviceService _deviceService;
+        private ScheduleService _scheduleService;
 
         public IConfigurationRoot Configuration { get; }
         private ILogger<Startup> _logger;
@@ -39,7 +40,13 @@ namespace AquariumApi.DeviceApi
 
         }
 
-        private async void DeviceBootstrap()
+        private void DeviceBootstrap()
+        {
+            ContactAquariumService();
+            _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
+        }
+
+        private async void ContactAquariumService()
         {
             try
             {
@@ -52,9 +59,9 @@ namespace AquariumApi.DeviceApi
                     + $"\nEnabled Temperature: {device.EnabledTemperature}"
                     );
 
-                
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
             }
@@ -69,7 +76,7 @@ namespace AquariumApi.DeviceApi
             }
         }
 
-
+        
         // This method gets called by the runtime. Use this method to add services to the container.
         [System.Obsolete]
         public void ConfigureServices(IServiceCollection services)
@@ -106,9 +113,13 @@ namespace AquariumApi.DeviceApi
 
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, Microsoft.Extensions.Hosting.IHostingEnvironment env, IDeviceService deviceService, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app,
+            Microsoft.Extensions.Hosting.IHostingEnvironment env,
+            IDeviceService deviceService, 
+            ScheduleService scheduleService,ILogger<Startup> logger)
         {
             _deviceService = deviceService;
+            _scheduleService = scheduleService;
             _logger = logger;
 
             if (env.IsDevelopment())

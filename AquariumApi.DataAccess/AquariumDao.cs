@@ -139,6 +139,7 @@ namespace AquariumApi.DataAccess
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
+        List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -360,8 +361,8 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.TblAquariumPhoto.RemoveRange(_dbAquariumContext.TblAquariumPhoto.Where(aq => aq.AquariumId == aquariumId));
             _dbAquariumContext.TblAquariumEquipment.RemoveRange(aquarium.Equipment);
 
-            if (aquarium.Device != null) _dbAquariumContext.TblDevice.Remove(aquarium.Device);
-            _dbAquariumContext.TblAquarium.Remove(aquarium);
+            if (aquarium.Device != null) DeleteAquariumDevice(aquarium.Device.Id);
+            _dbAquariumContext.Remove(aquarium);
             _dbAquariumContext.SaveChanges();
         }
        
@@ -460,12 +461,11 @@ namespace AquariumApi.DataAccess
         {
             var device = _dbAquariumContext.TblDevice
                 .Include(e => e.CameraConfiguration)
+                .Include(e => e.ScheduleAssignments)
                 .SingleOrDefault(d => d.Id == deviceId);
             if (device == null)
                 throw new KeyNotFoundException();
-            _dbAquariumContext.TblDevice.Remove(device);
-            if (device.CameraConfiguration != null)
-                _dbAquariumContext.TblCameraConfiguration.Remove(device.CameraConfiguration);
+            _dbAquariumContext.Remove(device);
             _dbAquariumContext.SaveChanges();
             return device;
         }
@@ -593,6 +593,15 @@ namespace AquariumApi.DataAccess
             var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
                 .AsNoTracking()
                 .Where(sa => sa.DeviceId == deviceId)
+                .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
+                .ToList();
+            return schedules;
+        }
+        public List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId)
+        {
+            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
+                .AsNoTracking()
+                .Where(sa => sa.ScheduleId == scheduleId)
                 .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .ToList();
             return schedules;
