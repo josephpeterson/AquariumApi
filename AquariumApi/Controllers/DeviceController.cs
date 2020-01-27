@@ -185,28 +185,7 @@ namespace AquariumApi.Controllers
         }
 
 
-        //Recieve snapshot from device
-        [HttpPost, DisableRequestSizeLimit]
-        [Route("/v1/Device/{deviceId}/Snapshot")]
-        public IActionResult UploadSnapshot(int deviceId,RequestModel data)
-        {
-            try
-            {
-                _logger.LogInformation($"POST /v1/Device/{deviceId}/Snapshot called");
-                var snapshotImage = data.SnapshotImage;
-                var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data.Snapshot);
-
-                var device = _aquariumService.GetAquariumDeviceById(deviceId);
-                AquariumSnapshot s = _aquariumService.AddSnapshot(device.AquariumId, snapshot,snapshotImage);
-                return new OkObjectResult(data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Device/{deviceId}/Snapshot: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-        //Retrieve AquariumDeviceApi.log
+       //Retrieve AquariumDeviceApi.log
         [HttpPost, DisableRequestSizeLimit]
         [Route("/v1/Device/{deviceId}/Log")]
         public IActionResult ClearDeviceLog(int deviceId)
@@ -346,11 +325,5 @@ namespace AquariumApi.Controllers
             }
         }
 
-    }
-
-    public class RequestModel
-    {
-        public IFormFile SnapshotImage { get; set; }
-        public string Snapshot { get; set; }
     }
 }

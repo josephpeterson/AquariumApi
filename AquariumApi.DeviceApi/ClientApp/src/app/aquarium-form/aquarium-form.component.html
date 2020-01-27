@@ -1,0 +1,4 @@
+<h2>Select an Aquarium</h2>
+<mat-radio-group aria-label="Select an option">
+  <mat-radio-button class="d-flex" (click)="clickSelectAquarium(a)" *ngFor="let a of aquariums" value="a.id" >{{a.name}}</mat-radio-button>
+</mat-radio-group>

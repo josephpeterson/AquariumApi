@@ -10,6 +10,7 @@ namespace AquariumApi.Models
         CreateAccountActivity = 3200,
         DeleteAccountActivity = 3201,
         LoginAccountActivity = 3205,
+        DeviceLoginAccountActivity = 3206,
 
         CreateAquariumActivity = 1200,
         DeleteAquariumActivity = 1201,
@@ -104,6 +105,13 @@ namespace AquariumApi.Models
         public LoginAccountActivity()
         {
             this.ActivityType = ActivityTypes.LoginAccountActivity;
+        }
+    }
+    public class DeviceLoginAccountActivity : Activity
+    {
+        public DeviceLoginAccountActivity()
+        {
+            this.ActivityType = ActivityTypes.DeviceLoginAccountActivity;
         }
     }
 }

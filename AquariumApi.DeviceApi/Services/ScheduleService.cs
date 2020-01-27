@@ -186,7 +186,7 @@ namespace AquariumApi.DeviceApi
         private void TakeSnapshotTask(DeviceScheduleTask task)
         {
             _logger.LogInformation("Taking aquarium snapshot...");
-            var device = _deviceService.GetDevice();
+            var device = _deviceService.GetConnectionInformation().Aquarium.Device;
             var snapshot = _deviceService.TakeSnapshot();
             var photo = _deviceService.TakePhoto(device.CameraConfiguration);
             var deviceId = task.Schedule.ScheduleAssignments
@@ -194,7 +194,7 @@ namespace AquariumApi.DeviceApi
                         .Select(sa => sa.DeviceId)
                         .First();
 
-            _deviceService.SendAquariumSnapshotToHost(task.Schedule.Host, deviceId, snapshot, photo);
+            _deviceService.SendAquariumSnapshotToHost(task.Schedule.Host, snapshot, photo);
             _logger.LogInformation("Aquarium snapshot sent successfully");
         }
 

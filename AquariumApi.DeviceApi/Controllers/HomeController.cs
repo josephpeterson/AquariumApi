@@ -14,15 +14,21 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IDeviceService _deviceService;
         private ScheduleService _scheduleService;
+        private HardwareService _hardwareService;
+        private IAquariumAuthService _aquariumAuthService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
 
         public HomeController(IDeviceService deviceService,
             ScheduleService scheduleService,
+            HardwareService hardwareService,
+            IAquariumAuthService aquariumAuthService,
             ILogger<HomeController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
             _scheduleService = scheduleService;
+            _hardwareService = hardwareService;
+            _aquariumAuthService = aquariumAuthService;
             _logger = logger;
             _config = config;
         }
@@ -33,8 +39,8 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("GET /v1/Scan called");
-                _deviceService.CheckAvailableHardware();
-                return new OkObjectResult(_deviceService.GetDevice());
+                var hardware = _hardwareService.ScanHardware();
+                return new OkObjectResult(hardware);
             }
             catch (Exception ex)
             {
@@ -45,12 +51,13 @@ namespace AquariumApi.DeviceApi.Controllers
         }
         [HttpPost]
         [Route("/v1/Ping")]
-        public IActionResult Ping([FromBody] AquariumDevice device)
+        public IActionResult Ping([FromBody] DeviceLoginResponse loginResponse)
         {
             try
             {
                 _logger.LogInformation("POST /v1/Ping called");
-                _deviceService.SetDevice(device);
+                //_aquariumAuthService.SaveTokenToCache(loginResponse);
+                //_deviceService.ReloadAuthenticationToken();
                 return new OkResult();
             }
             catch (Exception ex)
@@ -61,13 +68,6 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
         [HttpGet]
-        [Route("/v1/Ping")]
-        public IActionResult CheckPing()
-        {
-            _logger.LogInformation("GET /v1/Ping called");
-            return new OkResult();
-        }
-        [HttpGet]
         [Route("/v1/Information")]
         public IActionResult GetDeviceInformation()
         {
@@ -76,7 +76,7 @@ namespace AquariumApi.DeviceApi.Controllers
                 _logger.LogInformation("POST /v1/Information called");
                 var information = new DeviceInformation()
                 {
-                    Aquarium = _deviceService.GetDevice().Aquarium,
+                    Aquarium = _deviceService.GetConnectionInformation().Aquarium,
                     config = System.IO.File.ReadAllText("config.json"),
                     Schedules = _scheduleService.GetAllSchedules()
                 };

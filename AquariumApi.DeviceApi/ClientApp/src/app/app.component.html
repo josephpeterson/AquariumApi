@@ -1,0 +1,39 @@
+<!--The content below is only a placeholder and can be replaced.-->
+
+<div class="container">
+
+  <ng-container *ngIf="currentStep == 3 && loginInformation else setup">
+    <div class="row">
+      <h2>Device Dashboard</h2>
+      <button class="btn btn-danger" (click)="clickLogout()">Logout</button>
+
+    </div>
+    <information-page [loginInformation]="loginInformation"></information-page>
+  </ng-container>
+
+  <ng-template #setup>
+    <div class="row">
+      <h1>Aquarium Device</h1>
+      <p class="text-muted">Hello, this is the aquarium device hardware set up. You must log in to your Aquarium account
+        and
+        select an aquarium to be monitored.</p>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="alert alert-danger" role="alert" *ngIf="error">
+          {{error}}
+        </div>
+        <login-form *ngIf="currentStep == 1" [disabled]="loading"></login-form>
+        <ng-container *ngIf="currentStep == 2">
+          <p>Welcome, {{aquariumUser.username}}!</p>
+          <aquarium-form [aquariums]="aquariumUser.aquariums" [disabled]="loading"></aquarium-form>
+        </ng-container>
+
+        <button *ngIf="currentStep == 1" [disabled]="loading" class="btn btn-success"
+          (click)="clickSubmitStep1()">Continue</button>
+        <button *ngIf="currentStep == 2" [disabled]="loading" class="btn btn-success"
+          (click)="clickSubmitStep2()">Finish</button>
+      </div>
+    </div>
+  </ng-template>
+</div>

@@ -18,18 +18,15 @@ namespace AquariumApi.DeviceApi
         AquariumSnapshot TakeSnapshot();
         byte[] TakePhoto(CameraConfiguration configuration);
 
-        Task<AquariumDevice> PingAquariumService();
-        void CheckAvailableHardware();
-        AquariumDevice GetDevice();
-        void SetDevice(AquariumDevice device);
-        AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo);
-        AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId, AquariumSnapshot snapshot, byte[] photo);
+        void PingAquariumService();
+        AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo);
+        DeviceLoginResponse GetConnectionInformation();
     }
     public class DeviceService : IDeviceService
     {
         private IConfiguration _config;
         private ILogger<DeviceService> _logger;
-        private AquariumDevice Device;
+        private DeviceLoginResponse _accountLogin;
         private IHardwareService _hardwareService;
         private IAquariumClient _aquariumClient;
 
@@ -40,16 +37,6 @@ namespace AquariumApi.DeviceApi
             _hardwareService = hardwareService;
             _aquariumClient = aquariumClient;
         }
-
-        public void SetDevice(AquariumDevice device)
-        {
-            Device = device;
-        }
-        public AquariumDevice GetDevice()
-        {
-            return Device;
-        }
-
 
         public byte[] TakePhoto(CameraConfiguration configuration)
         {
@@ -62,45 +49,23 @@ namespace AquariumApi.DeviceApi
             {
                 Date = DateTime.Now.ToUniversalTime()
             };
-            if (Device.EnabledTemperature) snapshot.Temperature = _hardwareService.GetTemperatureC();
+            if (_accountLogin.Aquarium.Device.EnabledTemperature) snapshot.Temperature = _hardwareService.GetTemperatureC();
             return snapshot;
         }
 
-        public async Task<AquariumDevice> PingAquariumService()
+        public async void PingAquariumService()
         {
-            Device = new AquariumDevice()
-            {
-                PrivateKey = _config["DeviceKey"]
-            };
-            Console.WriteLine("Attempting to contact Aquarium Service...");
-            Console.WriteLine($"Device Key: '{Device.PrivateKey}'");
-            CheckAvailableHardware();
-            var actualDevice = await _aquariumClient.GetDeviceInformation(Device);
-            _logger.LogInformation("Device information found for aquarium \"" + actualDevice.Aquarium.Name + "\"");
-            SetDevice(actualDevice);
-            return actualDevice;
+            var response = await _aquariumClient.ValidateAuthenticationToken();
+            _accountLogin = response;
+            _logger.LogInformation("Device information found for aquarium \"" + _accountLogin.Aquarium.Name + "\"");
         }
-
-        public void CheckAvailableHardware()
+        public AquariumSnapshot SendAquariumSnapshotToHost(string host,AquariumSnapshot snapshot, byte[] photo)
         {
-            if (Device == null)
-                throw new Exception("No device information found from service.");
-            var thisDevice = _hardwareService.ScanHardware();
-            Device.EnabledLighting = thisDevice.EnabledLighting;
-            Device.EnabledNitrate = thisDevice.EnabledNitrate;
-            Device.EnabledNitrite = thisDevice.EnabledNitrite;
-            Device.EnabledPh = thisDevice.EnabledPh;
-            Device.EnabledPhoto = thisDevice.EnabledPhoto;
-            Device.EnabledTemperature = thisDevice.EnabledTemperature;
+            return _aquariumClient.SendAquariumSnapshotToHost(host, snapshot, photo);
         }
-
-        public AquariumSnapshot SendAquariumSnapshot(AquariumSnapshot snapshot, byte[] photo)
+        public DeviceLoginResponse GetConnectionInformation()
         {
-            return _aquariumClient.SendAquariumSnapshot(Device.Id, snapshot, photo);
-        }
-        public AquariumSnapshot SendAquariumSnapshotToHost(string host,int deviceId,AquariumSnapshot snapshot, byte[] photo)
-        {
-            return _aquariumClient.SendAquariumSnapshotToHost(host,Device.Id, snapshot, photo);
+            return _accountLogin;
         }
     }
 }

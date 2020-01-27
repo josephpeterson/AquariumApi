@@ -2,6 +2,6 @@
   "Port": 80,
   "DeviceKey": "testtankdevicekey",
   "AquariumCachePath": "aquarium.json",
-  "AquariumServiceUrl": "http://aquarium-api-dev.azurewebsites.net/v1",
+  "AquariumServiceUrl": "http://localhost:5000/v1",
   "ScheduleAssignmentPath": "aquarium_schedules.json"
 }

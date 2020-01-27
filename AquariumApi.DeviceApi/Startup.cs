@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AquariumApi.DeviceApi.Clients;
 using AquariumApi.Models;
@@ -46,20 +47,11 @@ namespace AquariumApi.DeviceApi
             _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
         }
 
-        private async void ContactAquariumService()
+        private void ContactAquariumService()
         {
             try
             {
-                var device = await _deviceService.PingAquariumService();
-                _logger.LogInformation("[Connected to Aquarium Service]");
-
-                _logger.LogInformation("Device Information: "
-                    + $"\nAquarium Name: {device.Aquarium.Name}"
-                    + $"\nEnabled Photo: {device.EnabledPhoto}"
-                    + $"\nEnabled Temperature: {device.EnabledTemperature}"
-                    );
-
-
+               _deviceService.PingAquariumService();
             }
             catch (Exception ex)
             {
@@ -102,6 +94,7 @@ namespace AquariumApi.DeviceApi
             services.AddTransient<IAquariumClient, AquariumClient>();
             services.AddSingleton<IDeviceService, DeviceService>();
             services.AddSingleton<IQueueService, QueueService>();
+            services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
 
         }
 
@@ -162,8 +155,15 @@ namespace AquariumApi.DeviceApi
                 name: "spa-fallback",
                 defaults: new { controller = "Home", action = "Spa" });
             });
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";
+            
+            });
             app.UseHttpsRedirection();
 
+
+            Thread.Sleep(10*1000);
             DeviceBootstrap();
         }
     }

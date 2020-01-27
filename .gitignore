@@ -13,3 +13,4 @@ obj/*
 AquariumApi/config.json
 AquariumApi/config.json
 AquariumApi.DeviceApi/Properties/PublishProfiles/*
+AquariumApi.DeviceApi/wwwroot/*

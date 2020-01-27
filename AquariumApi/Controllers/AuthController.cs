@@ -19,12 +19,14 @@ namespace AquariumApi.Controllers
         private readonly IEncryptionService _encryptionService;
         public readonly IAccountService _accountService;
         private readonly IActivityService _activityService;
+        private readonly IAquariumService _aquariumService;
         public readonly ILogger<AuthController> _logger;
-        public AuthController(IEncryptionService encryptionService,IAccountService accountService, ILogger<AuthController> logger,IActivityService activityService)
+        public AuthController(IEncryptionService encryptionService,IAccountService accountService, IAquariumService aquariumService,ILogger<AuthController> logger,IActivityService activityService)
         {
             _encryptionService = encryptionService;
             _accountService = accountService;
             _activityService = activityService;
+            _aquariumService = aquariumService;
             _logger = logger;
         }
 
@@ -35,7 +37,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Auth/Login called");
-                var token = _accountService.LoginUser(user.Email,user.Password);
+                var token = _accountService.IssueUserLoginToken(user.Email,user.Password);
 
                 var userAcc = _accountService.GetUserByUsername(user.Email);
                 if(userAcc == null)
@@ -51,6 +53,38 @@ namespace AquariumApi.Controllers
                 return Unauthorized();
             }
         }
+        [HttpPost]
+        [Route("/v1/Auth/Login/Device")]
+        public IActionResult DeviceLogin([FromBody]DeviceLoginRequest deviceLogin)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Auth/Login/Device called");
+                var token = _accountService.IssueDeviceLoginToken(deviceLogin.Email, deviceLogin.Password,deviceLogin.AquariumId);
+
+                var userAcc = _accountService.GetUserByUsername(deviceLogin.Email);
+                if (userAcc == null)
+                    userAcc = _accountService.GetUserByEmail(deviceLogin.Email);
+                _activityService.RegisterActivity(new DeviceLoginAccountActivity()
+                {
+                    AccountId = userAcc.Id
+                });
+                userAcc.Aquariums = _aquariumService.GetAquariumsByAccountId(userAcc.Id);
+                var data = new DeviceLoginResponse
+                {
+                    Account = userAcc,
+                    Token = token,
+                    AquariumId = deviceLogin.AquariumId
+                };
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Auth/Login/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return Unauthorized();
+            }
+        }
+
         [HttpPost]
         [Route("/v1/Auth/Signup")]
         public IActionResult Signup([FromBody]SignupRequest signupRequest)

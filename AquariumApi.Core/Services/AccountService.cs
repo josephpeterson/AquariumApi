@@ -24,7 +24,7 @@ namespace AquariumApi.Core
         AquariumUser GetUserByEmail(string email);
         AquariumUser UpdateUser(AquariumUser user);
         void DeleteUser(int userId);
-        string LoginUser(string email, string password);
+        string IssueUserLoginToken(string email, string password);
         int GetCurrentUserId();
         void SendResetPasswordEmail(string email);
         string UpgradePasswordResetToken(string token);
@@ -36,6 +36,8 @@ namespace AquariumApi.Core
         bool CanModify(int accountId, Fish fish);
         bool CanAccess(int accountId, Fish fish);
         AquariumProfile UpdateProfile(AquariumProfile profile);
+        string IssueDeviceLoginToken(string email, string password,int? deviceId);
+        int GetCurrentAquariumId();
     }
     public class AccountService : IAccountService
     {
@@ -56,6 +58,10 @@ namespace AquariumApi.Core
         public int GetCurrentUserId()
         {
             return Convert.ToInt16(_context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+        }
+        public int GetCurrentAquariumId()
+        {
+            return Convert.ToInt16(_context.HttpContext.User.FindFirst(ClaimTypes.Name).Value);
         }
         public AquariumUser AddUser(SignupRequest signupRequest)
         {
@@ -107,7 +113,7 @@ namespace AquariumApi.Core
         {
             throw new NotImplementedException();
         }
-        public string LoginUser(string email, string password)
+        public string IssueUserLoginToken(string email, string password)
         {
             var targetUser = _aquariumDao.GetUserByUsernameOrEmail(email);
             if (targetUser == null)
@@ -115,11 +121,6 @@ namespace AquariumApi.Core
 
             var hash = _encryptionService.Encrypt(password);
             AquariumUser user = _aquariumDao.GetAccountByLogin(targetUser.Id, hash);
-
-
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
-            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -127,7 +128,36 @@ namespace AquariumApi.Core
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim(ClaimTypes.Name, user.Username)
             };
+            return GenerateLoginToken(claims);
+        }
+        public string IssueDeviceLoginToken(string email, string password,int? aquariumId = null)
+        {
+            var targetUser = _aquariumDao.GetUserByUsernameOrEmail(email);
+            if (targetUser == null)
+                throw new UnauthorizedAccessException();
 
+            if(aquariumId.HasValue)
+            {
+                var aqId = Convert.ToInt16(aquariumId);
+                var aquarium = _aquariumDao.GetAquariumById(aqId);
+                if(aquarium.OwnerId != targetUser.Id)
+                    throw new UnauthorizedAccessException("You do not own this device");
+            }
+
+            var hash = _encryptionService.Encrypt(password);
+            AquariumUser user = _aquariumDao.GetAccountByLogin(targetUser.Id, hash);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, "Device"),
+                new Claim(ClaimTypes.Name, aquariumId.ToString()),
+            };
+            return GenerateLoginToken(claims);
+        }
+        private string GenerateLoginToken(List<Claim> claims)
+        {
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
+            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
             var tokeOptions = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
