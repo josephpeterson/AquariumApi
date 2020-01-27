@@ -1,4 +1,4 @@
-﻿using AquariumApi.Models;
+using AquariumApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2.HPack;
@@ -30,7 +30,6 @@ namespace AquariumApi.DeviceApi.Clients
         private ILogger<IAquariumClient> _logger;
         private IConfiguration _config;
         private IAquariumAuthService _aquariumAuthService;
-        private AquariumDevice _device;
 
 
         public AquariumClient(ILogger<IAquariumClient> logger, IConfiguration config,

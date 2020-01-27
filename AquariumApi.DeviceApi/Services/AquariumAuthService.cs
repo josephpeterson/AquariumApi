@@ -1,4 +1,4 @@
-﻿using AquariumApi.DeviceApi.Clients;
+using AquariumApi.DeviceApi.Clients;
 using AquariumApi.Models;
 using Bifrost.IO.Ports;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +40,8 @@ namespace AquariumApi.DeviceApi
         }
         public DeviceLoginResponse LoadTokenFromCache()
         {
+            if (!File.Exists("login.json")) return null;
+
             _token = JsonConvert.DeserializeObject<DeviceLoginResponse>(File.ReadAllText("login.json"));
             return _token;
         }

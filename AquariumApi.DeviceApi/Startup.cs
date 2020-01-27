@@ -1,15 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AquariumApi.DeviceApi.Clients;
+using AquariumApi.DeviceApi.Extensions;
 using AquariumApi.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,150 +23,125 @@ using Unosquare.WiringPi;
 
 namespace AquariumApi.DeviceApi
 {
-    public class Startup
-    {
-        private IDeviceService _deviceService;
-        private ScheduleService _scheduleService;
+	public class Startup
+	{
+		private IDeviceService _deviceService;
+		private ScheduleService _scheduleService;
 
-        public IConfigurationRoot Configuration { get; }
-        private ILogger<Startup> _logger;
+		public IConfigurationRoot Configuration { get; }
+		private ILogger<Startup> _logger;
 
-        public Startup(IConfiguration configuration)
-        {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            // Set up configuration sources.
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(currentDirectory)
-                .AddJsonFile($"config.json", optional: false)
-                .AddEnvironmentVariables();
-            Configuration = builder.Build();
+		public Startup(IConfiguration configuration)
+		{
+			var currentDirectory = Directory.GetCurrentDirectory();
+			// Set up configuration sources.
+			var builder = new ConfigurationBuilder()
+					.SetBasePath(currentDirectory)
+					.AddJsonFile($"config.json", optional: false)
+					.AddEnvironmentVariables();
+			Configuration = builder.Build();
 
-        }
+		}
+		// This method gets called by the runtime. Use this method to add services to the container.
+		[System.Obsolete]
+		public void ConfigureServices(IServiceCollection services)
+		{
+			services.AddSingleton<IConfiguration>(Configuration);
+			services.AddLogging();
+			// Register the Swagger generator, defining 1 or more Swagger documents
+			services.AddSwaggerGen(c =>
+			{
+				c.SwaggerDoc("v1", new Info { Title = "AquariumDevice API", Version = "v1" });
+			});
+      services.AddSpaStaticFiles(configuration =>
+      {
+        configuration.RootPath = "ClientApp/dist";
+      });
+      services.AddAquariumDevice();
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+		}
 
-        private void DeviceBootstrap()
-        {
-            ContactAquariumService();
-            _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
-        }
+		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+		public void Configure(IApplicationBuilder app,
+				Microsoft.Extensions.Hosting.IHostingEnvironment env,
+				IDeviceService deviceService,
+				ScheduleService scheduleService, ILogger<Startup> logger)
+		{
+			_deviceService = deviceService;
+			_scheduleService = scheduleService;
+			_logger = logger;
 
-        private void ContactAquariumService()
-        {
-            try
-            {
-               _deviceService.PingAquariumService();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
-            }
+			if (env.IsDevelopment())
+			{
+				app.UseDeveloperExceptionPage();
+			}
+			else
+			{
+				app.UseHsts();
+			}
+			// global cors policy
+			app.UseCors(x => x
+					.AllowAnyOrigin()
+					.AllowAnyMethod()
+					.AllowAnyHeader()
+					.AllowCredentials());
 
-            try
-            {
-                //Pi.Init<BootstrapWiringPi>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Could not enable wiring: { ex.Message } Details: { ex.ToString() }");
-            }
-        }
-
-        
-        // This method gets called by the runtime. Use this method to add services to the container.
-        [System.Obsolete]
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddLogging();
-            // Register the Swagger generator, defining 1 or more Swagger documents
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new Info { Title = "AquariumDevice API", Version = "v1" });
-            });
-
-
-            RegisterServices(services);
-            RegisterHostedServices(services);
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-        }
-
-        private void RegisterServices(IServiceCollection services)
-        {
-            services.AddSingleton<IConfiguration>(Configuration);
-            services.AddTransient<IHardwareService, HardwareService>();
-            services.AddTransient<ISerialService, SerialService>();
-            services.AddTransient<IAquariumClient, AquariumClient>();
-            services.AddSingleton<IDeviceService, DeviceService>();
-            services.AddSingleton<IQueueService, QueueService>();
-            services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
-
-        }
-
-        /* Background services */
-        private void RegisterHostedServices(IServiceCollection services)
-        {
-            services.AddSingleton<ScheduleService>();
-        }
-
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app,
-            Microsoft.Extensions.Hosting.IHostingEnvironment env,
-            IDeviceService deviceService, 
-            ScheduleService scheduleService,ILogger<Startup> logger)
-        {
-            _deviceService = deviceService;
-            _scheduleService = scheduleService;
-            _logger = logger;
-
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHsts();
-            }
-            // global cors policy
-            app.UseCors(x => x
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
-
-            app.UseStaticFiles();
+			app.UseStaticFiles();
 
 
 
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
+			// Enable middleware to serve generated Swagger as a JSON endpoint.
+			app.UseSwagger();
 
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = "swagger";
-            });
+			// Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+			// specifying the Swagger JSON endpoint.
+			app.UseSwaggerUI(c =>
+			{
+				c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+				c.RoutePrefix = "swagger";
+			});
 
-            app.UseMvc(routes =>
-            {
-                // default routes plus any other custom routes
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-                routes.MapSpaFallbackRoute(
-                name: "spa-fallback",
-                defaults: new { controller = "Home", action = "Spa" });
-            });
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp";
-            
-            });
-            app.UseHttpsRedirection();
+			app.UseMvc(routes =>
+			{
+							// default routes plus any other custom routes
+							routes.MapRoute(
+									name: "default",
+									template: "{controller=Home}/{action=Index}/{id?}");
+				routes.MapSpaFallbackRoute(
+							name: "spa-fallback",
+							defaults: new { controller = "Home", action = "Spa" });
+			});
+      app.UseSpa(spa =>
+      {
+        spa.Options.SourcePath = "ClientApp";
+        if (env.IsDevelopment())
+          spa.UseAngularCliServer(npmScript: "start");
+      });
+      app.UseHttpsRedirection();
 
 
-            Thread.Sleep(10*1000);
-            DeviceBootstrap();
-        }
-    }
+			Thread.Sleep(10 * 1000);
+			DeviceBootstrap();
+		}
+		private void DeviceBootstrap()
+		{
+			ContactAquariumService();
+			_scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
+		}
+
+		private void ContactAquariumService()
+		{
+
+      _deviceService.PingAquariumService();
+			try
+			{
+				//Pi.Init<BootstrapWiringPi>();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError($"Could not enable wiring: { ex.Message } Details: { ex.ToString() }");
+			}
+		}
+
+	}
 }
