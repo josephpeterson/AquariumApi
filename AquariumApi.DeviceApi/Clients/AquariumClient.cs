@@ -43,7 +43,7 @@ namespace AquariumApi.DeviceApi.Clients
 
         public AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo)
         {
-            var path = $"{host}/DeviceInteraction/Snapshot";
+            var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction/Snapshot";
             _logger.LogInformation("Sending snapshot: " + path);
 
 
@@ -99,17 +99,17 @@ namespace AquariumApi.DeviceApi.Clients
 
             HttpClient client = GetHttpClient();
             var result = await client.GetAsync(path);
-            if (!result.IsSuccessStatusCode)
-                    throw new Exception("Invalid request");
+      if (!result.IsSuccessStatusCode)
+        throw new UnauthorizedAccessException("Could not validate token against server");
 
             var res = await result.Content.ReadAsStringAsync();
             var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
             var aquarium = response.Aquarium;
             var account = response.Account;
 
-            _logger.LogInformation($"- Account: ${account.Username}");
-            _logger.LogInformation($"- Aquarium: ${aquarium.Name}");
-            _logger.LogInformation($"- Aquarium Device: ${aquarium.Device.Name}");
+            _logger.LogInformation($"- Account: {account.Username}");
+            _logger.LogInformation($"- Aquarium: {aquarium.Name}");
+            _logger.LogInformation($"- Aquarium Device: {aquarium.Device.Name}");
             _logger.LogInformation("Token successfully validated.");
             return response;
         }

@@ -19,13 +19,20 @@ namespace AquariumApi.Controllers
         private readonly IEncryptionService _encryptionService;
         public readonly IAccountService _accountService;
         private readonly IActivityService _activityService;
+        private readonly INotificationService _notificationService;
         private readonly IAquariumService _aquariumService;
         public readonly ILogger<AuthController> _logger;
-        public AuthController(IEncryptionService encryptionService,IAccountService accountService, IAquariumService aquariumService,ILogger<AuthController> logger,IActivityService activityService)
+        public AuthController(IEncryptionService encryptionService,
+            IAccountService accountService, 
+            INotificationService notificationService,
+            IAquariumService aquariumService,
+            ILogger<AuthController> logger,
+            IActivityService activityService)
         {
             _encryptionService = encryptionService;
             _accountService = accountService;
             _activityService = activityService;
+            _notificationService = notificationService;
             _aquariumService = aquariumService;
             _logger = logger;
         }
@@ -65,11 +72,38 @@ namespace AquariumApi.Controllers
                 var userAcc = _accountService.GetUserByUsername(deviceLogin.Email);
                 if (userAcc == null)
                     userAcc = _accountService.GetUserByEmail(deviceLogin.Email);
-                _activityService.RegisterActivity(new DeviceLoginAccountActivity()
-                {
-                    AccountId = userAcc.Id
-                });
+
                 userAcc.Aquariums = _aquariumService.GetAquariumsByAccountId(userAcc.Id);
+                if (deviceLogin.AquariumId.HasValue)
+                {
+                    var aq = userAcc.Aquariums.First(a => a.Id == deviceLogin.AquariumId);
+                    _activityService.RegisterActivity(new DeviceLoginAccountActivity()
+                    {
+                        AccountId = userAcc.Id
+                    });
+                    _notificationService.EmitAsync(new DispatchedNotification
+                    {
+                        Date = DateTime.Now.ToUniversalTime(),
+                        Type = NotificationTypes.LoginDeviceActivity,
+                        DispatcherId = userAcc.Id,
+                        Title = "New Device Login",
+                        Subtitle = $"Aquarium monitoring device connected to {aq.Name}",
+                    },new List<int>(userAcc.Id));
+
+                    if(aq.Device == null)
+                    {
+                        var d = new AquariumDevice
+                        {
+                            Name = "Remote Login",
+                            Type = "RaspberryPi",
+                            Address = "",
+                            Port = "0",
+                            PrivateKey = "",
+                            AquariumId = aq.Id
+                        };
+                        _aquariumService.AddAquariumDevice(d);
+                    }
+                }
                 var data = new DeviceLoginResponse
                 {
                     Account = userAcc,

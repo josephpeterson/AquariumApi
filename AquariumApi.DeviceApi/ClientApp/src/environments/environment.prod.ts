@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  url: "/"
+  url: window.location.origin
 
 };

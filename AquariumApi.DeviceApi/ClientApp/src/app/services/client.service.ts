@@ -30,7 +30,10 @@ export class ClientService {
         return this.http.post(this._url + "ClientApp/Login", loginInformation);
     }
     public logout() {
-        return this.http.delete(this._url + "ClientApp/Logout").subscribe(location.reload, location.reload);
+        function reload() {
+            window.location.reload();
+        }
+        return this.http.delete(this._url + "ClientApp/Logout").subscribe(reload, reload);
     }
     public getDetailedInformation() {
         return this.http.get(this._url + "ClientApp");

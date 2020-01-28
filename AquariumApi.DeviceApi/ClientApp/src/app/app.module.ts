@@ -12,13 +12,16 @@ import {MatRadioModule} from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { InformationPageComponent } from './information-page/information-page.component';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { NavBarComponent } from './nav-bar/nav-bar.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginFormComponent,
     AquariumFormComponent,
-    InformationPageComponent
+    InformationPageComponent,
+    NavBarComponent
   ],
   imports: [
     BrowserModule,
@@ -28,7 +31,8 @@ import { InformationPageComponent } from './information-page/information-page.co
     FormsModule,
     HttpClientModule,
     MatInputModule,
-    MatRadioModule
+    MatRadioModule,
+    MatProgressSpinnerModule
   ],
   providers: [],
   bootstrap: [AppComponent]

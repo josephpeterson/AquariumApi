@@ -291,6 +291,7 @@ namespace AquariumApi.DataAccess
         public List<Aquarium> GetAquariumsByAccountId(int userId)
         {
             return _dbAquariumContext.TblAquarium
+                .Include(aq => aq.Device)
                 .Where(aq => aq.OwnerId == userId)
                 .ToList();
         }
@@ -1158,7 +1159,8 @@ namespace AquariumApi.DataAccess
         {
             return _dbAquariumContext.TblNotification
                 .AsNoTracking()
-                .Include(n => n.Source)
+                .Include(n => n.Source).ThenInclude(n => n.Dispatcher)
+                .Include(n => n.Target)
                 //.ThenInclude(n => n.Dispatcher)
                 .Where(n => n.TargetId == id)
                 .Take(20)

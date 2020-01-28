@@ -10,6 +10,7 @@ namespace AquariumApi.Models
         public int TargetId { get; set; }
         public bool Dismissed { get; set; }
 
+
         public DispatchedNotification Source { get; set; }
         public AquariumUser Target { get; set; }
     }

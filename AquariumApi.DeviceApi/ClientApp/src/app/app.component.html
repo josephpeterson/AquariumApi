@@ -1,39 +1,57 @@
 <!--The content below is only a placeholder and can be replaced.-->
+<nav-bar [loginInformation]="loginInformation"></nav-bar>
 
 <div class="container">
 
-  <ng-container *ngIf="currentStep == 3 && loginInformation else setup">
-    <div class="row">
-      <h2>Device Dashboard</h2>
-      <button class="btn btn-danger" (click)="clickLogout()">Logout</button>
-
-    </div>
+  <ng-container *ngIf="currentStep == 4 && loginInformation else setup">
     <information-page [loginInformation]="loginInformation"></information-page>
   </ng-container>
 
   <ng-template #setup>
-    <div class="row">
-      <h1>Aquarium Device</h1>
-      <p class="text-muted">Hello, this is the aquarium device hardware set up. You must log in to your Aquarium account
-        and
-        select an aquarium to be monitored.</p>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="alert alert-danger" role="alert" *ngIf="error">
-          {{error}}
-        </div>
-        <login-form *ngIf="currentStep == 1" [disabled]="loading"></login-form>
-        <ng-container *ngIf="currentStep == 2">
-          <p>Welcome, {{aquariumUser.username}}!</p>
-          <aquarium-form [aquariums]="aquariumUser.aquariums" [disabled]="loading"></aquarium-form>
-        </ng-container>
+    <ng-container *ngIf="response else noResponse">
 
-        <button *ngIf="currentStep == 1" [disabled]="loading" class="btn btn-success"
-          (click)="clickSubmitStep1()">Continue</button>
-        <button *ngIf="currentStep == 2" [disabled]="loading" class="btn btn-success"
-          (click)="clickSubmitStep2()">Finish</button>
+
+      <div class="row">
+        <h1>Aquarium Device</h1>
+        <p class="text-muted">Hello, this is the aquarium device hardware set up. You must log in to your Aquarium
+          account
+          and
+          select an aquarium to be monitored.</p>
       </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="alert alert-danger" role="alert" *ngIf="error">
+            {{error}}
+          </div>
+          <login-form *ngIf="currentStep == 1" [disabled]="loading"></login-form>
+          <ng-container *ngIf="currentStep == 2">
+            <p>Welcome, {{aquariumUser.username}}!</p>
+            <aquarium-form [aquariums]="aquariumUser.aquariums" [disabled]="loading"></aquarium-form>
+          </ng-container>
+          <ng-container *ngIf="currentStep == 3">
+            <h3>Device Exists</h3>
+            <p>It seems like this aquarium already has a device monitoring it. Is that this device?</p>
+          </ng-container>
+
+
+          <button *ngIf="currentStep > 1" [disabled]="loading" class="btn btn-danger"
+            (click)="clickBack()">Back</button>
+          <button *ngIf="currentStep == 1" [disabled]="loading" class="btn btn-success"
+            (click)="clickSubmitStep1()">Continue</button>
+          <button *ngIf="currentStep == 2" [disabled]="loading" class="btn btn-success"
+            (click)="clickSubmitStep2()">Select Aquarium</button>
+          <button *ngIf="currentStep == 3" [disabled]="loading" class="btn btn-success"
+            (click)="clickSubmitStep2(true)">Replace Device</button>
+        </div>
+      </div>
+
+    </ng-container>
+  </ng-template>
+  <ng-template #noResponse>
+    <div class="row justify-content-center">
+      <mat-progress-spinner mode="indeterminate">
+      </mat-progress-spinner>
     </div>
   </ng-template>
 </div>

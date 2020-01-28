@@ -19,6 +19,7 @@ export class AppComponent implements OnInit {
 
   public error: string;
   public loading: boolean;
+  public response: boolean;
   public currentStep: number = 3;
   public aquariumUser: AquariumAccount;
   public loginInformation: LoginInformationResponse;
@@ -30,7 +31,7 @@ export class AppComponent implements OnInit {
   @ViewChild(AquariumFormComponent) aquariumForm: AquariumFormComponent
 
   constructor(private service: ClientService) {
-    
+
   }
 
   public ngOnInit(): void {
@@ -54,19 +55,32 @@ export class AppComponent implements OnInit {
       console.error(err);
     });
   }
-  public clickSubmitStep2() {
+  public clickSubmitStep2(force: boolean = false) {
     this.loading = true;
     delete this.error;
 
-    this.loginRequest.aquariumId = this.aquariumForm.aquarium.id;
+    if (this.currentStep == 2) {
+      if (!this.aquariumForm.aquarium) {
+        this.error = "Please select an aquarium";
+        this.loading = false;
+        return;
+      }
+      this.loginRequest.aquariumId = this.aquariumForm.aquarium.id;
+      if (this.aquariumForm.aquarium.device && !force) {
+        this.currentStep = 3;
+        this.loading = false;
+        return;
+      }
+    }
+
     console.log(this.loginRequest);
     this.service.attemptLogin(this.loginRequest).subscribe((account: AquariumAccount) => {
-      console.log("success 2 ", account);
       this.aquariumUser = account;
-      this.currentStep = 3;
+      this.currentStep = 4;
       this.loadInformation();
     }, (err: HttpErrorResponse) => {
       this.error = "Could not log in";
+      this.currentStep = 2;
       this.loading = false;
       console.error(err);
     });
@@ -78,18 +92,30 @@ export class AppComponent implements OnInit {
     delete this.error;
     this.service.getDetailedInformation().subscribe((data: LoginInformationResponse) => {
       // stuff
-      console.log(data);
       this.loading = false;
       this.loginInformation = data;
-    }, err => {
-      this.error = "Could not authenticate with service"
+      this.response = true;
+      this.currentStep = 4;
+    }, (err: HttpErrorResponse) => {
+      this.response = true;
+      console.log(err);
+      if (err.status == 401) {
+        this.currentStep = 1;
+        this.loading = false;
+        delete this.error;
+        return;
+      }
+      this.error = "Could not authenticate with service";
       this.loading = false;
-      this.currentStep = 2;
+      this.currentStep = 1;
       console.error(err);
     });
   }
   public clickLogout() {
     this.service.logout();
+  }
+  public clickBack() {
+    this.currentStep--;
   }
 }
 

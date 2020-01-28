@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace AquariumApi.DeviceApi
     AquariumSnapshot TakeSnapshot();
     byte[] TakePhoto(CameraConfiguration configuration);
 
-    void PingAquariumService();
+    Task<DeviceLoginResponse> PingAquariumService();
     AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo);
     DeviceLoginResponse GetConnectionInformation();
   }
@@ -53,17 +54,19 @@ namespace AquariumApi.DeviceApi
       return snapshot;
     }
 
-    public async void PingAquariumService()
+    public async Task<DeviceLoginResponse> PingAquariumService()
     {
       try
       {
         var response = await _aquariumClient.ValidateAuthenticationToken();
         _accountLogin = response;
         _logger.LogInformation("Device information found for aquarium \"" + _accountLogin.Aquarium.Name + "\"");
+        return response;
       }
       catch (Exception ex)
       {
         _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
+        return null;
       }
     }
     public AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo)

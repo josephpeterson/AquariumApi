@@ -132,7 +132,22 @@ namespace AquariumApi.DeviceApi
 		private void ContactAquariumService()
 		{
 
-      _deviceService.PingAquariumService();
+      _deviceService.PingAquariumService().ContinueWith(res =>
+      {
+        //Reload our schedules
+        var sa = res.Result.Aquarium.Device.ScheduleAssignments;
+        if (sa != null)
+        {
+          var schedules = sa.Select(s => s.Schedule).ToList();
+          _scheduleService.SaveSchedulesToCache(schedules);
+          if (_scheduleService.Running)
+          {
+            _scheduleService.StopAsync(_scheduleService.token).Wait();
+            _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
+          }
+        }
+      });
+
 			try
 			{
 				//Pi.Init<BootstrapWiringPi>();
