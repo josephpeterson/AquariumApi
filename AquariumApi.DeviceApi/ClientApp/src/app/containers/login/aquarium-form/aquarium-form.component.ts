@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Aquarium } from '../models/Aquarium';
+import { Aquarium } from 'src/app/models/Aquarium';
 
 @Component({
   selector: 'aquarium-form',

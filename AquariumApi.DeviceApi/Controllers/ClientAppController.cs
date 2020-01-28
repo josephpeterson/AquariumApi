@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.DeviceApi.Clients;
@@ -69,24 +70,46 @@ namespace AquariumApi.DeviceApi.Controllers
                 return Unauthorized();
             }
         }
-    [HttpGet]
-    [Route("ClientApp/Schedule")]
-    public IActionResult GetScheduleInformation ()
-    {
-      try
-      {
-        _logger.LogInformation($"GET /v1/ClientApp/Schedule called");
-        var scheduleStatus = _scheduleService.GetStatus();
-        return new OkObjectResult(scheduleStatus);
-      }
-      catch (Exception ex)
-      {
-        _logger.LogError($"GET /v1/ClientApp/Schedule caught exception: { ex.Message } Details: { ex.ToString() }");
-        _logger.LogError(ex.StackTrace);
-        return Unauthorized();
-      }
-    }
-    [HttpDelete]
+        [HttpGet]
+        [Route("ClientApp/Schedule")]
+        public IActionResult GetScheduleInformation()
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/ClientApp/Schedule called");
+                var scheduleStatus = _scheduleService.GetStatus();
+                return new OkObjectResult(scheduleStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/ClientApp/Schedule caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return Unauthorized();
+            }
+        }
+        [HttpGet]
+        [Route("ClientApp/Log")]
+        public IActionResult GetDeviceLog()
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/ClientApp/Log called");
+                var path = Path.Combine(new string[]{Directory.GetCurrentDirectory(), "AquariumDeviceApi.log"}).ToString();
+                var deviceLog = System.IO.File.ReadAllText(path);
+                return new OkObjectResult(deviceLog);
+            }
+            catch(FileNotFoundException)
+            {
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/ClientApp/Log caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest();
+            }
+        }
+        [HttpDelete]
         [Route("ClientApp/Logout")]
         public IActionResult Logout()
         {

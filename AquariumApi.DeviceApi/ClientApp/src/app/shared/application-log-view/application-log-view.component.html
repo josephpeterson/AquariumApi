@@ -1,0 +1,10 @@
+<h5>Filters</h5>
+<div class="row">
+  <mat-checkbox *ngFor="let filter of filters" class="p-2" [(ngModel)]="filter.value">{{filter.name}}
+  </mat-checkbox>
+</div>
+<div class="card card-body ">
+  <code>
+          <pre style="height:350px" class="overflow-auto" #scrollWindow>{{getFilteredLog()}}</pre>
+          </code>
+</div>

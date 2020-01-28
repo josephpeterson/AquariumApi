@@ -88,7 +88,7 @@ namespace AquariumApi.Controllers
                         DispatcherId = userAcc.Id,
                         Title = "New Device Login",
                         Subtitle = $"Aquarium monitoring device connected to {aq.Name}",
-                    },new List<int>(userAcc.Id));
+                    },new List<int>(userAcc.Id)).Wait();
 
                     if(aq.Device == null)
                     {

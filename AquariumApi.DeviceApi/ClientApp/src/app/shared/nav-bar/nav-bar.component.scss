@@ -1,3 +1,11 @@
+nav.navbar {
+  .active {
+    font-weight:bold;
+  }
+  .nav-link {
+    cursor: pointer;
+  }
+}
 .row.content {height: 550px}
     
     /* Set gray background color and 100% height */

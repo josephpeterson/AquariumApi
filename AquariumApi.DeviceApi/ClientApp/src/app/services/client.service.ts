@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LoginInformationModel } from '../models/LoginInformation.model';
+import { LoginInformationResponse } from '../models/LoginInformationResponse';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -20,7 +21,7 @@ export class ClientService {
     private _url: string;
     private _cdn: string;
 
-    public aquariumId: number;
+    public loginInformation: LoginInformationResponse;
 
     constructor(private http: HttpClient) {
         this._url = environment.url;
@@ -41,5 +42,7 @@ export class ClientService {
     public getDeviceScheduleInformation() {
         return this.http.get(this._url + "/ClientApp/Schedule");
     }
-
+    public getDeviceLog() {
+        return this.http.get(this._url + "/ClientApp/Log");
+    }
 }

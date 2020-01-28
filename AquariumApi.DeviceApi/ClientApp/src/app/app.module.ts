@@ -1,29 +1,37 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
-import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LoginFormComponent } from './login-form/login-form.component';
-import { AquariumFormComponent } from './aquarium-form/aquarium-form.component';
+import { LoginFormComponent } from './containers/login/login-form/login-form.component';
+import { AquariumFormComponent } from './containers/login/aquarium-form/aquarium-form.component';
+import { NavBarComponent } from './shared/nav-bar/nav-bar.component';
+import { ScheduleInformationComponent } from './schedule-information/schedule-information.component';
+import { LogPageComponent } from './containers/logs/log-page.component';
+import { DashboardContainerComponent } from './containers/dashboard/dashboard-container.component';
+import { ApplicationLogViewComponent } from './shared/application-log-view/application-log-view.component';
+import { AppRoutingModule } from './app-routing.module';
+import { HttpClientModule } from '@angular/common/http';
+
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatInputModule} from '@angular/material/input';
 import {MatRadioModule} from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-import { InformationPageComponent } from './information-page/information-page.component';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
-import { NavBarComponent } from './nav-bar/nav-bar.component';
-import { ScheduleInformationComponent } from './schedule-information/schedule-information.component';
+import { MatProgressSpinnerModule } from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { LoginContainerComponent } from './containers/login/login-container.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginFormComponent,
     AquariumFormComponent,
-    InformationPageComponent,
     NavBarComponent,
-    ScheduleInformationComponent
+    ScheduleInformationComponent,
+    LogPageComponent,
+    DashboardContainerComponent,
+    LoginContainerComponent,
+    ApplicationLogViewComponent
   ],
   imports: [
     BrowserModule,
@@ -34,6 +42,7 @@ import { ScheduleInformationComponent } from './schedule-information/schedule-in
     HttpClientModule,
     MatInputModule,
     MatRadioModule,
+    MatCheckboxModule,
     MatProgressSpinnerModule
   ],
   providers: [],

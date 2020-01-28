@@ -1,0 +1,7 @@
+<h4 class="d-flex p-3">Application Logs</h4>
+<application-log-view [log]="deviceLog" *ngIf="(!loading) else loadingContainer"></application-log-view>
+<ng-template #loadingContainer>
+    <div class="row justify-content-center">
+        <mat-progress-spinner mode='indeterminate'></mat-progress-spinner>
+    </div>
+</ng-template>
