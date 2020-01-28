@@ -53,13 +53,13 @@ namespace AquariumApi.DeviceApi
 			{
 				c.SwaggerDoc("v1", new Info { Title = "AquariumDevice API", Version = "v1" });
 			});
+      services.AddAquariumDevice();
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
       services.AddSpaStaticFiles(configuration =>
       {
         configuration.RootPath = "ClientApp/dist";
       });
-      services.AddAquariumDevice();
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-		}
+    }
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app,
@@ -86,7 +86,8 @@ namespace AquariumApi.DeviceApi
 					.AllowAnyHeader()
 					.AllowCredentials());
 
-			app.UseStaticFiles();
+
+
 
 
 
@@ -101,22 +102,24 @@ namespace AquariumApi.DeviceApi
 				c.RoutePrefix = "swagger";
 			});
 
-			app.UseMvc(routes =>
-			{
-							// default routes plus any other custom routes
-							routes.MapRoute(
-									name: "default",
-									template: "{controller=Home}/{action=Index}/{id?}");
-				routes.MapSpaFallbackRoute(
-							name: "spa-fallback",
-							defaults: new { controller = "Home", action = "Spa" });
-			});
+      app.UseHttpsRedirection();
+      app.UseStaticFiles();
+      app.UseSpaStaticFiles();
+
+      app.UseMvc(routes =>
+      {
+        routes.MapRoute(
+            name: "default",
+            template: "{controller}/{action=Index}/{id?}");
+      });
       app.UseSpa(spa =>
       {
         spa.Options.SourcePath = "ClientApp";
         if (env.IsDevelopment())
           spa.UseAngularCliServer(npmScript: "start");
       });
+
+      app.UseStaticFiles();
       app.UseHttpsRedirection();
 
 
@@ -134,8 +137,10 @@ namespace AquariumApi.DeviceApi
 
       _deviceService.PingAquariumService().ContinueWith(res =>
       {
+        var response = res.Result;
+        if (response == null) return;
         //Reload our schedules
-        var sa = res.Result.Aquarium.Device.ScheduleAssignments;
+        var sa = response.Aquarium.Device.ScheduleAssignments;
         if (sa != null)
         {
           var schedules = sa.Select(s => s.Schedule).ToList();

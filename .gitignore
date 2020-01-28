@@ -17,3 +17,4 @@ AquariumApi.DeviceApi/wwwroot/*
 AquariumApi.DeviceApi/ClientApp/node_modules/*
 AquariumApi.DeviceApi/ClientApp/dist/*
 AquariumApi.DeviceApi/ClientApp/wwwroot/*
+AquariumApi.DeviceApi/aquarium_schedules.json

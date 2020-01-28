@@ -27,16 +27,16 @@ export class ClientService {
     }
 
     public attemptLogin(loginInformation: LoginInformationModel) {
-        return this.http.post(this._url + "ClientApp/Login", loginInformation);
+        return this.http.post(this._url + "/ClientApp/Login", loginInformation);
     }
     public logout() {
         function reload() {
             window.location.reload();
         }
-        return this.http.delete(this._url + "ClientApp/Logout").subscribe(reload, reload);
+        return this.http.delete(this._url + "/ClientApp/Logout").subscribe(reload, reload);
     }
     public getDetailedInformation() {
-        return this.http.get(this._url + "ClientApp");
+        return this.http.get(this._url + "/ClientApp");
     }
 
 }

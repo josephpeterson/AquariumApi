@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AquariumApi.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,14 +15,14 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IDeviceService _deviceService;
         private ScheduleService _scheduleService;
-        private HardwareService _hardwareService;
+        private IHardwareService _hardwareService;
         private IAquariumAuthService _aquariumAuthService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
 
         public HomeController(IDeviceService deviceService,
             ScheduleService scheduleService,
-            HardwareService hardwareService,
+            IHardwareService hardwareService,
             IAquariumAuthService aquariumAuthService,
             ILogger<HomeController> logger, IConfiguration config)
         {
@@ -32,7 +33,8 @@ namespace AquariumApi.DeviceApi.Controllers
             _logger = logger;
             _config = config;
         }
-        [HttpGet]
+
+    [HttpGet]
         [Route("/v1/Scan")]
         public IActionResult ScanHardware()
         {
