@@ -324,7 +324,7 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Feedings)
                 .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
                 .Include(aq => aq.Device).ThenInclude(d => d.ScheduleAssignments)
-                    .ThenInclude(sa => sa.Schedule)
+                    .ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .FirstOrDefault();
             if (aquarium == null) return aquarium;
 
@@ -443,7 +443,7 @@ namespace AquariumApi.DataAccess
             var device = _dbAquariumContext.TblDevice.AsNoTracking()
                 .Where(s => s.Id == deviceId)
                 .Include(e => e.CameraConfiguration)
-                .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule)
+                .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .First();
             if (device.CameraConfiguration == null)
                 device.CameraConfiguration = new CameraConfiguration();

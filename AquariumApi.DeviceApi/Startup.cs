@@ -128,8 +128,8 @@ namespace AquariumApi.DeviceApi
 		}
 		private void DeviceBootstrap()
 		{
-			ContactAquariumService();
 			_scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
+			ContactAquariumService();
 		}
 
 		private void ContactAquariumService()

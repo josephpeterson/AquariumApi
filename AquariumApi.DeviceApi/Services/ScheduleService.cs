@@ -109,10 +109,11 @@ namespace AquariumApi.DeviceApi
     }
     public ScheduleState GetStatus()
     {
+      var nextTask = GetNextTask(_schedules, DateTime.Now);
       return new ScheduleState
       {
         Running = Running,
-        NextTask = GetNextTask(_schedules, DateTime.Now),
+        NextTask = nextTask,
         Schedules = _schedules,
         TaskCount = _schedules.SelectMany(s => s.ExpandTasks()).Count()
       };

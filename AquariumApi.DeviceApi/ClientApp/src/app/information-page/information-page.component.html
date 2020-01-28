@@ -17,10 +17,4 @@
   </div>
 </div>
 <h4>Schedules</h4>
-<div class="row m-2" *ngFor="let sa of loginInformation.aquarium.device.scheduleAssignments">
-  <div class="card w-100" *ngIf="sa.schedule as s">
-    <div class="card-body" >
-      {{s.name}}
-    </div>
-  </div>
-</div>
+<schedule-information [loginInformation]="loginInformation"></schedule-information>

@@ -100,7 +100,7 @@ namespace AquariumApi.Controllers
                 if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
                 AquariumSnapshot s = _aquariumService.AddSnapshot(id, snapshot, snapshotImage);
-                return new OkObjectResult(data);
+                return new OkObjectResult(s);
             }
             catch (Exception ex)
             {

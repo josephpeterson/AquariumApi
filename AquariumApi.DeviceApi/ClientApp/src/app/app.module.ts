@@ -14,6 +14,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { InformationPageComponent } from './information-page/information-page.component';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { NavBarComponent } from './nav-bar/nav-bar.component';
+import { ScheduleInformationComponent } from './schedule-information/schedule-information.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { NavBarComponent } from './nav-bar/nav-bar.component';
     LoginFormComponent,
     AquariumFormComponent,
     InformationPageComponent,
-    NavBarComponent
+    NavBarComponent,
+    ScheduleInformationComponent
   ],
   imports: [
     BrowserModule,

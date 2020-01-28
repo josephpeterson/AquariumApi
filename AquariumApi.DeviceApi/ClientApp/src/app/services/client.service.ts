@@ -38,5 +38,8 @@ export class ClientService {
     public getDetailedInformation() {
         return this.http.get(this._url + "/ClientApp");
     }
+    public getDeviceScheduleInformation() {
+        return this.http.get(this._url + "/ClientApp/Schedule");
+    }
 
 }

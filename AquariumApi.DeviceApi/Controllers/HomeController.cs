@@ -51,9 +51,9 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
-        [HttpPost]
+        [HttpGet]
         [Route("/v1/Ping")]
-        public IActionResult Ping([FromBody] DeviceLoginResponse loginResponse)
+        public IActionResult Ping()
         {
             try
             {

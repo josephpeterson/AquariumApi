@@ -69,7 +69,24 @@ namespace AquariumApi.DeviceApi.Controllers
                 return Unauthorized();
             }
         }
-        [HttpDelete]
+    [HttpGet]
+    [Route("ClientApp/Schedule")]
+    public IActionResult GetScheduleInformation ()
+    {
+      try
+      {
+        _logger.LogInformation($"GET /v1/ClientApp/Schedule called");
+        var scheduleStatus = _scheduleService.GetStatus();
+        return new OkObjectResult(scheduleStatus);
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError($"GET /v1/ClientApp/Schedule caught exception: { ex.Message } Details: { ex.ToString() }");
+        _logger.LogError(ex.StackTrace);
+        return Unauthorized();
+      }
+    }
+    [HttpDelete]
         [Route("ClientApp/Logout")]
         public IActionResult Logout()
         {
@@ -77,6 +94,7 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 _logger.LogInformation("DELETE /ClientApp/Logout called");
                 _aquariumClient.ClearLoginToken();
+                _scheduleService.StopAsync(_scheduleService.token).Wait();
                 return new OkResult();
             }
             catch (Exception ex)
