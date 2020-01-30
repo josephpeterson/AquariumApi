@@ -128,7 +128,7 @@ namespace AquariumApi.Core
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim(ClaimTypes.Name, user.Username)
             };
-            return GenerateLoginToken(claims);
+            return GenerateLoginToken(claims,false);
         }
         public string IssueDeviceLoginToken(string email, string password,int? aquariumId = null)
         {
@@ -154,15 +154,18 @@ namespace AquariumApi.Core
             };
             return GenerateLoginToken(claims);
         }
-        private string GenerateLoginToken(List<Claim> claims)
+        private string GenerateLoginToken(List<Claim> claims,bool expires = true)
         {
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+            DateTime? expirationDate = null;
+            if (expires)
+                expirationDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:LengthMins"]));
             var tokeOptions = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:LengthMins"])),
+                expires: expirationDate,
                 signingCredentials: signinCredentials
             );
             return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
