@@ -10,21 +10,21 @@ import { NotifierService } from 'angular-notifier';
 export class LogPageComponent implements OnInit {
   deviceLog$ = this.service.getDeviceLog();
   public loading: boolean = true;
-  refreshing: boolean;
 
   constructor(private service: ClientService,
     private notifier: NotifierService) { }
 
   ngOnInit() {
+    this.clickGetApplicationLog();
   }
   clickGetApplicationLog() {
-    this.refreshing = true;
+    this.loading = true;
     this.deviceLog$ = this.service.getDeviceLog();
 
     this.deviceLog$.subscribe(data => {
-      this.refreshing = false;
+      this.loading = false;
     }, err => {
-      this.refreshing = false;
+      this.loading = false;
       this.notifier.notify("error", "An error occured while retrieving the application log file");
       console.log(err);
     });

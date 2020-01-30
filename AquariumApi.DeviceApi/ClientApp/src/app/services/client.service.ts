@@ -44,7 +44,7 @@ export class ClientService {
         return this.http.get(this._url + "/ClientApp/Schedule");
     }
     public getDeviceLog() {
-        return this.http.get(this._url + "/ClientApp/Log");
+        return this.http.get(this._url + "/ClientApp/Log",{ responseType: "text" });
     }
     public performScheduleTask(task: DeviceScheduleTask) {
         return this.http.post(this._url + "/ClientApp/PerformTask",task);
