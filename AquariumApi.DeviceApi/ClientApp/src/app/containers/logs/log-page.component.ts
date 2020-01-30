@@ -24,6 +24,7 @@ export class LogPageComponent implements OnInit {
     },err => {
       this.loading = false;
       console.log("No log file found");
+      console.log(err);
     },() => {
       this.loading = false;
     });

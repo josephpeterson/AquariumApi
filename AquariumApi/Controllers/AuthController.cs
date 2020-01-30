@@ -52,13 +52,15 @@ namespace AquariumApi.Controllers
 
                 if (loginType == "Device")
                 {
-                    var aquarium = _accountService.GetCurrentAquariumId();
-                    string token = _accountService.IssueDeviceLoginToken(user, aquarium);
+                    var aquariumId = _accountService.GetCurrentAquariumId();
+                    var aquarium = _aquariumService.GetAquariumById(aquariumId);
+                    string token = _accountService.IssueDeviceLoginToken(user, aquariumId);
                     var res = new DeviceLoginResponse
                     {
                         Account = user,
                         Token = token,
-                        AquariumId = aquarium
+                        AquariumId = aquariumId,
+                        Aquarium = aquarium
                     };
                     return new OkObjectResult(res);
                 }

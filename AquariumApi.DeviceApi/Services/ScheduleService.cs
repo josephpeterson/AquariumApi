@@ -201,7 +201,9 @@ namespace AquariumApi.DeviceApi
         private void TakeSnapshotTask(DeviceScheduleTask task)
         {
             _logger.LogInformation("Taking aquarium snapshot...");
-            var cameraConfiguration = _deviceService.GetConnectionInformation().Aquarium.Device.CameraConfiguration;
+            var con = _deviceService.GetConnectionInformation();
+            var device = con.Aquarium.Device;
+            var cameraConfiguration = device.CameraConfiguration;
             var snapshot = _deviceService.TakeSnapshot();
             var photo = _deviceService.TakePhoto(cameraConfiguration);
 
