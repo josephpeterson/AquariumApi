@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Core;
@@ -14,10 +15,15 @@ namespace AquariumApi.Controllers
     {
         public readonly IAquariumService _aquariumService;
         public readonly ILogger<SnapshotController> _logger;
-        public FeedingController(IAquariumService aquariumService, ILogger<SnapshotController> logger)
+        private readonly IPhotoManager _photoManager;
+
+        public FeedingController(IAquariumService aquariumService, 
+            IPhotoManager photoManager,
+            ILogger<SnapshotController> logger)
         {
             _aquariumService = aquariumService;
             _logger = logger;
+            _photoManager = photoManager;
         }
         [HttpPost]
         [Route("/v1/Feeding/Add")]
@@ -104,6 +110,29 @@ namespace AquariumApi.Controllers
                 _logger.LogError($"GET /v1/Feeding/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
+        }
+
+
+
+        [HttpGet]
+        [Route("test/{aquariumId}")]
+        public IActionResult Test(int aquariumId)
+        {
+            try
+            {
+                var ids = _aquariumService.GetSnapshots(aquariumId).Select(s => s.Id).ToArray();
+                _logger.LogInformation("\n\n\n ** Attempting to create timelapse ** \n\n\n");
+
+                var buffer = _photoManager.CreateTimelapse(ids);
+                var ms = new MemoryStream(buffer);
+                return new OkObjectResult(buffer);
+            }
+            catch(Exception e)
+            {
+                _logger.LogError("\n\n\n ** Could not create timelapse ** \n\n\n");
+                _logger.LogError("\n" + e);
+            }
+            return Ok();
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -15,16 +16,17 @@ namespace AquariumApi.Core
 {
     public interface IPhotoManager
     {
+        byte[] CreateTimelapse(int[] photoContentIds);
         void DeletePhoto(int photoId);
         Task<PhotoContent> StorePhoto(byte[] buffer);
     }
-    public class PhotoManager: IPhotoManager
+    public class PhotoManager : IPhotoManager
     {
         private readonly IAquariumDao _aquariumDao;
         private readonly IAzureService _azureService;
         private IConfiguration _config;
 
-        public PhotoManager(IConfiguration config,IAzureService azureService,IAquariumDao aquariumDao)
+        public PhotoManager(IConfiguration config, IAzureService azureService, IAquariumDao aquariumDao)
         {
             _aquariumDao = aquariumDao;
             _azureService = azureService;
@@ -57,15 +59,15 @@ namespace AquariumApi.Core
             content.Exists = true;
 
             await _azureService.UploadFileToStorageContainer(buffer, path);
-            if(Convert.ToBoolean(_config["Photos:ExpandSizes"]))
+            if (Convert.ToBoolean(_config["Photos:ExpandSizes"]))
             {
                 ExpandPhotoSizes(buffer, path);
             }
-            if(_azureService.ExistsInStorageContainer(path))
+            if (_azureService.ExistsInStorageContainer(path))
                 _aquariumDao.UpdatePhotoReference(content);
             return content;
         }
-        private async void ExpandPhotoSizes(byte[] buffer,string path)
+        private async void ExpandPhotoSizes(byte[] buffer, string path)
         {
             var sizes = _config.GetSection("Photos:Sizes").Get<List<decimal>>();
             foreach (var s in sizes)
@@ -113,6 +115,49 @@ namespace AquariumApi.Core
             }
 
             return destImage;
+        }
+        public byte[] CreateTimelapse(int[] photoContentIds)
+        {
+            var photos = _aquariumDao.GetPhotoContentByIds(photoContentIds);
+            var inputFiles = "timelapse/test_%d.jpg";
+            var fileName = "ffmpeg.exe";
+            var output = "test.avi";
+
+            if (File.Exists(output))
+                File.Delete(output);
+
+            //Load all requested images
+            var i = 0;
+            photos.ForEach(content =>
+            {
+                var path = inputFiles.Replace("%d",i.ToString());
+                File.WriteAllBytes(path,_azureService.GetFileFromStorageContainer(content.Filepath).Result);
+                i++;
+            });
+            
+
+            //Launch batch process
+            var arguments = $"-f image2 -framerate 12 -start_number 1 -i {inputFiles} -s 720x480 {output}";
+            var p = new Process();
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.FileName = fileName;
+            p.StartInfo.Arguments = arguments;
+            p.Start();
+
+            var stdOutput = p.StandardOutput.ReadToEnd();
+            var errOutput = p.StandardError.ReadToEnd();
+            p.WaitForExit();
+
+            //Verify file exists
+            if (!File.Exists(output))
+                throw new Exception($"Command Process Failed with the following output:\n" +
+                    $"Standard Output: {stdOutput}\n" +
+                    $"Error Output: {errOutput}"
+                );
+            return File.ReadAllBytes(output);
         }
     }
 }
