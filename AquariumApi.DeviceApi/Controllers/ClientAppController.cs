@@ -93,19 +93,16 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"GET /v1/ClientApp/Log called");
-                var deviceLog = System.IO.File.ReadAllText("AquariumDeviceApi.log");
-                return new OkObjectResult(deviceLog);
+                var text = System.IO.File.ReadAllText("AquariumDeviceApi.log");
+                return new OkObjectResult(text);
             }
-            catch(FileNotFoundException)
+            catch (FileNotFoundException)
             {
                 return new OkResult();
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError($"GET /v1/ClientApp/Log caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return BadRequest();
+                return new BadRequestResult();
             }
         }
         [HttpDelete]

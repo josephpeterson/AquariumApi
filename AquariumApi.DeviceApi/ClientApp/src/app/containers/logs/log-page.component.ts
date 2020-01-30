@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ClientService } from '../../services/client.service';
+import { NotifierService } from 'angular-notifier';
 
 @Component({
   selector: 'log-page',
@@ -7,26 +8,25 @@ import { ClientService } from '../../services/client.service';
   styleUrls: ['./log-page.component.scss']
 })
 export class LogPageComponent implements OnInit {
-  deviceLog: string;
+  deviceLog$ = this.service.getDeviceLog();
   public loading: boolean = true;
+  refreshing: boolean;
 
-  constructor(private service: ClientService) { }
+  constructor(private service: ClientService,
+    private notifier: NotifierService) { }
 
   ngOnInit() {
-    this.loadDeviceLog();
   }
+  clickGetApplicationLog() {
+    this.refreshing = true;
+    this.deviceLog$ = this.service.getDeviceLog();
 
-  loadDeviceLog() {
-    this.loading = true;
-    this.service.getDeviceLog().subscribe((log:string) => {
-      this.deviceLog = log;
-      this.loading = false;
-    },err => {
-      this.loading = false;
-      console.log("No log file found");
+    this.deviceLog$.subscribe(data => {
+      this.refreshing = false;
+    }, err => {
+      this.refreshing = false;
+      this.notifier.notify("error", "An error occured while retrieving the application log file");
       console.log(err);
-    },() => {
-      this.loading = false;
     });
   }
 }
