@@ -46,6 +46,16 @@
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="aquarium_schedules.json" />
+    <Content Remove="login.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="aquarium_schedules.json" />
+    <None Include="login.json" />
+  </ItemGroup>
+
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <!-- Ensure Node.js is installed -->

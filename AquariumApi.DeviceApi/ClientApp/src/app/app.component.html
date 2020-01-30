@@ -1,7 +1,7 @@
-<!--The content below is only a placeholder and can be replaced.-->
 <nav-bar [loginInformation]="service.loginInformation"></nav-bar>
 
 <div class="container" *ngIf="(!loading)">
+  <notifier-container></notifier-container>
 
   <ng-container *ngIf="!service.loginInformation else route">
     <login-container></login-container>

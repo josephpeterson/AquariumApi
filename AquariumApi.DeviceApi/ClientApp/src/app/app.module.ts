@@ -21,6 +21,7 @@ import { MatProgressSpinnerModule } from '@angular/material';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { LoginContainerComponent } from './containers/login/login-container.component';
 import { NotifierModule } from "angular-notifier";
+import { DeviceNotifierConfig } from './config/DeviceNotifierConfig';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,7 @@ import { NotifierModule } from "angular-notifier";
     MatInputModule,
     MatRadioModule,
     MatCheckboxModule,
-    NotifierModule,
+    NotifierModule.withConfig(DeviceNotifierConfig),
     MatProgressSpinnerModule
   ],
   providers: [],

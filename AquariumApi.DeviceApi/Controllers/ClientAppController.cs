@@ -94,8 +94,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation($"GET /v1/ClientApp/Log called");
-                var path = Path.Combine(new string[]{Directory.GetCurrentDirectory(), "AquariumDeviceApi.log"}).ToString();
-                var deviceLog = System.IO.File.ReadAllText(path);
+                var deviceLog = System.IO.File.ReadAllText("AquariumDeviceApi.log");
                 return new OkObjectResult(deviceLog);
             }
             catch(FileNotFoundException)

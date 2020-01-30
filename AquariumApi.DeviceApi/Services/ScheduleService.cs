@@ -20,7 +20,7 @@ namespace AquariumApi.DeviceApi
         public CancellationToken token;
         public bool Running;
 
-        public List<DeviceSchedule> _schedules { get; private set; }
+        public List<DeviceSchedule> _schedules { get; private set; } = new List<DeviceSchedule>();
 
         public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger, IDeviceService deviceService)
         {
