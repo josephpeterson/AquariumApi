@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { LoginContainerComponent } from './containers/login/login-container.component';
+import { NotifierModule } from "angular-notifier";
 
 @NgModule({
   declarations: [
@@ -43,6 +44,7 @@ import { LoginContainerComponent } from './containers/login/login-container.comp
     MatInputModule,
     MatRadioModule,
     MatCheckboxModule,
+    NotifierModule,
     MatProgressSpinnerModule
   ],
   providers: [],

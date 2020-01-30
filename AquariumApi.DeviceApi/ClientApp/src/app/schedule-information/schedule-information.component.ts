@@ -4,6 +4,7 @@ import { DeviceScheduleState } from '../models/DeviceScheduleState';
 import { ClientService } from '../services/client.service';
 import * as moment from 'moment';
 import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
+import { NotifierService } from 'angular-notifier';
 
 @Component({
   selector: 'schedule-information',
@@ -15,8 +16,10 @@ export class ScheduleInformationComponent implements OnInit {
   @Input() loginInformation: LoginInformationResponse;
   scheduleState: DeviceScheduleState;
   public scanning: boolean;
+  performingTask: boolean;
 
-  constructor(public service: ClientService) { }
+  constructor(public service: ClientService,
+    private notifier: NotifierService) { }
 
   ngOnInit() {
 
@@ -36,7 +39,15 @@ export class ScheduleInformationComponent implements OnInit {
       })
   }
   clickPerformTask(task: DeviceScheduleTask) {
-    /*  */
+    this.performingTask = true;
+    this.service.performScheduleTask(task).subscribe(
+      (data) => {
+        this.performingTask = false;
+        this.notifier.notify("success", "Task was performed successfully!");
+      }, err => {
+        this.performingTask = false;
+        this.notifier.notify("error", "Could not perform task on device");
+      })
   }
   public readableDuration(timespan: string) {
     return moment.duration(timespan).humanize();

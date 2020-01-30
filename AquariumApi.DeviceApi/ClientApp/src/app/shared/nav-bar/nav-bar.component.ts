@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ClientService } from '../../services/client.service';
 import { LoginInformationResponse } from '../../models/LoginInformationResponse';
+import { NotifierService } from 'angular-notifier';
 
 @Component({
   selector: 'nav-bar',
@@ -10,12 +11,26 @@ import { LoginInformationResponse } from '../../models/LoginInformationResponse'
 export class NavBarComponent implements OnInit {
 
   @Input() loginInformation: LoginInformationResponse;
-  
-  constructor(private service: ClientService) { }
+  public renewingToken: boolean;
+
+  constructor(private service: ClientService,
+    private notifier: NotifierService) { }
 
   ngOnInit() {
   }
   public clickLogout() {
     this.service.logout();
+  }
+  public clickRenew() {
+    this.renewingToken = true;
+    this.service.renewAuthToken().subscribe(data => {
+      this.notifier.notify("success", "Token renewed!");
+      this.renewingToken = false;
+
+    }, err => {
+      this.notifier.notify("error", "Error renewing auth token");
+      this.renewingToken = false;
+
+    })
   }
 }

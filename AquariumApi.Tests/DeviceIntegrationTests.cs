@@ -73,7 +73,7 @@ public class DeviceIntegrationTests
 
         var photo = File.ReadAllBytes("temp.jpg");
 
-        var data = aquariumClient.SendAquariumSnapshotToHost(host, deviceId, snapshot, photo);
+        var data = aquariumClient.SendAquariumSnapshotToHost(snapshot, photo);
 
         Assert.NotNull(data);
     }

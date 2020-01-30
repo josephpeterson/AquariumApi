@@ -20,8 +20,10 @@ export class LogPageComponent implements OnInit {
     this.loading = true;
     this.service.getDeviceLog().subscribe((log:string) => {
       this.deviceLog = log;
+      this.loading = false;
     },err => {
-
+      this.loading = false;
+      console.log("No log file found");
     },() => {
       this.loading = false;
     });

@@ -20,12 +20,13 @@ namespace AquariumApi.DeviceApi.Clients
     public interface IAquariumClient
     {
         Task<Aquarium> ApplyDeviceHardware(AquariumDevice aquariumDevice);
-        AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo);
+        AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
         Task<AquariumUser> RetrieveLoginToken(DeviceLoginRequest loginRequest);
         Task<DeviceLoginResponse> ValidateAuthenticationToken();
         void ClearLoginToken();
+        Task<DeviceLoginResponse> RenewAuthenticationToken();
     }
-    public class AquariumClient: IAquariumClient
+    public class AquariumClient : IAquariumClient
     {
         private ILogger<IAquariumClient> _logger;
         private IConfiguration _config;
@@ -41,7 +42,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
 
 
-        public AquariumSnapshot SendAquariumSnapshotToHost(string host, AquariumSnapshot snapshot, byte[] photo)
+        public AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo)
         {
             var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction/Snapshot";
             _logger.LogInformation("Sending snapshot: " + path);
@@ -53,7 +54,7 @@ namespace AquariumApi.DeviceApi.Clients
             multiContent.Add(new ByteArrayContent(photo), "SnapshotImage", DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString());
 
             //var httpContent = new StringContent(JsonConvert.SerializeObject(snapshot), Encoding.UTF8, "application/json");
-            multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)), String.Format("\"{0}\"","Snapshot"));
+            multiContent.Add(new StringContent(JsonConvert.SerializeObject(snapshot)), String.Format("\"{0}\"", "Snapshot"));
             HttpClient client = GetHttpClient();
             var result = client.PostAsync(path, multiContent).Result;
             if (!result.IsSuccessStatusCode)
@@ -99,8 +100,8 @@ namespace AquariumApi.DeviceApi.Clients
 
             HttpClient client = GetHttpClient();
             var result = await client.GetAsync(path);
-      if (!result.IsSuccessStatusCode)
-        throw new UnauthorizedAccessException("Could not validate token against server");
+            if (!result.IsSuccessStatusCode)
+                throw new UnauthorizedAccessException("Could not validate token against server");
 
             var res = await result.Content.ReadAsStringAsync();
             var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
@@ -145,6 +146,31 @@ namespace AquariumApi.DeviceApi.Clients
             _aquariumAuthService.SaveTokenToCache(response);
             return response.Account;
         }
+
+        public async Task<DeviceLoginResponse> RenewAuthenticationToken()
+        {
+            //save login information for cache 
+            //then on load contact service and validate
+            var path = $"{_config["AquariumServiceUrl"]}/Auth/Renew";
+            _logger.LogInformation("\n\n** Attempting to renew authentication token ** \n\n");
+            _logger.LogInformation("- Service Url: " + path);
+            HttpClient client = GetHttpClient();
+            client.Timeout = TimeSpan.FromMinutes(5);
+            var result = await client.GetAsync(path);
+            if (!result.IsSuccessStatusCode)
+            {
+                _logger.LogError("\n\n** Could not renew authentication token ** \n\n");
+                throw new Exception("Could not renew authentication token");
+            }
+
+            _logger.LogInformation("\n\n ** Authentication Token Successfully Renewed ** \n\n");
+
+            var res = await result.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
+            _aquariumAuthService.SaveTokenToCache(response);
+            return response;
+        }
+
         private HttpClient GetHttpClient()
         {
             var token = _aquariumAuthService.GetToken();
@@ -155,12 +181,12 @@ namespace AquariumApi.DeviceApi.Clients
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             return client;
         }
-        
+
         public void ClearLoginToken()
         {
             _aquariumAuthService.DeleteToken();
         }
-       
+
     }
-    
+
 }

@@ -24,7 +24,7 @@ namespace AquariumApi.Core
         AquariumUser GetUserByEmail(string email);
         AquariumUser UpdateUser(AquariumUser user);
         void DeleteUser(int userId);
-        string IssueUserLoginToken(string email, string password);
+        string IssueUserLoginToken(AquariumUser aquariumUser);
         int GetCurrentUserId();
         void SendResetPasswordEmail(string email);
         string UpgradePasswordResetToken(string token);
@@ -36,8 +36,10 @@ namespace AquariumApi.Core
         bool CanModify(int accountId, Fish fish);
         bool CanAccess(int accountId, Fish fish);
         AquariumProfile UpdateProfile(AquariumProfile profile);
-        string IssueDeviceLoginToken(string email, string password,int? deviceId);
+        string IssueDeviceLoginToken(AquariumUser aquariumUser,int? aquariumId);
         int GetCurrentAquariumId();
+        string GetCurrentUserType();
+        AquariumUser AttemptUserCredentials(string email, string password);
     }
     public class AccountService : IAccountService
     {
@@ -54,6 +56,10 @@ namespace AquariumApi.Core
             _configuration = configuration;
             _aquariumDao = aquariumDao;
             _encryptionService = encryptionService;
+        }
+        public string GetCurrentUserType()
+        {
+            return _context.HttpContext.User.FindFirst(ClaimTypes.Role).Value;
         }
         public int GetCurrentUserId()
         {
@@ -113,54 +119,53 @@ namespace AquariumApi.Core
         {
             throw new NotImplementedException();
         }
-        public string IssueUserLoginToken(string email, string password)
+        public AquariumUser AttemptUserCredentials(string email, string password)
         {
             var targetUser = _aquariumDao.GetUserByUsernameOrEmail(email);
             if (targetUser == null)
                 throw new UnauthorizedAccessException();
 
             var hash = _encryptionService.Encrypt(password);
-            AquariumUser user = _aquariumDao.GetAccountByLogin(targetUser.Id, hash);
+            return _aquariumDao.GetAccountByLogin(targetUser.Id, hash);
+        }
+        public string IssueUserLoginToken(AquariumUser aquariumUser)
+        {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.Name, user.Username)
+                new Claim(ClaimTypes.NameIdentifier, aquariumUser.Id.ToString()),
+                new Claim(ClaimTypes.Email, aquariumUser.Email),
+                new Claim(ClaimTypes.Role, aquariumUser.Role),
+                new Claim(ClaimTypes.Name, aquariumUser.Username)
             };
-            return GenerateLoginToken(claims,false);
+            return GenerateLoginToken(claims);
         }
-        public string IssueDeviceLoginToken(string email, string password,int? aquariumId = null)
+        public string IssueDeviceLoginToken(AquariumUser aquariumUser, int? aquariumId = null)
         {
-            var targetUser = _aquariumDao.GetUserByUsernameOrEmail(email);
-            if (targetUser == null)
-                throw new UnauthorizedAccessException();
-
             if(aquariumId.HasValue)
             {
                 var aqId = Convert.ToInt16(aquariumId);
                 var aquarium = _aquariumDao.GetAquariumById(aqId);
-                if(aquarium.OwnerId != targetUser.Id)
-                    throw new UnauthorizedAccessException("You do not own this device");
+                if(aquarium.OwnerId != aquariumUser.Id)
+                    throw new UnauthorizedAccessException("You do not own this aquarium");
             }
-
-            var hash = _encryptionService.Encrypt(password);
-            AquariumUser user = _aquariumDao.GetAccountByLogin(targetUser.Id, hash);
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, aquariumUser.Id.ToString()),
                 new Claim(ClaimTypes.Role, "Device"),
                 new Claim(ClaimTypes.Name, aquariumId.ToString()),
             };
-            return GenerateLoginToken(claims);
+            return GenerateLoginToken(claims, false);
         }
+
         private string GenerateLoginToken(List<Claim> claims,bool expires = true)
         {
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-            DateTime? expirationDate = null;
+            DateTime? expirationDate;
             if (expires)
                 expirationDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:LengthMins"]));
+            else
+                expirationDate = DateTime.Now.AddDays(2);
             var tokeOptions = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],

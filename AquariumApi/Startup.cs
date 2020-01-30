@@ -141,8 +141,7 @@ namespace AquariumApi
         private void RegisterServices(IServiceCollection services)
         {
             services.AddDbContext<DbAquariumContext>(options => options
-                .UseSqlServer(Configuration["Database:dbAquarium"])
-                .EnableSensitiveDataLogging());
+                .UseSqlServer(Configuration["Database:dbAquarium"]));
             //.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll));
             services.AddTransient<IAquariumDao, AquariumDao>();
             services.AddTransient<IAquariumService, AquariumService>();

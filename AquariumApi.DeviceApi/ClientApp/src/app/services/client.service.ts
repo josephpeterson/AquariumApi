@@ -5,6 +5,7 @@ import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LoginInformationModel } from '../models/LoginInformation.model';
 import { LoginInformationResponse } from '../models/LoginInformationResponse';
+import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -44,5 +45,11 @@ export class ClientService {
     }
     public getDeviceLog() {
         return this.http.get(this._url + "/ClientApp/Log");
+    }
+    public performScheduleTask(task: DeviceScheduleTask) {
+        return this.http.post(this._url + "/ClientApp/PerformTask",task);
+    }
+    public renewAuthToken() {
+        return this.http.get(this._url + "/ClientApp/Auth/Renew");
     }
 }

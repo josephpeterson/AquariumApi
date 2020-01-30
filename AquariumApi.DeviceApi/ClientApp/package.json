@@ -23,6 +23,7 @@
     "@angular/router": "~7.2.0",
     "@ng-bootstrap/ng-bootstrap": "^2.0.0-alpha.0",
     "@ng-bootstrap/schematics": "^2.0.0-alpha.1",
+    "angular-notifier": "^6.0.1",
     "bootstrap": "^4.4.1",
     "core-js": "^2.5.4",
     "hammerjs": "^2.0.8",

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace AquariumApi.Controllers
         private readonly IAquariumService _aquariumService;
         public readonly ILogger<AuthController> _logger;
         public AuthController(IEncryptionService encryptionService,
-            IAccountService accountService, 
+            IAccountService accountService,
             INotificationService notificationService,
             IAquariumService aquariumService,
             ILogger<AuthController> logger,
@@ -36,23 +37,64 @@ namespace AquariumApi.Controllers
             _aquariumService = aquariumService;
             _logger = logger;
         }
+        [Authorize]
+        [HttpGet]
+        [Route("/v1/Auth/Renew")]
+        public IActionResult Renew()
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Auth/Renew called");
+                var userId = _accountService.GetCurrentUserId();
+                var loginType = _accountService.GetCurrentUserType();
+
+                var user = _accountService.GetUserById(userId);
+
+                if (loginType == "Device")
+                {
+                    var aquarium = _accountService.GetCurrentAquariumId();
+                    string token = _accountService.IssueDeviceLoginToken(user, aquarium);
+                    var res = new DeviceLoginResponse
+                    {
+                        Account = user,
+                        Token = token,
+                        AquariumId = aquarium
+                    };
+                    return new OkObjectResult(res);
+                }
+                else if (loginType == "User")
+                {
+                    string token = _accountService.IssueUserLoginToken(user);
+                    var res = new
+                    {
+                        Token = token
+                    };
+                    return new OkObjectResult(res);
+                }
+                else return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Auth/Renew endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return Unauthorized();
+            }
+        }
 
         [HttpPost]
         [Route("/v1/Auth/Login")]
-        public IActionResult Login([FromBody]LoginRequest user)
+        public IActionResult Login([FromBody]LoginRequest loginRequest)
         {
             try
             {
                 _logger.LogInformation($"POST /v1/Auth/Login called");
-                var token = _accountService.IssueUserLoginToken(user.Email,user.Password);
+                var user = _accountService.AttemptUserCredentials(loginRequest.Email, loginRequest.Password);
+                var token = _accountService.IssueUserLoginToken(user);
 
-                var userAcc = _accountService.GetUserByUsername(user.Email);
-                if(userAcc == null)
-                    userAcc = _accountService.GetUserByEmail(user.Email);
-                _activityService.RegisterActivity(new LoginAccountActivity() {
-                    AccountId = userAcc.Id
+                _activityService.RegisterActivity(new LoginAccountActivity()
+                {
+                    AccountId = user.Id
                 });
-                return new OkObjectResult(new { Token = token});
+                return new OkObjectResult(new { Token = token });
             }
             catch (Exception ex)
             {
@@ -67,30 +109,34 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Auth/Login/Device called");
-                var token = _accountService.IssueDeviceLoginToken(deviceLogin.Email, deviceLogin.Password,deviceLogin.AquariumId);
+                var user = _accountService.AttemptUserCredentials(deviceLogin.Email, deviceLogin.Password);
+                var token = _accountService.IssueDeviceLoginToken(user, deviceLogin.AquariumId);
 
-                var userAcc = _accountService.GetUserByUsername(deviceLogin.Email);
-                if (userAcc == null)
-                    userAcc = _accountService.GetUserByEmail(deviceLogin.Email);
 
-                userAcc.Aquariums = _aquariumService.GetAquariumsByAccountId(userAcc.Id);
+                user.Aquariums = _aquariumService.GetAquariumsByAccountId(user.Id);
                 if (deviceLogin.AquariumId.HasValue)
                 {
-                    var aq = userAcc.Aquariums.First(a => a.Id == deviceLogin.AquariumId);
+                    var aq = user.Aquariums.First(a => a.Id == deviceLogin.AquariumId);
+
+                    //Register account login activity
                     _activityService.RegisterActivity(new DeviceLoginAccountActivity()
                     {
-                        AccountId = userAcc.Id
+                        AccountId = user.Id
                     });
+
+                    //Dispatch notification stating new login occured
                     _notificationService.EmitAsync(new DispatchedNotification
                     {
                         Date = DateTime.Now.ToUniversalTime(),
                         Type = NotificationTypes.LoginDeviceActivity,
-                        DispatcherId = userAcc.Id,
+                        DispatcherId = user.Id,
                         Title = "New Device Login",
                         Subtitle = $"Aquarium monitoring device connected to {aq.Name}",
-                    },new List<int>(userAcc.Id)).Wait();
+                    }, new List<int>(user.Id)).Wait();
 
-                    if(aq.Device == null)
+
+                    //If the aquarium did not have a device, create a record for it
+                    if (aq.Device == null)
                     {
                         var d = new AquariumDevice
                         {
@@ -106,7 +152,7 @@ namespace AquariumApi.Controllers
                 }
                 var data = new DeviceLoginResponse
                 {
-                    Account = userAcc,
+                    Account = user,
                     Token = token,
                     AquariumId = deviceLogin.AquariumId
                 };
@@ -164,7 +210,8 @@ namespace AquariumApi.Controllers
             {
                 _logger.LogInformation($"POST /v1/Auth/PasswordReset/Upgrade called");
                 var requestToken = _accountService.UpgradePasswordResetToken(token.Token);
-                return new OkObjectResult(new TokenRequest {
+                return new OkObjectResult(new TokenRequest
+                {
                     Token = requestToken
                 });
             }

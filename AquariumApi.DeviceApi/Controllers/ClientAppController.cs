@@ -127,5 +127,41 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost("ClientApp/PerformTask")]
+        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
+        {
+            try
+            {
+                _scheduleService.PerformTask(deviceScheduleTask);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/ClientApp/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
+        [HttpGet]
+        [Route("ClientApp/Auth/Renew")]
+        public IActionResult RenewAuthenticationToken()
+        {
+            try
+            {
+                _logger.LogInformation("GET /ClientApp/Auth/Renew called");
+                var res = _deviceService.RenewAuthenticationToken().Result;
+                if (res)
+                    return Ok();
+                else
+                    return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/ClientApp/Auth/Renew caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest();
+            }
+        }
+
     }
 }
