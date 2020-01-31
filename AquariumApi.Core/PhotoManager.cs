@@ -136,7 +136,7 @@ namespace AquariumApi.Core
             var photos = _aquariumDao.GetPhotoContentByIds(photoContentIds);
             var inputFiles = "timelapse/test_%d.jpg";
             var fileName = "ffmpeg/ffmpeg.exe";
-            var output = $"test.{options.fileType}";
+            var output = $"test.{options.FileType}";
 
             List<string> fileCleanup = new List<string>();
 
@@ -186,7 +186,7 @@ namespace AquariumApi.Core
                     fileCleanup.Add(output);
 
                 //Store the file in azure
-                var path = $"{_config["Photos:Path"]}/timelapse-" + DateTime.UtcNow.Ticks + $".{options.fileType}";
+                var path = $"{_config["Photos:Path"]}/timelapse-" + DateTime.UtcNow.Ticks + $".{options.FileType}";
                 var content = _aquariumDao.CreatePhotoReference();
                 content.Date = DateTime.UtcNow;
                 content.Filepath = path;

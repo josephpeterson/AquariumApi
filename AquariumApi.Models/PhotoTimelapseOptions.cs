@@ -7,6 +7,6 @@
         public int Width { get; set; } = 400;
         public int Height { get; set; } = 600;
         public int Framerate { get; set; } = 12;
-        public string fileType { get; set; } = "avi";
+        public string FileType { get; set; } = "avi";
     }
 }
