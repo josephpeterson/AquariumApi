@@ -87,6 +87,7 @@ namespace AquariumApi.Core
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
+        List<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
     }
     public class AquariumService : IAquariumService
     {
@@ -171,6 +172,10 @@ namespace AquariumApi.Core
         public AquariumSnapshot GetSnapshotById(int snapshotId)
         {
             return _aquariumDao.GetSnapshotById(snapshotId);
+        }
+        public List<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds)
+        {
+            return _aquariumDao.GetSnapshotsByIds(snapshotIds).ToList();
         }
         public void DeleteSnapshot(int snapshotId)
         {

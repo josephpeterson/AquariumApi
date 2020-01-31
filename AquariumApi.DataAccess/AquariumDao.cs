@@ -141,6 +141,7 @@ namespace AquariumApi.DataAccess
         void DeleteWaterDosings(List<int> waterDosingIds);
         List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId);
         List<PhotoContent> GetPhotoContentByIds(int[] photoIds);
+        ICollection<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1229,6 +1230,11 @@ namespace AquariumApi.DataAccess
             var removedWaterDosings = _dbAquariumContext.TblWaterDosing.Where(n => waterDosingIds.Contains(n.Id)).ToList();
             _dbAquariumContext.RemoveRange(removedWaterDosings);
             _dbAquariumContext.SaveChanges();
+        }
+
+        public ICollection<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds)
+        {
+            return _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id)).ToList();
         }
     }
 }

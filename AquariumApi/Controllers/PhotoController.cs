@@ -175,5 +175,35 @@ namespace AquariumApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("/v1/Photo/Timelapse")]
+        public IActionResult CreatePhotoTimelapse([FromBody] CreateTimelapseRequest request)
+        {
+            try
+            {
+                //Verify we own these snapshosts
+                var uId = _accountService.GetCurrentUserId();
+                var aquariums = _aquariumService.GetAquariumsByAccountId(uId).Select(a => a.Id);
+                var snapshots = _aquariumService.GetSnapshotsByIds(request.SnapshotIds)
+                    .Where(s => aquariums.Contains(s.AquariumId))
+                    .Select(s => s.PhotoId.Value).ToArray();
+
+                _logger.LogInformation("\n\n\n ** Attempting to create timelapse ** \n\n\n");
+                var buffer = _photoManager.CreateTimelapse(snapshots, request.Options);
+                return new OkObjectResult(buffer);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("\n\n\n ** Could not create timelapse ** \n\n\n");
+                _logger.LogError("\n" + e);
+            }
+            return Ok();
+        }
+
+        public class CreateTimelapseRequest
+        {
+            public List<int> SnapshotIds { get; set; }
+            public PhotoTimelapseOptions Options { get; set; }
+        }
     }
 }
