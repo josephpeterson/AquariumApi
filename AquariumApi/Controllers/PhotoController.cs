@@ -186,6 +186,7 @@ namespace AquariumApi.Controllers
                 var aquariums = _aquariumService.GetAquariumsByAccountId(uId).Select(a => a.Id);
                 var snapshots = _aquariumService.GetSnapshotsByIds(request.SnapshotIds)
                     .Where(s => aquariums.Contains(s.AquariumId))
+                    .OrderBy(s => s.Date)
                     .Select(s => s.PhotoId.Value).ToArray();
 
                 _logger.LogInformation("\n\n\n ** Attempting to create timelapse ** \n\n\n");
