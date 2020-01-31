@@ -16,7 +16,7 @@ namespace AquariumApi.Core
 {
     public interface IPhotoManager
     {
-        byte[] CreateTimelapse(int[] photoContentIds);
+        PhotoContent CreateTimelapse(int[] photoContentIds,PhotoTimelapseOptions options);
         void DeletePhoto(int photoId);
         Task<PhotoContent> StorePhoto(byte[] buffer);
     }
@@ -63,6 +63,21 @@ namespace AquariumApi.Core
             {
                 ExpandPhotoSizes(buffer, path);
             }
+            if (_azureService.ExistsInStorageContainer(path))
+                _aquariumDao.UpdatePhotoReference(content);
+            return content;
+        }
+        private async Task<PhotoContent> StoreTimelapse(byte[] buffer)
+        {
+            var now = DateTime.Now.ToUniversalTime();
+            var path = $"{_config["Photos:Path"]}/" + now.Ticks + ".avi";
+
+            var content = _aquariumDao.CreatePhotoReference();
+            content.Date = now;
+            content.Filepath = path;
+            content.Exists = true;
+
+            await _azureService.UploadFileToStorageContainer(buffer, path);
             if (_azureService.ExistsInStorageContainer(path))
                 _aquariumDao.UpdatePhotoReference(content);
             return content;
@@ -116,48 +131,83 @@ namespace AquariumApi.Core
 
             return destImage;
         }
-        public byte[] CreateTimelapse(int[] photoContentIds)
+        public PhotoContent CreateTimelapse(int[] photoContentIds,PhotoTimelapseOptions options)
         {
             var photos = _aquariumDao.GetPhotoContentByIds(photoContentIds);
             var inputFiles = "timelapse/test_%d.jpg";
-            var fileName = "ffmpeg.exe";
-            var output = "test.avi";
+            var fileName = "ffmpeg/ffmpeg.exe";
+            var output = $"test.{options.fileType}";
 
-            if (File.Exists(output))
-                File.Delete(output);
+            List<string> fileCleanup = new List<string>();
 
-            //Load all requested images
-            var i = 0;
-            photos.ForEach(content =>
+            try
             {
-                var path = inputFiles.Replace("%d",i.ToString());
-                File.WriteAllBytes(path,_azureService.GetFileFromStorageContainer(content.Filepath).Result);
-                i++;
-            });
-            
+                if (File.Exists(output))
+                    File.Delete(output);
 
-            //Launch batch process
-            var arguments = $"-f image2 -framerate 12 -start_number 1 -i {inputFiles} -s 720x480 {output}";
-            var p = new Process();
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.FileName = fileName;
-            p.StartInfo.Arguments = arguments;
-            p.Start();
+                //Verify directory exists
+                var dir = Path.GetDirectoryName(inputFiles);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
 
-            var stdOutput = p.StandardOutput.ReadToEnd();
-            var errOutput = p.StandardError.ReadToEnd();
-            p.WaitForExit();
+                //Load all requested images
+                var i = 0;
+                photos.ForEach(c =>
+                {
+                    var filePath = inputFiles.Replace("%d", i.ToString());
+                    File.WriteAllBytes(filePath, _azureService.GetFileFromStorageContainer(c.Filepath).Result);
+                    fileCleanup.Add(filePath);
+                    i++;
+                });
 
-            //Verify file exists
-            if (!File.Exists(output))
-                throw new Exception($"Command Process Failed with the following output:\n" +
-                    $"Standard Output: {stdOutput}\n" +
-                    $"Error Output: {errOutput}"
-                );
-            return File.ReadAllBytes(output);
+
+                //Launch batch process
+                var arguments = $"-f image2 -framerate {options.Framerate} -start_number 1 -i {inputFiles} -s {options.Width}x{options.Height} {output}";
+                var p = new Process();
+                p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.RedirectStandardError = true;
+                p.StartInfo.FileName = fileName;
+                p.StartInfo.Arguments = arguments;
+                p.Start();
+
+                var stdOutput = p.StandardOutput.ReadToEnd();
+                var errOutput = p.StandardError.ReadToEnd();
+                p.WaitForExit();
+
+                //Verify file exists
+                if (!File.Exists(output))
+                    throw new Exception($"Command Process Failed with the following output:\n" +
+                        $"Standard Output: {stdOutput}\n" +
+                        $"Error Output: {errOutput}"
+                    );
+                else
+                    fileCleanup.Add(output);
+
+                //Store the file in azure
+                var path = $"{_config["Photos:Path"]}/timelapse-" + DateTime.UtcNow.Ticks + $".{options.fileType}";
+                var content = _aquariumDao.CreatePhotoReference();
+                content.Date = DateTime.UtcNow;
+                content.Filepath = path;
+                content.Exists = true;
+                _azureService.UploadFileToStorageContainer(File.ReadAllBytes(output), path);
+                if (_azureService.ExistsInStorageContainer(path))
+                    _aquariumDao.UpdatePhotoReference(content);
+
+                return content;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                fileCleanup.ForEach(file =>
+                {
+                    File.Delete(file);
+                });
+            }
         }
     }
 }

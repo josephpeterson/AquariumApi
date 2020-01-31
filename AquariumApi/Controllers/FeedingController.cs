@@ -120,11 +120,10 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                var ids = _aquariumService.GetSnapshots(aquariumId).Select(s => s.Id).ToArray();
+                var ids = _aquariumService.GetSnapshots(aquariumId).Where(s => s.PhotoId.HasValue).Select(s => s.PhotoId.Value).ToArray();
                 _logger.LogInformation("\n\n\n ** Attempting to create timelapse ** \n\n\n");
 
-                var buffer = _photoManager.CreateTimelapse(ids);
-                var ms = new MemoryStream(buffer);
+                var buffer = _photoManager.CreateTimelapse(ids,new PhotoTimelapseOptions());
                 return new OkObjectResult(buffer);
             }
             catch(Exception e)
