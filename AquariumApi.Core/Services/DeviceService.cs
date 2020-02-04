@@ -21,7 +21,6 @@ namespace AquariumApi.Core
         bool Ping(int deviceId);
         AquariumSnapshot TakeSnapshot(int deviceId);
         byte[] TakePhoto(int deviceId);
-        bool SetAquarium(int deviceId, int aquariumId);
         string GetDeviceLog(int deviceId);
         DeviceInformation GetDeviceInformation(int deviceId);
 
@@ -29,7 +28,7 @@ namespace AquariumApi.Core
         void ClearDeviceLog(int deviceId);
         ScheduleState GetDeviceScheduleStatus(int deviceId);
         void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
-        void ApplyCameraConfiguration(int deviceId, CameraConfiguration cameraConfiguration);
+        void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
     }
     public class DeviceService : IDeviceService
     {
@@ -61,19 +60,6 @@ namespace AquariumApi.Core
             HttpClient client = new HttpClient();
             HttpResponseMessage response = client.GetAsync(path).Result;
             if (response.IsSuccessStatusCode)
-                return true;
-            return false;
-        }
-        public bool SetAquarium(int deviceId,int aquariumId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/Ping";
-            HttpClient client = new HttpClient();
-            JsonSerializerSettings jss = new JsonSerializerSettings();
-            jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            var httpContent = new StringContent(JsonConvert.SerializeObject(device, jss), Encoding.UTF8, "application/json");
-            var result = client.PostAsync(path, httpContent).Result;
-            if (result.IsSuccessStatusCode)
                 return true;
             return false;
         }
@@ -158,23 +144,21 @@ namespace AquariumApi.Core
                     throw new Exception("Could not apply schedule assignment to device");
             }
         }
-        public void ApplyCameraConfiguration(int deviceId, CameraConfiguration cameraConfiguration)
+        public void ApplyUpdatedDevice(AquariumDevice aquariumDevice)
         {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/CameraConfiguration";
+            var path = $"http://{aquariumDevice.Address}:{aquariumDevice.Port}/v1/Device";
 
             using (var client2 = new HttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
                 jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                var config = device.CameraConfiguration;
-                //config.Device = null;
 
-                var httpContent = new StringContent(JsonConvert.SerializeObject(cameraConfiguration, jss), Encoding.UTF8, "application/json");
+                var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not apply schedule assignment to device");
+                    throw new Exception("Could not send updated device information to device");
             }
+            _logger.LogInformation("Device information updated on device");
         }
 
         public ScheduleState GetDeviceScheduleStatus(int deviceId)

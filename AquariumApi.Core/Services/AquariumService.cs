@@ -52,7 +52,6 @@ namespace AquariumApi.Core
         AquariumDevice DeleteAquariumDevice(int deviceId);
         void DeleteDeviceSchedule(int scheduleId);
         AquariumDevice UpdateAquariumDevice(AquariumDevice deviceId);
-        void SetAquariumDevice(int aquariumId,int deviceId);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
@@ -160,7 +159,7 @@ namespace AquariumApi.Core
             var deviceToUpdate = _aquariumDao.GetAquariumDeviceById(0);
             deviceToUpdate.CameraConfiguration = config;
             var device = _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
-            _deviceService.ApplyCameraConfiguration(deviceToUpdate.Id, config);
+            _deviceService.ApplyUpdatedDevice(device);
             return device;
         }
 
@@ -308,15 +307,8 @@ namespace AquariumApi.Core
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
             var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
-            //_deviceService.SetAquarium(updatedDevice.Id.Value, device.AquariumId.Value);
+            _deviceService.ApplyUpdatedDevice(device);
             return updatedDevice;
-        }
-
-        //possibly delete this
-        public void SetAquariumDevice(int aquariumId,int deviceId)
-        {
-            _aquariumDao.SetAquariumDevice(aquariumId, deviceId);
-            _deviceService.SetAquarium(deviceId, aquariumId);
         }
         public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
         {

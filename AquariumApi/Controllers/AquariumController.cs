@@ -125,26 +125,6 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpPost]
-        [Route("/v1/Aquarium/{aquariumId}/Device")]
-        public IActionResult SetAquariumDevice(int aquariumId, [FromBody] int deviceId)
-        {
-            try
-            {
-                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Device called");
-                var id = _accountService.GetCurrentUserId();
-                var aq = _aquariumService.GetAquariumById(aquariumId);
-                if (aq.OwnerId != id) return new UnauthorizedResult();
-                _aquariumService.SetAquariumDevice(aquariumId, deviceId);
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
-
         [HttpGet]
         [Route("/v1/Aquarium/TemperatureHistogram")]
         public IActionResult GetTemperatureHistogram(int aquariumId)
