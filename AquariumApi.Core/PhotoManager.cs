@@ -191,7 +191,7 @@ namespace AquariumApi.Core
                 content.Date = DateTime.UtcNow;
                 content.Filepath = path;
                 content.Exists = true;
-                _azureService.UploadFileToStorageContainer(File.ReadAllBytes(output), path);
+                _azureService.UploadFileToStorageContainer(File.ReadAllBytes(output), path).Wait();
                 if (_azureService.ExistsInStorageContainer(path))
                     _aquariumDao.UpdatePhotoReference(content);
 
