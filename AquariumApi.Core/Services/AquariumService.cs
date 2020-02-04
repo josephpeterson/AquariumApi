@@ -159,7 +159,9 @@ namespace AquariumApi.Core
         {
             var deviceToUpdate = _aquariumDao.GetAquariumDeviceById(0);
             deviceToUpdate.CameraConfiguration = config;
-            return _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
+            var device = _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
+            _deviceService.ApplyCameraConfiguration(deviceToUpdate.Id, config);
+            return device;
         }
 
 

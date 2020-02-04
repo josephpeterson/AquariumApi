@@ -23,6 +23,7 @@ namespace AquariumApi.DeviceApi
         AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
         DeviceLoginResponse GetConnectionInformation();
         Task<bool> RenewAuthenticationToken();
+        void ApplyCameraConfiguration(CameraConfiguration cameraConfiguration);
     }
     public class DeviceService : IDeviceService
     {
@@ -91,6 +92,11 @@ namespace AquariumApi.DeviceApi
         public DeviceLoginResponse GetConnectionInformation()
         {
             return _accountLogin;
+        }
+
+        public void ApplyCameraConfiguration(CameraConfiguration cameraConfiguration)
+        {
+            _accountLogin.Aquarium.Device.CameraConfiguration = cameraConfiguration;
         }
     }
 }

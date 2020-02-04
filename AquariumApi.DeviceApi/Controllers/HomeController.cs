@@ -91,5 +91,22 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost]
+        [Route("/v1/CameraConfiguration")]
+        public IActionResult UpdateConnectionInformation([FromBody] CameraConfiguration cameraConfiguration)
+        {
+            try
+            {
+                _logger.LogInformation("POST /v1/CameraConfiguration called");
+                _deviceService.ApplyCameraConfiguration(cameraConfiguration);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/CameraConfiguration endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
     }
 }
