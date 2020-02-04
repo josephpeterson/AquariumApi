@@ -156,7 +156,10 @@ namespace AquariumApi.Core
                 var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"{result.StatusCode}: {result.ReasonPhrase}");
                     throw new Exception("Could not send updated device information to device");
+                }
             }
             _logger.LogInformation("Device information updated on device");
         }
