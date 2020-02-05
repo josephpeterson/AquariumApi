@@ -158,6 +158,7 @@ namespace AquariumApi.Core
                 if (!result.IsSuccessStatusCode)
                 {
                     _logger.LogError($"{result.StatusCode}: {result.ReasonPhrase}");
+                    _logger.LogError($"Path: {path}");
                     throw new Exception("Could not send updated device information to device");
                 }
             }

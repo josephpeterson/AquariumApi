@@ -34,7 +34,7 @@ namespace AquariumApi.DeviceApi.Controllers
             _config = config;
         }
 
-    [HttpGet]
+        [HttpGet]
         [Route("/v1/Scan")]
         public IActionResult ScanHardware()
         {
