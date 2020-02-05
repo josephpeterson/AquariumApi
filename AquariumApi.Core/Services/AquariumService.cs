@@ -51,7 +51,7 @@ namespace AquariumApi.Core
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         void DeleteDeviceSchedule(int scheduleId);
-        AquariumDevice UpdateAquariumDevice(AquariumDevice deviceId);
+        AquariumDevice UpdateAquariumDevice(AquariumDevice aquariumDevice);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
@@ -307,7 +307,15 @@ namespace AquariumApi.Core
         public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
         {
             var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
-            _deviceService.ApplyUpdatedDevice(device);
+            try
+            {
+                _deviceService.ApplyUpdatedDevice(updatedDevice);
+            }
+            catch(Exception ex)
+            {
+                //Could not  tell devices that we updated
+                _logger.LogError("Could not send update to devices.");
+            }
             return updatedDevice;
         }
         public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
