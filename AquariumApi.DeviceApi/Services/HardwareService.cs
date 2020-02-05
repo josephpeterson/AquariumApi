@@ -30,13 +30,17 @@ namespace AquariumApi.DeviceApi
         }
         public AquariumDevice ScanHardware()
         {
-            return new AquariumDevice()
+            var port = _hostingEnvironment;
+
+            var hardware = new AquariumDevice()
             {
+                Port = _config["Port"],
                 EnabledPhoto = CanTakePhoto(),
                 EnabledTemperature = _serialService.CanRetrieveTemperature(),
                 EnabledNitrate = _serialService.CanRetrieveNitrate(),
                 EnabledPh = _serialService.CanRetrievePh(),
             };
+            return hardware;
         }
 
 

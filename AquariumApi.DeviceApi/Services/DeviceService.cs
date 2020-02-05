@@ -24,6 +24,7 @@ namespace AquariumApi.DeviceApi
         DeviceLoginResponse GetConnectionInformation();
         Task<bool> RenewAuthenticationToken();
         void ApplyAquariumDevice(AquariumDevice aquariumDevice);
+        Task<Aquarium> ApplyDeviceHardware();
     }
     public class DeviceService : IDeviceService
     {
@@ -85,6 +86,21 @@ namespace AquariumApi.DeviceApi
                 return false;
             }
         }
+        public async Task<Aquarium> ApplyDeviceHardware()
+        {
+            try
+            {
+                var response = await _aquariumClient.ApplyDeviceHardware(_hardwareService.ScanHardware());
+                _accountLogin.Aquarium = response;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Could not apply current device hardware");
+                return null;
+            }
+        }
+
         public AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo)
         {
             return _aquariumClient.SendAquariumSnapshotToHost(snapshot, photo);

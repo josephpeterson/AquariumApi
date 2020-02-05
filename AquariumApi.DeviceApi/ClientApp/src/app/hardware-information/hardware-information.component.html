@@ -1,0 +1,43 @@
+<p class="text-muted">These are the enabled peripherals/sensors that are currently enabled. Some may be
+  unavailable
+  depending on hardware installed on your device. These may be USB plug-ins, GPIO connections etc.</p>
+<ng-container *ngIf="device">
+
+  <ul class="list-group w-50">
+    <li class="list-group-item" [ngClass]="{'list-group-item-success': device.enabledPhoto}">Photo
+      Module
+      <div *ngIf="device.enabledPhoto" class="float-md-right">Checked</div>
+      <a *ngIf="device.enabledPhoto" class="float-md-right" (click)="clickManagePhotoModule()">Manage...</a>
+    </li>
+    <li class="list-group-item" [ngClass]="{'list-group-item-success': device.enabledTemperature}">
+      Temperature
+      Sensor
+      <div *ngIf="device.enabledTemperature" class="float-md-right">Checked</div>
+    </li>
+    <li class="list-group-item" [ngClass]="{'list-group-item-success': device.enabledLighting}">LED
+      Controller
+
+      <div *ngIf="device.enabledLighting" class="float-md-right">Checked</div>
+    </li>
+    <li class="list-group-item" [ngClass]="{'list-group-item-success': device.enabledPh}">Ph Sensor
+      <div *ngIf="device.enabledPh" class="float-md-right">Checked</div>
+    </li>
+    <li class="list-group-item" [ngClass]="{'list-group-item-success': device.enabledNitrate}">
+      Nitrate/Nitrite
+      Sensor
+      <div *ngIf="device.enabledNitrate" class="float-md-right">Checked</div>
+    </li>
+  </ul>
+  <div>
+
+    <button [disabled]="scanning" [class.btn-secondary]="!scanning" type="submit" class="m-2 btn "
+      (click)="clickScanDeviceHardware()">
+      <ng-container *ngIf="scanning">
+        Scanning <mat-progress-spinner class="float-right ml-1 align-middle" color="warn" [diameter]="25"
+          mode="indeterminate">
+        </mat-progress-spinner>
+      </ng-container>
+      <ng-container class="btn-secondary" *ngIf="!scanning">Scan Hardware</ng-container>
+    </button>
+  </div>
+</ng-container>

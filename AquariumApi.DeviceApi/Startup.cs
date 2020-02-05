@@ -144,6 +144,10 @@ namespace AquariumApi.DeviceApi
                 }
                 else
                     _logger.LogInformation("No schedules deployed on this device.");
+
+                //Send current hardware
+                _logger.LogInformation("Scanning hardware...");
+                _deviceService.ApplyDeviceHardware().Wait();
             }
 
 

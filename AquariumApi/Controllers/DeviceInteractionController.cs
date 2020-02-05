@@ -54,6 +54,31 @@ namespace AquariumApi.Controllers
 
 
 
+                _logger.LogInformation("Attempting to determine local ip addresses");
+                var localIp = Request.HttpContext.Connection.LocalIpAddress;
+                var localPort = Request.HttpContext.Connection.LocalPort;
+                var remoteIp = Request.HttpContext.Connection.RemoteIpAddress;
+                var remotePort = Request.HttpContext.Connection.RemotePort;
+                var aquariumPort = aquariumDevice.Port;
+
+                _logger.LogInformation($"\n" +
+                    $"- Local Ip Address: {localIp}:{localPort}" +
+                    $"- Remote Ip Address: {remoteIp}:{remotePort}" +
+                    $"- Determined Address: {remoteIp}:{aquariumPort}" +
+                    $"\n");
+                //Update IP Information
+                var ip = remoteIp;
+                var port = aquariumPort;
+                if ($"{remoteIp}" == "::1")
+                    ip = localIp;
+                if (aquarium.Device.Address != $"{ip}" || aquarium.Device.Port != $"{port}")
+                {
+                    aquarium.Device.Address = $"{ip}";
+                    aquarium.Device.Port = $"{port}";
+                    aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
+                    _notificationService.EmitAsync(userId, "Aquarium Device", $"[{aquarium.Device.Name}] Aquarium device ip/port combination was updated to ${ip}:{port}").Wait();
+                }
+
 
 
                 aquarium.Device = _aquariumService.ApplyAquariumDeviceHardware(aquarium.Device.Id, aquariumDevice);
@@ -85,28 +110,6 @@ namespace AquariumApi.Controllers
                 if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
 
-
-                _logger.LogInformation("Attempting to determine local ip addresses");
-                var localIp = Request.HttpContext.Connection.LocalIpAddress;
-                var localPort = Request.HttpContext.Connection.LocalPort;
-                var remoteIp = Request.HttpContext.Connection.RemoteIpAddress;
-                var remotePort = Request.HttpContext.Connection.RemotePort;
-                _logger.LogInformation($"\n" +
-                    $"- Local Ip Address: {localIp}:{localPort}" +
-                    $"- Remote Ip Address: {remoteIp}:{remotePort}" +
-                    $"\n");
-
-                //Update IP Information
-                var ip = remoteIp;
-                if ($"{remoteIp}" == "::1")
-                    ip = localIp;
-                if (aquarium.Device.Address != $"{ip}" || aquarium.Device.Port != $"{remotePort}")
-                {
-                    aquarium.Device.Address = $"{ip}";
-                    aquarium.Device.Port = $"{localPort}";
-                    aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
-                    _notificationService.EmitAsync(userId, "Aquarium Device", $"[{aquarium.Device.Name}] Aquarium device ip/port combination was updated to ${ip}:{remotePort}").Wait();
-                }
                 return new OkObjectResult(new DeviceLoginResponse
                 {
                     Account = _aquariumService.GetAccountDetailed(userId, userId),

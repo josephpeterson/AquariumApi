@@ -22,6 +22,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { LoginContainerComponent } from './containers/login/login-container.component';
 import { NotifierModule } from "angular-notifier";
 import { DeviceNotifierConfig } from './config/DeviceNotifierConfig';
+import { HardwareInformationComponent } from './hardware-information/hardware-information.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { DeviceNotifierConfig } from './config/DeviceNotifierConfig';
     LogPageComponent,
     DashboardContainerComponent,
     LoginContainerComponent,
-    ApplicationLogViewComponent
+    ApplicationLogViewComponent,
+    HardwareInformationComponent
   ],
   imports: [
     BrowserModule,
