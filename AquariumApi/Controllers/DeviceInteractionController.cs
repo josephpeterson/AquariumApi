@@ -103,7 +103,7 @@ namespace AquariumApi.Controllers
                 if (aquarium.Device.Address != $"{ip}" || aquarium.Device.Port != $"{remotePort}")
                 {
                     aquarium.Device.Address = $"{ip}";
-                    aquarium.Device.Port = $"{remotePort}";
+                    aquarium.Device.Port = $"{localPort}";
                     aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
                     _notificationService.EmitAsync(userId, "Aquarium Device", $"[{aquarium.Device.Name}] Aquarium device ip/port combination was updated to ${ip}:{remotePort}").Wait();
                 }
