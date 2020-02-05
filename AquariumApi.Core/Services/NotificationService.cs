@@ -35,6 +35,7 @@ namespace AquariumApi.Core
         ICollection<Notification> GetNotificationsByAccountId(int id);
         ICollection<Notification> GetNotificationsById(List<int> notificationIds);
         void DeleteDispatchedNotifications(List<int> notificationIds);
+        Task EmitAsync(int senderId, string title, string subtitle, string body = "");
     }
     public class NotificationService : INotificationService
     {
@@ -72,14 +73,26 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DismissNotifications(notificationIds);
         }
-        public Task EmitAsync(DispatchedNotification notif)
+        public async Task EmitAsync(DispatchedNotification notif)
         {
-            return _aquariumDao.EmitNotification(notif);
+            await _aquariumDao.EmitNotification(notif);
+        }
+        public async Task EmitAsync(int senderId,string title,string subtitle,string body = "")
+        {
+            await EmitAsync(new DispatchedNotification
+            {
+                Date = DateTime.Now.ToUniversalTime(),
+                Type = NotificationTypes.LoginDeviceActivity,
+                DispatcherId = senderId,
+                Title = title,
+                Subtitle = subtitle,
+                Body = body
+            }, new List<int>() { senderId });
         }
 
-        public Task EmitAsync(DispatchedNotification notif, List<int> aquariumAccountIds)
+        public async Task EmitAsync(DispatchedNotification notif, List<int> aquariumAccountIds)
         {
-            return _aquariumDao.EmitNotification(notif, aquariumAccountIds);
+            await _aquariumDao.EmitNotification(notif, aquariumAccountIds);
         }
 
         public ICollection<DispatchedNotification> GetAllDispatchedNotifications()
@@ -95,6 +108,8 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.GetNotificationsByAccountId(id);
         }
+
+
 
     }
 }

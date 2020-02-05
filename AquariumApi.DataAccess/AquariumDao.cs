@@ -1125,7 +1125,7 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
 
-        public Task EmitNotification(DispatchedNotification notif)
+        public async Task EmitNotification(DispatchedNotification notif)
         {
             _dbAquariumContext.Add(notif);
             _dbAquariumContext.SaveChanges();
@@ -1137,10 +1137,10 @@ namespace AquariumApi.DataAccess
                     TargetId = u.Id
                 });
             });
-           return _dbAquariumContext.SaveChangesAsync();
+            await _dbAquariumContext.SaveChangesAsync();
         }
 
-        public Task EmitNotification(DispatchedNotification notif, List<int> aquariumAccountIds)
+        public async Task EmitNotification(DispatchedNotification notif, List<int> aquariumAccountIds)
         {
             _dbAquariumContext.Add(notif);
             _dbAquariumContext.SaveChanges();
@@ -1152,7 +1152,7 @@ namespace AquariumApi.DataAccess
                     TargetId = id
                 });
             });
-            return _dbAquariumContext.SaveChangesAsync();
+            await _dbAquariumContext.SaveChangesAsync();
         }
 
         public ICollection<DispatchedNotification> GetAllDispatchedNotifications()

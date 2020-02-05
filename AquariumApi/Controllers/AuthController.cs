@@ -134,7 +134,7 @@ namespace AquariumApi.Controllers
                         DispatcherId = user.Id,
                         Title = "New Device Login",
                         Subtitle = $"Aquarium monitoring device connected to {aq.Name}",
-                    }, new List<int>(user.Id)).Wait();
+                    }, new List<int>() { user.Id }).Wait();
 
 
                     //If the aquarium did not have a device, create a record for it

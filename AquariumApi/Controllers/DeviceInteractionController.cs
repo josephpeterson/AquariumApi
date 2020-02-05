@@ -20,18 +20,21 @@ namespace AquariumApi.Controllers
         public readonly IAquariumService _aquariumService;
         public readonly IDeviceService _deviceService;
         private readonly IAccountService _accountService;
+        private readonly INotificationService _notificationService;
         public readonly ILogger<DeviceInteractionController> _logger;
         public DeviceInteractionController(IAquariumService aquariumService, IDeviceService deviceService,
             IAccountService accountService,
+            INotificationService notificationService,
             ILogger<DeviceInteractionController> logger)
         {
             _aquariumService = aquariumService;
             _deviceService = deviceService;
             _accountService = accountService;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
-        
+
         [HttpPost]
         public IActionResult ApplyDeviceHardware([FromBody] AquariumDevice aquariumDevice)
         {
@@ -41,16 +44,16 @@ namespace AquariumApi.Controllers
                 var userId = _accountService.GetCurrentUserId();
                 var id = _accountService.GetCurrentAquariumId();
                 var aquarium = _aquariumService.GetAquariumById(id);
-                if(aquarium.Device == null)
+                if (aquarium.Device == null)
                 {
                     return BadRequest("This aquarium does not have a device");
                 }
-                if(!_accountService.CanModify(userId,aquarium))
+                if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
 
 
 
-                
+
 
 
                 aquarium.Device = _aquariumService.ApplyAquariumDeviceHardware(aquarium.Device.Id, aquariumDevice);
@@ -97,10 +100,13 @@ namespace AquariumApi.Controllers
                 var ip = remoteIp;
                 if ($"{remoteIp}" == "::1")
                     ip = localIp;
-                aquarium.Device.Address = $"{ip}";
-                aquarium.Device.Port = $"{remotePort}";
-                aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
-
+                if (aquarium.Device.Address != $"{ip}" || aquarium.Device.Port != $"{remotePort}")
+                {
+                    aquarium.Device.Address = $"{ip}";
+                    aquarium.Device.Port = $"{remotePort}";
+                    aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
+                    _notificationService.EmitAsync(userId, "Aquarium Device", $"[{aquarium.Device.Name}] Aquarium device ip/port combination was updated to ${ip}:{remotePort}").Wait();
+                }
                 return new OkObjectResult(new DeviceLoginResponse
                 {
                     Account = _aquariumService.GetAccountDetailed(userId, userId),
