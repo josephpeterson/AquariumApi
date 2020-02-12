@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { LoginInformationModel } from '../models/LoginInformation.model';
 import { LoginInformationResponse } from '../models/LoginInformationResponse';
 import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
+import { Aquarium } from '../models/Aquarium';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -51,5 +52,8 @@ export class ClientService {
     }
     public renewAuthToken() {
         return this.http.get(this._url + "/ClientApp/Auth/Renew");
+    }
+    public scanHardware() {
+        return this.http.get<Aquarium>(this._url + "/ClientApp/Hardware/Scan");
     }
 }

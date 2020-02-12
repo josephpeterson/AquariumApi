@@ -158,6 +158,27 @@ namespace AquariumApi.DeviceApi.Controllers
                 return BadRequest();
             }
         }
+        [HttpGet]
+        [Route("ClientApp/Hardware/Scan")]
+        public IActionResult ApplyDeviceHardware()
+        {
+            try
+            {
+                var r = Request;
+                _logger.LogInformation("GET /ClientApp/Hardware/Scan called");
+                var aquarium = _deviceService.ApplyDeviceHardware().Result;
+                if (aquarium != null)
+                    return new OkObjectResult(aquarium);
+                else
+                    return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/ClientApp/Hardware/Scan caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest();
+            }
+        }
 
     }
 }

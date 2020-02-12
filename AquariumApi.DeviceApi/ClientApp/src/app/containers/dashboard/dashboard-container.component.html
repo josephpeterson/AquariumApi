@@ -1,21 +1,23 @@
 <div class="row">
-    <div class="col">
-      <div class="card" *ngIf="loginInformation.account as account">
-        <div class="card-body">
-          <h3>{{account.username}}</h3>
-          <span>Email: {{account.email}}</span>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="card" *ngIf="loginInformation.aquarium as aquarium">
-        <div class="card-body">
-          <h3>{{aquarium.name}}</h3>
-          <span>Size: {{aquarium.gallons}} gallons</span>
-        </div>
+  <div class="col">
+    <div class="card" *ngIf="loginInformation.account as account">
+      <div class="card-body">
+        <h3>{{account.username}}</h3>
+        <span>Email: {{account.email}}</span>
       </div>
     </div>
   </div>
-  <h4>Schedules</h4>
-  <schedule-information [loginInformation]="loginInformation"></schedule-information>
-  
+  <div class="col">
+    <div class="card" *ngIf="loginInformation.aquarium as aquarium">
+      <div class="card-body">
+        <h3>{{aquarium.name}}</h3>
+        <span>Size: {{aquarium.gallons}} gallons</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4>Hardware</h4>
+<hardware-information [loginInformation]="loginInformation"></hardware-information>
+<h4>Schedules</h4>
+<schedule-information [loginInformation]="loginInformation"></schedule-information>

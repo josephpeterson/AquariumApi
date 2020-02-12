@@ -20,18 +20,23 @@ namespace AquariumApi.Controllers
         public readonly IAquariumService _aquariumService;
         public readonly IDeviceService _deviceService;
         private readonly IAccountService _accountService;
+        private readonly INotificationService _notificationService;
         public readonly ILogger<DeviceInteractionController> _logger;
         public DeviceInteractionController(IAquariumService aquariumService, IDeviceService deviceService,
             IAccountService accountService,
+            INotificationService notificationService,
             ILogger<DeviceInteractionController> logger)
         {
             _aquariumService = aquariumService;
             _deviceService = deviceService;
             _accountService = accountService;
+            _notificationService = notificationService;
             _logger = logger;
         }
+
+
         [HttpPost]
-        public IActionResult GetDeviceById([FromBody] AquariumDevice aquariumDevice)
+        public IActionResult ApplyDeviceHardware([FromBody] AquariumDevice aquariumDevice)
         {
             try
             {
@@ -39,12 +44,42 @@ namespace AquariumApi.Controllers
                 var userId = _accountService.GetCurrentUserId();
                 var id = _accountService.GetCurrentAquariumId();
                 var aquarium = _aquariumService.GetAquariumById(id);
-                if(aquarium.Device == null)
+                if (aquarium.Device == null)
                 {
                     return BadRequest("This aquarium does not have a device");
                 }
-                if(!_accountService.CanModify(userId,aquarium))
+                if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
+
+
+
+
+                _logger.LogInformation("Attempting to determine local ip addresses");
+                var localIp = Request.HttpContext.Connection.LocalIpAddress;
+                var localPort = Request.HttpContext.Connection.LocalPort;
+                var remoteIp = Request.HttpContext.Connection.RemoteIpAddress;
+                var remotePort = Request.HttpContext.Connection.RemotePort;
+                var aquariumPort = aquariumDevice.Port;
+
+                _logger.LogInformation($"\n" +
+                    $"- Local Ip Address: {localIp}:{localPort}" +
+                    $"- Remote Ip Address: {remoteIp}:{remotePort}" +
+                    $"- Determined Address: {remoteIp}:{aquariumPort}" +
+                    $"\n");
+                //Update IP Information
+                var ip = remoteIp;
+                var port = aquariumPort;
+                if ($"{remoteIp}" == "::1")
+                    ip = localIp;
+                if (aquarium.Device.Address != $"{ip}" || aquarium.Device.Port != $"{port}")
+                {
+                    aquarium.Device.Address = $"{ip}";
+                    aquarium.Device.Port = $"{port}";
+                    aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
+                    _notificationService.EmitAsync(userId, "Aquarium Device", $"[{aquarium.Device.Name}] Aquarium device ip/port combination was updated to ${ip}:{port}").Wait();
+                }
+
+
 
                 aquarium.Device = _aquariumService.ApplyAquariumDeviceHardware(aquarium.Device.Id, aquariumDevice);
                 return new OkObjectResult(aquarium);
@@ -55,6 +90,10 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        /* 
+         * Aquarium Device will attempt to retrieve its information upon boot.
+         * Hardware information will be sent
+         */
         [HttpGet]
         public IActionResult RecievePing()
         {
@@ -70,6 +109,7 @@ namespace AquariumApi.Controllers
                 }
                 if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
+
                 return new OkObjectResult(new DeviceLoginResponse
                 {
                     Account = _aquariumService.GetAccountDetailed(userId, userId),
