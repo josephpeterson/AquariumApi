@@ -33,7 +33,7 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 _logger.LogError($"POST /v1/Take endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(ex.StackTrace);
             }
         }
 

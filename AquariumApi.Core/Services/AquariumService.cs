@@ -118,6 +118,12 @@ namespace AquariumApi.Core
         {
             aquarium.Name = aquarium.Name.Trim();
             aquarium.StartDate = aquarium.StartDate.ToUniversalTime();
+
+            var type = aquarium.Substrate.Type.ToLower();
+            if (type == "n/a" || type == "none")
+                aquarium.Substrate.Type = null;
+
+
             if (aquarium.Name == null) throw new Exception("Invalid aquarium name");
             if (aquarium.Gallons <= 0) throw new Exception("Invalid aquarium size");
 

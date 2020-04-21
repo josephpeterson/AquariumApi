@@ -75,6 +75,9 @@ namespace AquariumApi.Controllers
             {
                 _logger.LogInformation("POST /v1/Aquarium/Add called");
 
+                if (aquarium == null)
+                    throw new Exception("No aquarium information sent");
+
                 //Static properties
                 int id = _accountService.GetCurrentUserId();
                 aquarium.OwnerId = id;
