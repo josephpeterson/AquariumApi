@@ -75,7 +75,7 @@ namespace AquariumApi.Controllers
                 {
                     aquarium.Device.Address = $"{ip}";
                     aquarium.Device.Port = $"{port}";
-                    aquarium.Device = _aquariumService.UpdateAquariumDevice(aquarium.Device);
+                    aquarium.Device = _aquariumService.UpdateAquariumDevice(userId,aquarium.Device);
                     _notificationService.EmitAsync(userId, "Aquarium Device", $"[{aquarium.Device.Name}] Aquarium device ip/port combination was updated to ${ip}:{port}").Wait();
                 }
 

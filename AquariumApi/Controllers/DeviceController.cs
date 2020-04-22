@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Core.Services;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,13 +13,16 @@ using Newtonsoft.Json;
 
 namespace AquariumApi.Controllers
 {
+    [Authorize]
     public class DeviceController : Controller
     {
+        private readonly IAccountService _accountService;
         public readonly IAquariumService _aquariumService;
         public readonly IDeviceService _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public DeviceController(IAquariumService aquariumService, IDeviceService deviceService,ILogger<DeviceController> logger)
+        public DeviceController(IAccountService accountService,IAquariumService aquariumService, IDeviceService deviceService,ILogger<DeviceController> logger)
         {
+            _accountService = accountService;
             _aquariumService = aquariumService;
             _deviceService = deviceService;
             _logger = logger;
@@ -59,10 +63,16 @@ namespace AquariumApi.Controllers
         [Route("/v1/Device/Update")]
         public IActionResult UpdateAquariumDevice([FromBody] AquariumDevice device)
         {
+
             try
             {
                 _logger.LogInformation($"POST /v1/Device/Update called");
-                var updatedDevice = _aquariumService.UpdateAquariumDevice(device);
+                var id = _accountService.GetCurrentUserId();
+                var aq = _aquariumService.GetAquariumById(device.AquariumId);
+                if(!_accountService.CanModify(id, aq))
+                    return new UnauthorizedResult();
+
+                var updatedDevice = _aquariumService.UpdateAquariumDevice(id,device);
                 return new OkObjectResult(updatedDevice);
             }
             catch (Exception ex)

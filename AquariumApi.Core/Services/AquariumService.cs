@@ -51,7 +51,7 @@ namespace AquariumApi.Core
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         void DeleteDeviceSchedule(int scheduleId);
-        AquariumDevice UpdateAquariumDevice(AquariumDevice aquariumDevice);
+        AquariumDevice UpdateAquariumDevice(int userId,AquariumDevice aquariumDevice);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
         AquariumPhoto GetAquariumPhotoById(int photoId);
         AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
@@ -94,12 +94,17 @@ namespace AquariumApi.Core
         private readonly ILogger<AquariumService> _logger;
         private readonly IDeviceService _deviceService;
         private readonly IPhotoManager _photoManager;
+
+        private readonly INotificationService _notificationService;
+
+
+
         private readonly IConfiguration _config;
         private readonly IActivityService _activityService;
         private readonly IAccountService _accountService;
 
         public AquariumService(IConfiguration config, ILogger<AquariumService> logger, IAquariumDao aquariumDao, IAccountService accountService,
-                               IActivityService activityService,IDeviceService deviceService,IPhotoManager photoManager)
+                               IActivityService activityService,IDeviceService deviceService,IPhotoManager photoManager,INotificationService notificationService)
         {
             _config = config;
             _activityService = activityService;
@@ -108,6 +113,7 @@ namespace AquariumApi.Core
             _logger = logger;
             _deviceService = deviceService;
             _photoManager = photoManager;
+            _notificationService = notificationService;
         }
 
         public List<Aquarium> GetAllAquariums()
@@ -310,7 +316,7 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.DeleteAquariumDevice(deviceId);
         }
-        public AquariumDevice UpdateAquariumDevice(AquariumDevice device)
+        public AquariumDevice UpdateAquariumDevice(int userId,AquariumDevice device)
         {
             var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
             try
@@ -321,6 +327,9 @@ namespace AquariumApi.Core
             {
                 //Could not  tell devices that we updated
                 _logger.LogError("Could not send update to devices.");
+                _notificationService.EmitAsync(userId, "Aquarium Device", $"[{device.Name}] Unable to connect to aquarium device. Your device may be offline. " +
+                    $"We attempted to contact: " +
+                    $"${device.Address}:{device.Port}").Wait();
             }
             return updatedDevice;
         }
