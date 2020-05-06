@@ -37,6 +37,8 @@ namespace AquariumApi.Models
             var indvidualTasks = Tasks.ToList();
             indvidualTasks.ForEach(t =>
             {
+                t.StartTime = t.StartTime.ToLocalTime();
+                t.EndTime = t.EndTime?.ToLocalTime();
                 //Reset the day
                 tasks.Add(new DeviceScheduleTask()
                 {
