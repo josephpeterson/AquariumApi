@@ -15,6 +15,7 @@ namespace AquariumApi.Core
 {
     public interface IAquariumService
     {
+        /* Aquarium */
         Aquarium AddAquarium(Aquarium aquarium);
         List<Aquarium> GetAllAquariums();
         Aquarium GetAquariumById(int id);
@@ -26,11 +27,14 @@ namespace AquariumApi.Core
         AquariumSnapshot GetSnapshotById(int snapshotId);
         void DeleteSnapshot(int removeSnapshotId);
 
+        /* Species */
         Species AddSpecies(Species species);
         List<Species> GetAllSpecies();
         Species UpdateSpecies(Species species);
         void DeleteSpecies(int speciesId);
 
+
+        /* Fish */
         Fish AddFish(Fish fish);
         Fish GetFishById(int fishId);
         Fish UpdateFish(Fish fish);
@@ -47,6 +51,7 @@ namespace AquariumApi.Core
         void DeleteFeeding(int feedingId);
         Species GetSpeciesById(int speciesId);
 
+        /* Aquarium Device */
         AquariumDevice AddAquariumDevice(AquariumDevice device);
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice DeleteAquariumDevice(int deviceId);
@@ -87,6 +92,10 @@ namespace AquariumApi.Core
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
         List<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
+
+
+        /* Form Components */
+        List<KeyValuePair<string,int>> GetSelectOptionsBySelectType(string selectType);
     }
     public class AquariumService : IAquariumService
     {
@@ -616,6 +625,43 @@ namespace AquariumApi.Core
         public void DeleteWaterDosings(List<int> waterDosingIds)
         {
              _aquariumDao.DeleteWaterDosings(waterDosingIds);
+        }
+
+        public List<KeyValuePair<string,int>> GetSelectOptionsBySelectType(string selectType)
+        {
+            List<KeyValuePair<string, int>> options;
+            switch(selectType)
+            {
+                case "SpeciesCategories":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Freshwater",0),
+                        new KeyValuePair<string, int>("Marine",1),
+                        new KeyValuePair<string, int>("Reef Compatible",2),
+                    };
+                    break;
+                case "SpeciesTemperament":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Peaceful",0),
+                        new KeyValuePair<string, int>("Semi-Aggressive",1),
+                        new KeyValuePair<string, int>("Aggressive",2),
+                    };
+                    break;
+                case "SpeciesCareLevel":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Easy",0),
+                        new KeyValuePair<string, int>("Intermediate",1),
+                        new KeyValuePair<string, int>("Expert",2),
+                    };
+                    break;
+                default:
+                    options = new List<KeyValuePair<string, int>>();
+                    break;
+            }
+            
+            return options;
         }
     }
 }

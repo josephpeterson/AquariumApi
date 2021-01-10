@@ -17,9 +17,10 @@ namespace AquariumApi.DeviceApi
                 .AddJsonFile("config.json");
             Configuration = builder.Build();
             CreateWebHostBuilder(args).Build().Run();
+
         }
 
-        
+
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)

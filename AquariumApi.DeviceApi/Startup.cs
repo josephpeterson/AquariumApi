@@ -17,9 +17,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;
-using Unosquare.RaspberryIO;
-using Unosquare.WiringPi;
 
 namespace AquariumApi.DeviceApi
 {
@@ -47,11 +46,15 @@ namespace AquariumApi.DeviceApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IConfiguration>(Configuration);
+
+
+
+
             services.AddLogging();
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "AquariumDevice API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "AquariumDevice API", Version = "v1" });
             });
             services.AddAquariumDevice();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
@@ -152,9 +155,12 @@ namespace AquariumApi.DeviceApi
 
 
             //Attempt to enable wiringPi
+            _logger.LogInformation("*** Attempting to enable WiringPi ***");
             try
             {
-                //Pi.Init<BootstrapWiringPi>();
+               //Pi.Init<BootstrapWiringPi>();
+
+                _logger.LogInformation("WiringPi Enabled");
             }
             catch (Exception ex)
             {

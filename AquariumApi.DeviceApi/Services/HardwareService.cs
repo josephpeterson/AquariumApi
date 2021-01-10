@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace AquariumApi.DeviceApi
@@ -13,6 +14,7 @@ namespace AquariumApi.DeviceApi
         int GetTemperatureC();
         AquariumDevice ScanHardware();
         byte[] TakePhoto(CameraConfiguration config);
+        void WaterChangeBeginDrain();
     }
     public class HardwareService : IHardwareService
     {
@@ -89,5 +91,54 @@ namespace AquariumApi.DeviceApi
         }
 
 
+
+        public List<DeviceSensor> ReadAllSensors()
+        {
+            List<DeviceSensor> sensors = new List<DeviceSensor>();
+            sensors.Add(
+                new DeviceSensor()
+                {
+                    Pin = 40,
+                    Type = SensorTypes.FloatSwitch,
+                    Polarity = Polarity.Input
+                }
+            );
+
+            sensors.ForEach(s =>
+            {
+               
+            });
+
+            return sensors;
+        }
+
+
+        public void WaterChangePrepare()
+        {
+            //Turn off return pump and Protein Skimmer
+
+        }
+        public void WaterChangeBeginDrain()
+        {
+            //Open solenoid until float sensor detects low water level
+
+            /*
+            var solenoid = Pi.Gpio[21];
+            solenoid.PinMode = GpioPinDriveMode.Output;
+            _logger.LogInformation("[WaterChange] SOLENOID OPEN");
+            solenoid.Write(GpioPinValue.High);
+            System.Threading.Thread.Sleep(2000);
+            solenoid.Write(GpioPinValue.Low);
+            _logger.LogInformation("[WaterChange] SOLENOID CLOSED");
+            */
+        }
+        public void WaterChangeBeginReplenish()
+        {
+            //Turn on replenish pump until sensor detects high water level
+        }
+        public void WaterChangeBeginATO()
+        {
+            //Turn on ATO pump until sensor detects high water level
+        }
     }
 }

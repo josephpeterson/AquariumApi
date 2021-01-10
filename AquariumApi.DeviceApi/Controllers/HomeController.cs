@@ -15,6 +15,7 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IDeviceService _deviceService;
         private ScheduleService _scheduleService;
+        private IGpioService _gpioService;
         private IHardwareService _hardwareService;
         private IAquariumAuthService _aquariumAuthService;
         private ILogger<HomeController> _logger;
@@ -23,11 +24,13 @@ namespace AquariumApi.DeviceApi.Controllers
         public HomeController(IDeviceService deviceService,
             ScheduleService scheduleService,
             IHardwareService hardwareService,
+            IGpioService gpioService,
             IAquariumAuthService aquariumAuthService,
             ILogger<HomeController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
             _scheduleService = scheduleService;
+            _gpioService = gpioService;
             _hardwareService = hardwareService;
             _aquariumAuthService = aquariumAuthService;
             _logger = logger;
@@ -108,5 +111,6 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
+
     }
 }
