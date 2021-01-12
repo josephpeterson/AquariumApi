@@ -1,0 +1,17 @@
+[Unit]
+Description=Aquarium Device API
+
+[Service]
+WorkingDirectory=/home/pi/DeviceApi
+ExecStart=/usr/local/bin/dotnet /home/pi/DeviceApi/AquariumApi.DeviceApi.dll
+Restart=always
+# Restart service after 10 seconds if the dotnet service crashes:
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=dotnet-aquarium
+User=root
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target

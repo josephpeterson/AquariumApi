@@ -10,6 +10,10 @@ sudo cp launch.sh /etc/init.d/c_start_aquarium_deviceApi
 sudo chmod 755 /etc/init.d/c_start_aquarium_deviceApi
 sudo update-rc.d c_start_aquarium_deviceApi defaults
 
+
+#Option 2: Running DeviceApi on boot
+sudo sh install.sh
+
 #3.5in Screen installation
 sudo rm -rf LCD-show
 git clone https://github.com/goodtft/LCD-show.git

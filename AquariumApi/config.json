@@ -5,12 +5,18 @@
   },
   "Jwt": {
     "Secret": "notsafesecretchangethis",
+    "DeviceSecret": "thiskeyisusedfordevices",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
     "LengthMins": 90
   },
   "Password": {
-    "EncryptionSalt":  "thisisadefaultsaltforhashing"
+    "ResetPasswordLimitMins": 10,
+    "ResetPasswordLimitMins2": 5,
+    "ResetRedirectUri": "http://localhost:4200/passwordreset",
+    "ResetPasswordSecret": "thisisadefaultresetbasicbasic",
+    "ResetPasswordSecret2": "thisisatemporarysecretbasicbasic",
+    "EncryptionSalt": "thisisadefaultsaltforhashing"
   },
   "Photos": {
     "ExpandSizes": true,
@@ -18,13 +24,14 @@
     "Sizes": [ 0.25, 0.5 ]
   },
   "Emailer": {
-    "ApiKey": "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",
-    "Address1": "azure_dc48d12be2b8c60bfc3f6e92b7fd6036@azure.com"
+    "ApiKey": "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",
+    "Address1": "support@aquariumsolutions.com"
   },
   "Azure": {
     "AccountUsername": "aquariumstorage",
-    "AccountKey": "/4oZz2BFSxmoQAqXmLl3+6y7z7n3jBtv6+qxqOjPLhafKhCZT5XTqv1NCCSULlH7Tah3aas6Rbj9Uzududm+tw==",
-    "AquariumPhotosShare": "aquarium-photos"
+    "AccountKey": "ETFva6NtlNeugd5gA955eESciTgDr4Ru4+l+BtuQ5Mf/QVSSDrFk3dWCt7KsX+6E6xI4m6RQvFWwppcfFk5QPw==",
+    "AquariumPhotosShare": "aquarium-photos",
+    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=aquariumstorage;AccountKey=ETFva6NtlNeugd5gA955eESciTgDr4Ru4+l+BtuQ5Mf/QVSSDrFk3dWCt7KsX+6E6xI4m6RQvFWwppcfFk5QPw==;EndpointSuffix=core.windows.net"
   },
   "AquariumPhotoFilePath": "wwwroot/photos/{0}/{1}.jpg",
   "FishPhotoFilePath": "wwwroot/fish/photos/{0}/{1}.jpg",

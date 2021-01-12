@@ -18,6 +18,10 @@ namespace AquariumApi.DeviceApi
         List<DeviceSensor> GetSensorValues();
         void WaterChangeBeginDrain();
         void WaterChangeDrainTest(int msLength);
+        void WaterChangeCompleteATO(int maxRuntime);
+        void WaterChangeStopATO();
+        void WaterChangeTestATOPump();
+        ATOStatus WaterChangeGetATOStatus();
     } 
     public class GpioService : IGpioService
     {
@@ -25,6 +29,10 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<HardwareService> _logger;
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
+
+        /* Auto top off */
+        private int atoPumpRelayPin = 21;
+        private CancellationTokenSource atoTaskCancelationToken;
 
 
         private int solenoidPin = 21;
@@ -47,6 +55,14 @@ namespace AquariumApi.DeviceApi
                 Type = SensorTypes.FloatSwitch,
                 Polarity = Polarity.Input
             },
+
+            new  DeviceSensor()
+            {
+                Name = "ATO Complete Sensor",
+                Pin = 20,
+                Type = SensorTypes.FloatSwitch,
+                Polarity = Polarity.Input
+            },
         };
 
 
@@ -54,6 +70,7 @@ namespace AquariumApi.DeviceApi
 
         private GpioController Controller;
 
+        public bool ATOSystemRunning { get; private set; }
 
         public GpioService(IConfiguration config, ILogger<HardwareService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
         {
@@ -185,11 +202,17 @@ namespace AquariumApi.DeviceApi
         private void OnSensorTriggered(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
         {
             var drainCompleteSensor = pins[1];
-            if (pinValueChangedEventArgs.PinNumber != drainCompleteSensor.Pin)
-                return;
+            var atoCompletePin = pins[2];
 
-            if(IsDraining())
-                CloseDrainHose();
+
+            if (pinValueChangedEventArgs.PinNumber == atoCompletePin.Pin)
+            {
+                WaterChangeATOSensorTriggered();
+                return;
+            }
+            if (pinValueChangedEventArgs.PinNumber == drainCompleteSensor.Pin)
+                if(IsDraining())
+                  CloseDrainHose();
         }
 
        
@@ -209,9 +232,78 @@ namespace AquariumApi.DeviceApi
         {
             //Turn on replenish pump until sensor detects high water level
         }
-        public void WaterChangeBeginATO()
+
+
+        /* Auto top off */
+        public void WaterChangeTestATOPump()
         {
-            //Turn on ATO pump until sensor detects high water level
+            if (ATOSystemRunning)
+                return;
+            _logger.LogInformation("[WaterChange] ATO test pump");
+            Controller.Write(atoPumpRelayPin, PinValue.High);
+            Thread.Sleep(3000);
+            Controller.Write(atoPumpRelayPin, PinValue.Low);
+            _logger.LogInformation("[WaterChange] ATO test pump done.");
+
         }
+        public void WaterChangeCompleteATO(int maxRuntime)
+        {
+            if (atoTaskCancelationToken != null && !atoTaskCancelationToken.IsCancellationRequested)
+                atoTaskCancelationToken.Cancel();
+
+            //Open solenoid valve
+            _logger.LogInformation("[WaterChange] ATO Beginning...");
+            Controller.Write(atoPumpRelayPin, PinValue.High);
+            ATOSystemRunning = true;
+
+
+            //Apply a max drain time
+            var maxPumpRuntime = maxRuntime * 1000 * 60;
+            atoTaskCancelationToken = new CancellationTokenSource();
+            CancellationToken ct = atoTaskCancelationToken.Token;
+            Task.Run(() =>
+            {
+                Thread.Sleep(maxPumpRuntime);
+                ct.ThrowIfCancellationRequested();
+                if (ct.IsCancellationRequested)
+                    return;
+
+                if (ATOSystemRunning)
+                {
+                    _logger.LogInformation($"[WaterChange] ATO Stopped! Reached maximum run time of {maxRuntime} minutes.");
+                    WaterChangeStopATO();
+                }
+
+            }).ConfigureAwait(false); //Fire and forget
+        }
+        public void WaterChangeStopATO()
+        {
+            if (atoTaskCancelationToken != null && !atoTaskCancelationToken.IsCancellationRequested)
+                atoTaskCancelationToken.Cancel();
+
+            Controller.Write(atoPumpRelayPin, PinValue.Low);
+            ATOSystemRunning = false;
+            _logger.LogInformation("[WaterChange] ATO Stopped");
+        }
+        public void WaterChangeATOSensorTriggered()
+        {
+            if (!ATOSystemRunning)
+                return;
+            _logger.LogInformation("[WaterChange] ATO Sensor triggered");
+            WaterChangeStopATO();
+        }
+
+        public ATOStatus WaterChangeGetATOStatus()
+        {
+            return new ATOStatus()
+            {
+                PumpRunning = ATOSystemRunning,
+                SensorValue = pins[2].Value
+            };
+        }
+    }
+    public class AutoTopOffProcess
+    {
+
     }
 }

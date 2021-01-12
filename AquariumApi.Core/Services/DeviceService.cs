@@ -29,6 +29,7 @@ namespace AquariumApi.Core
         ScheduleState GetDeviceScheduleStatus(int deviceId);
         void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
+        ATOStatus GetDeviceATOStatus(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -191,6 +192,18 @@ namespace AquariumApi.Core
                 if (!result.IsSuccessStatusCode)
                     throw new Exception("Could not perform task on device");
             }
+        }
+
+
+        /* Get device ATO status */
+        public ATOStatus GetDeviceATOStatus(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/WaterChange/ATO/Status";
+            HttpClient client = new HttpClient();
+            var data = client.GetStringAsync(path).Result;
+            var state = JsonConvert.DeserializeObject<ATOStatus>(data);
+            return state;
         }
     }
 }
