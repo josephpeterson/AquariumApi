@@ -20,3 +20,4 @@ AquariumApi.DeviceApi/ClientApp/wwwroot/*
 AquariumApi.DeviceApi/aquarium_schedules.json
 AquariumApi.DeviceApi/login.json
 AquariumApi.DeviceApi/Properties/PublishProfiles/*
+AquariumApi/config.json
