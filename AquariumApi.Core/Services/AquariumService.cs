@@ -656,6 +656,14 @@ namespace AquariumApi.Core
                         new KeyValuePair<string, int>("Expert",2),
                     };
                     break;
+                case "DeviceSensorTypes":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Float Switch",(int)SensorTypes.FloatSwitch),
+                        new KeyValuePair<string, int>("ATO Pump Relay",(int)SensorTypes.ATOPumpRelay),
+                        new KeyValuePair<string, int>("Other",(int)SensorTypes.Other),
+                    };
+                    break;
                 default:
                     options = new List<KeyValuePair<string, int>>();
                     break;

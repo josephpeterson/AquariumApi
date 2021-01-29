@@ -25,10 +25,12 @@ namespace AquariumApi.DeviceApi.Extensions
       services.AddSingleton<IGpioService, GpioService>();
       services.AddTransient<IAquariumClient, AquariumClient>();
       services.AddSingleton<IDeviceService, DeviceService>();
-      services.AddSingleton<IQueueService, QueueService>();
+      services.AddSingleton<IATOService, ATOService>();
+            services.AddSingleton<IQueueService, QueueService>();
       services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
+      services.AddSingleton<DeviceAPI, DeviceAPI>();
 
-    }
+        }
     /* Background services */
     private static void RegisterHostedServices(IServiceCollection services)
     {

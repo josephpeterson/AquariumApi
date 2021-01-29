@@ -13,11 +13,13 @@ namespace AquariumApi.DeviceApi.Controllers
     public class SettingsController : ControllerBase
     {
         private IConfiguration _config;
+        private DeviceAPI _deviceAPI;
         private ILogger<SettingsController> _logger;
 
-        public SettingsController(IConfiguration config, ILogger<SettingsController> logger)
+        public SettingsController(IConfiguration config, DeviceAPI deviceAPI,ILogger<SettingsController> logger)
         {
             _config = config;
+            _deviceAPI = deviceAPI;
             _logger = logger;
         }
         [HttpGet]
@@ -42,6 +44,20 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                  System.IO.File.Delete("AquariumDeviceApi.log");
+            }
+            catch (Exception e)
+            {
+                return new NotFoundResult();
+            }
+            return new OkResult();
+        }
+        [HttpPost]
+        [Route("/v1/Reboot")]
+        public IActionResult AttemptReboot()
+        {
+            try
+            {
+                _deviceAPI.Process();
             }
             catch (Exception e)
             {

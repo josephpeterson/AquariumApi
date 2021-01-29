@@ -21,6 +21,7 @@ namespace AquariumApi.Models
         public string Port { get; set; }
         public string Address { get; set; }
         public string PrivateKey { get; set; }
+        public string HardwareModel { get; set; }
         public bool EnabledTemperature { get; set; }
         public bool EnabledPh { get; set; }
         public bool EnabledPhoto { get; set; }
@@ -32,5 +33,7 @@ namespace AquariumApi.Models
 
         [ForeignKey("DeviceId")]
         public ICollection<DeviceScheduleAssignment> ScheduleAssignments { get; set; }
+        [ForeignKey("DeviceId")]
+        public ICollection<DeviceSensor> Sensors { get; set; }
     }
 }

@@ -266,6 +266,58 @@ namespace AquariumApi.Controllers
         }
 
 
+        //Create/remove device sensors
+        [HttpGet]
+        [Route("/v1/Device/{deviceId}/Sensors")]
+        public IActionResult GetDeviceSensors(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensors called");
+                var deviceSensors = _deviceService.GetDeviceSensors(deviceId);
+                return new OkObjectResult(deviceSensors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Sensors: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/Sensor/Create")]
+        public IActionResult CreateDeviceSensor(int deviceId, [FromBody] DeviceSensor sensor)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensor/Create called");
+                var deviceSensor = _deviceService.CreateDeviceSensor(deviceId,sensor);
+                return new OkObjectResult(deviceSensor);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Sensor/Create: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPost, DisableRequestSizeLimit]
+        [Route("/v1/Device/{deviceId}/Sensor/Remove")]
+        public IActionResult RemoveDeviceSensor(int deviceId,[FromBody] DeviceSensor sensor)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensor/Remove called");
+                _deviceService.DeleteDeviceSensor(deviceId,sensor.Id);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Sensor/Remove: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
+
+
 
 
         //Deploy/Remove Device Schedules

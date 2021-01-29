@@ -149,6 +149,34 @@ namespace AquariumApi.Controllers
             }
         }
 
+
+        //Device is asking for detailed device information
+        [HttpGet]
+        [Route("Device")]
+        public IActionResult GetDeviceInformation()
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/DeviceInteraction/Device called");
+                var userId = _accountService.GetCurrentUserId();
+                var id = _accountService.GetCurrentAquariumId();
+                var aquarium = _aquariumService.GetAquariumById(id);
+                if (aquarium.Device == null)
+                {
+                    return BadRequest("This aquarium does not have a device");
+                }
+                if (!_accountService.CanModify(userId, aquarium))
+                    return BadRequest("You do not own this aquarium");
+
+                return new OkObjectResult(_aquariumService.GetAquariumDeviceById(aquarium.Device.Id));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/DeviceInteraction/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+
     }
     public class RequestModel
     {

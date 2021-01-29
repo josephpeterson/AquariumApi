@@ -25,6 +25,8 @@ namespace AquariumApi.DeviceApi.Clients
         Task<DeviceLoginResponse> ValidateAuthenticationToken();
         void ClearLoginToken();
         Task<DeviceLoginResponse> RenewAuthenticationToken();
+        Task<ATOStatus> DispatchATOStatus(ATOStatus status);
+        Task<AquariumDevice> GetDeviceFromService();
     }
     public class AquariumClient : IAquariumClient
     {
@@ -187,6 +189,41 @@ namespace AquariumApi.DeviceApi.Clients
             _aquariumAuthService.DeleteToken();
         }
 
+        public async Task<ATOStatus> DispatchATOStatus(ATOStatus status)
+        {
+            var path = $"{_config["AquariumServiceUrl"]}/Auth/Renew";
+            _logger.LogInformation("Dispatching ATO status...");
+            _logger.LogInformation($" - Pump running: {status.PumpRunning}");
+            _logger.LogInformation($" - Max Run Time: {status.MaxRuntime}");
+            HttpClient client = GetHttpClient();
+            var httpContent = new StringContent(JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
+            var result = await client.PostAsync(path, httpContent);
+            if (!result.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Could not dispatch ATO status.");
+                throw new Exception("Could not dispatch ATO status");
+            }
+            _logger.LogInformation($"ATO status successfully dispatched to server.");
+            var res = await result.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<ATOStatus>(res);
+            return response;
+        }
+
+        public async Task<AquariumDevice> GetDeviceFromService()
+        {
+            var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction/Device";
+            _logger.LogInformation("Getting device information from service...");
+            HttpClient client = GetHttpClient();
+            var result = await client.GetAsync(path);
+            if (!result.IsSuccessStatusCode)
+            {
+                _logger.LogError($"Could not get device from service");
+                return null;
+            }
+            var res = await result.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<AquariumDevice>(res);
+            return response;
+        }
     }
 
 }

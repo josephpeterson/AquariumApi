@@ -30,6 +30,9 @@ namespace AquariumApi.Core
         void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
         ATOStatus GetDeviceATOStatus(int deviceId);
+        ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
+        DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor);
+        void DeleteDeviceSensor(int deviceId, int deviceSensorId);
     }
     public class DeviceService : IDeviceService
     {
@@ -204,6 +207,30 @@ namespace AquariumApi.Core
             var data = client.GetStringAsync(path).Result;
             var state = JsonConvert.DeserializeObject<ATOStatus>(data);
             return state;
+        }
+
+
+        /* Device Sensors */
+        public DeviceSensor CreateDeviceSensor(int deviceId,DeviceSensor deviceSensor)
+        {
+            deviceSensor.DeviceId = deviceId;
+            deviceSensor = _aquariumDao.AddDeviceSensor(deviceSensor);
+            /* todo tell rpi that sensors updated */
+            return deviceSensor;
+        }
+        public ICollection<DeviceSensor> GetDeviceSensors(int deviceId)
+        {
+            var deviceSensors = _aquariumDao.GetDeviceSensors(deviceId);
+            return deviceSensors;
+        }
+        public void DeleteDeviceSensor(int deviceId,int deviceSensorId)
+        {
+            var l = new List<int>()
+            {
+                deviceSensorId
+            };
+             _aquariumDao.DeleteDeviceSensors(l);
+            return;
         }
     }
 }

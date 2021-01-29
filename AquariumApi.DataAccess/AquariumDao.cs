@@ -142,6 +142,10 @@ namespace AquariumApi.DataAccess
         List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId);
         List<PhotoContent> GetPhotoContentByIds(int[] photoIds);
         ICollection<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
+        ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
+        DeviceSensor AddDeviceSensor(DeviceSensor deviceSensor);
+        DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
+        void DeleteDeviceSensors(List<int> deviceSensorIds);
     }
 
     public class AquariumDao : IAquariumDao
@@ -445,6 +449,7 @@ namespace AquariumApi.DataAccess
             var device = _dbAquariumContext.TblDevice.AsNoTracking()
                 .Where(s => s.Id == deviceId)
                 .Include(e => e.CameraConfiguration)
+                .Include(e => e.Sensors)
                 .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .First();
             if (device.CameraConfiguration == null)
@@ -1236,6 +1241,38 @@ namespace AquariumApi.DataAccess
         {
             return _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id)).ToList();
         }
+
+
+
+
+
+        /* Device Sensors */
+        public DeviceSensor AddDeviceSensor(DeviceSensor deviceSensor)
+        {
+            _dbAquariumContext.TblDeviceSensor.Add(deviceSensor);
+            _dbAquariumContext.SaveChanges();
+            return deviceSensor;
+        }
+        public ICollection<DeviceSensor> GetDeviceSensors(int deviceId)
+        {
+            var deviceSensors = _dbAquariumContext.TblDeviceSensor.Where(n => n.DeviceId == deviceId).ToList();
+            return deviceSensors;
+        }
+        public DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor)
+        {
+            _dbAquariumContext.TblDeviceSensor.Update(deviceSensor);
+            _dbAquariumContext.SaveChanges();
+            return deviceSensor;
+        }
+        public void DeleteDeviceSensors(List<int> deviceSensorIds)
+        {
+            var removedDeviceSensors = _dbAquariumContext.TblDeviceSensor.Where(n => deviceSensorIds.Contains(n.Id)).ToList();
+            _dbAquariumContext.RemoveRange(removedDeviceSensors);
+            _dbAquariumContext.SaveChanges();
+        }
+
+
+
     }
 }
 

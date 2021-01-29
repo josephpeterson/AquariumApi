@@ -25,6 +25,7 @@ namespace AquariumApi.DeviceApi
         Task<bool> RenewAuthenticationToken();
         void ApplyAquariumDevice(AquariumDevice aquariumDevice);
         Task<Aquarium> ApplyDeviceHardware();
+        Task<AquariumDevice> GetDeviceFromService();
     }
     public class DeviceService : IDeviceService
     {
@@ -64,6 +65,19 @@ namespace AquariumApi.DeviceApi
                 var response = await _aquariumClient.ValidateAuthenticationToken();
                 _accountLogin = response;
                 _logger.LogInformation("Device information found for aquarium \"" + _accountLogin.Aquarium.Name + "\"");
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
+                return null;
+            }
+        }
+        public async Task<AquariumDevice> GetDeviceFromService()
+        {
+            try
+            {
+                AquariumDevice response = await _aquariumClient.GetDeviceFromService();
                 return response;
             }
             catch (Exception ex)

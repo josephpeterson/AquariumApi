@@ -193,6 +193,8 @@ namespace AquariumApi.DeviceApi
                 case ScheduleTaskTypes.Snapshot:
                     TakeSnapshotTask(task);
                     break;
+
+                    //todo ato
                 default:
                     _logger.LogError($"Invalid task type id (taskId: {task.Id})");
                     break;
