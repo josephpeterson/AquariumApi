@@ -27,7 +27,7 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<HardwareService> _logger;
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
-        private List<DeviceSensor> Pins;
+        private List<DeviceSensor> Pins = new List<DeviceSensor>();
         private GpioController Controller;
         public bool ATOSystemRunning { get; private set; }
 
@@ -43,9 +43,6 @@ namespace AquariumApi.DeviceApi
             {
                 Controller = new GpioController();
                 _logger.LogInformation("GpioService: Initiated GpioController successfully.");
-
-                _logger.LogInformation("GpioService: Preparing pins....");
-                PreparePins();
             }
             catch(Exception ex)
             {
@@ -55,6 +52,8 @@ namespace AquariumApi.DeviceApi
         }
         public void PreparePins()
         {
+            _logger.LogInformation("GpioService: Preparing pins....");
+            _logger.LogInformation($"Gpio Controller is valid: {Controller != null}");
             Pins.ForEach(p =>
             {
                 try

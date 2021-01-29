@@ -26,25 +26,13 @@ namespace AquariumApi.DeviceApi
 
         public void Process()
         {
+            _logger.LogInformation("DeviceAPI Starting...");
             //Attempt to contact aquarium service
             var response = _deviceService.PingAquariumService().Result;
             AquariumDevice device = null;
 
             if (response != null)
             {
-                device = response.Aquarium.Device;
-                //Check for any existing schedules
-                var sa = device.ScheduleAssignments;
-                if (sa != null)
-                {
-                    _logger.LogInformation("Schedules found from service.");
-                    var schedules = sa.Select(s => s.Schedule).ToList();
-                    _scheduleService.SaveSchedulesToCache(schedules);
-                    _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
-                }
-                else
-                    _logger.LogInformation("No schedules deployed on this device.");
-
                 //Send current hardware
                 _logger.LogInformation("Scanning hardware...");
                 _deviceService.ApplyDeviceHardware().Wait();
@@ -62,7 +50,15 @@ namespace AquariumApi.DeviceApi
                     _gpioService.RegisterDevicePin(s);
                 });
 
+
+
+
+
+
+
+
                 //check if ato is enabled
+                _logger.LogInformation("Checking if ATO is enabled...");
                 var atoTask = device.ScheduleAssignments.Where(assignment =>
                     assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault() != null
                 ).FirstOrDefault();
@@ -73,10 +69,30 @@ namespace AquariumApi.DeviceApi
                 }
                 else
                     _logger.LogInformation("ATO is not enabled on this device.");
+
+
+
+
+
+
+
+                //Check schedules
+                _logger.LogInformation("Checking schedule information...");
+                var sa = device.ScheduleAssignments;
+                if (sa != null)
+                {
+                    _logger.LogInformation($"{sa.Count()} Schedules found");
+                    var schedules = sa.Select(s => s.Schedule).ToList();
+                    _scheduleService.SaveSchedulesToCache(schedules);
+                    _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
+                }
+                else
+                    _logger.LogInformation("No schedules are deployed on this device.");
             }
 
 
 
+            /*
             //Attempt to enable wiringPi
             _logger.LogInformation("*** Attempting to enable WiringPi ***");
             try
@@ -89,6 +105,7 @@ namespace AquariumApi.DeviceApi
             {
                 _logger.LogError($"Could not enable wiring: { ex.Message } Details: { ex.ToString() }");
             }
+            */
         }
 
     }

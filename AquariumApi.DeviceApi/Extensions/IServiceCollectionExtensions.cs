@@ -20,17 +20,16 @@ namespace AquariumApi.DeviceApi.Extensions
 
     private static void RegisterServices(IServiceCollection services)
     {
-      services.AddTransient<IHardwareService, HardwareService>();
-            services.AddTransient<ISerialService, SerialService>();
-      services.AddSingleton<IGpioService, GpioService>();
-      services.AddTransient<IAquariumClient, AquariumClient>();
-      services.AddSingleton<IDeviceService, DeviceService>();
-      services.AddSingleton<IATOService, ATOService>();
-            services.AddSingleton<IQueueService, QueueService>();
-      services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
-      services.AddSingleton<DeviceAPI, DeviceAPI>();
-
-        }
+        services.AddTransient<IHardwareService, HardwareService>();
+        services.AddTransient<ISerialService, SerialService>();
+        services.AddTransient<IGpioService, GpioService>();
+        services.AddTransient<IAquariumClient, AquariumClient>();
+        services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<IATOService, ATOService>();
+        services.AddSingleton<IQueueService, QueueService>();
+        services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
+        services.AddSingleton<DeviceAPI, DeviceAPI>();
+    }
     /* Background services */
     private static void RegisterHostedServices(IServiceCollection services)
     {

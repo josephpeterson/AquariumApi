@@ -70,10 +70,8 @@ namespace AquariumApi.DeviceApi.Clients
         {
             var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction";
 
-            _logger.LogInformation("\n\n** Attempting to apply device hardware ** \n\n");
-            _logger.LogInformation("- Service Url: " + path);
+            _logger.LogInformation("Sending latest device hardware information...");
             _logger.LogInformation("- Hardware:\n");
-            _logger.LogInformation(JsonConvert.SerializeObject(aquariumDevice));
 
             HttpClient client = GetHttpClient();
             var result = await client.PostAsJsonAsync(path, aquariumDevice);
@@ -89,16 +87,14 @@ namespace AquariumApi.DeviceApi.Clients
 
             _logger.LogInformation($"- Aquarium: ${aquarium.Name}");
             _logger.LogInformation($"- Aquarium Device: ${aquarium.Device.Name}");
-            _logger.LogInformation("Token successfully validated.");
+            _logger.LogInformation("Hardware information updated.");
             return aquarium;
         }
         /* Retrieve current token information */
         public async Task<DeviceLoginResponse> ValidateAuthenticationToken()
         {
             var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction";
-
-            _logger.LogInformation("\n\n** Attempting to validate authentication token ** \n\n");
-            _logger.LogInformation("- Service Url: " + path);
+            _logger.LogInformation("Validating authentication token...");
 
             HttpClient client = GetHttpClient();
             var result = await client.GetAsync(path);
@@ -154,18 +150,17 @@ namespace AquariumApi.DeviceApi.Clients
             //save login information for cache 
             //then on load contact service and validate
             var path = $"{_config["AquariumServiceUrl"]}/Auth/Renew";
-            _logger.LogInformation("\n\n** Attempting to renew authentication token ** \n\n");
-            _logger.LogInformation("- Service Url: " + path);
+            _logger.LogInformation("Renewing authentication token...");
             HttpClient client = GetHttpClient();
             client.Timeout = TimeSpan.FromMinutes(5);
             var result = await client.GetAsync(path);
             if (!result.IsSuccessStatusCode)
             {
-                _logger.LogError("\n\n** Could not renew authentication token ** \n\n");
+                _logger.LogError("\n\n ** Could not renew authentication token ** \n\n");
                 throw new Exception("Could not renew authentication token");
             }
 
-            _logger.LogInformation("\n\n ** Authentication Token Successfully Renewed ** \n\n");
+            _logger.LogInformation("Authentication Token Successfully Renewed");
 
             var res = await result.Content.ReadAsStringAsync();
             var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
