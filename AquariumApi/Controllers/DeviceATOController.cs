@@ -44,5 +44,37 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/ATO")]
+        public IActionResult RunDeviceATO(int deviceId,[FromBody] int maxRuntime)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/ATO called");
+                var atoStatus = _deviceService.PerformDeviceATO(deviceId, maxRuntime);
+                return new OkObjectResult(atoStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/ATO/Stop")]
+        public IActionResult StopDeviceATO(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/ATO/Stop called");
+                var atoStatus = _deviceService.StopDeviceATO(deviceId);
+                return new OkObjectResult(atoStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/ATO/Stop endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
     }
 }

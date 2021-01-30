@@ -40,9 +40,9 @@ namespace AquariumApi.DeviceApi.Controllers
             _config = config;
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("/v1/WaterChange/ATO")]
-        public IActionResult WaterChangeCompleteATO(int maxRuntime)
+        public IActionResult WaterChangeCompleteATO([FromBody] int maxRuntime)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet]
+        [HttpPost]
         [Route("/v1/WaterChange/ATO/Stop")]
         public IActionResult WaterChangeStopATO()
         {

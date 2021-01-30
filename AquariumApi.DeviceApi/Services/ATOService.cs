@@ -62,7 +62,7 @@ namespace AquariumApi.DeviceApi
 
             DateTime? nextRunTime = null;
             if(task != null)
-                nextRunTime = task.StartTime;
+                nextRunTime = task.StartTime.ToUniversalTime();
 
             _logger.LogInformation($"ATO successfully set up (Pump Relay Pin: {pumpRelaySensor.Pin} Float Sensor Pin: {floatSwitchSensor.Pin})");
             Status = new ATOStatus()

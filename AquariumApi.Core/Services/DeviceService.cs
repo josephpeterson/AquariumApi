@@ -33,6 +33,8 @@ namespace AquariumApi.Core
         ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
         DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor);
         void DeleteDeviceSensor(int deviceId, int deviceSensorId);
+        ATOStatus PerformDeviceATO(int deviceId, int maxRuntime);
+        ATOStatus StopDeviceATO(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -217,9 +219,7 @@ namespace AquariumApi.Core
                     var oldState = _aquariumDao.GetATOStatus(deviceId).Where(s => !s.Completed)
                         .OrderBy(s => s.UpdatedAt)
                         .FirstOrDefault();
-                    if (oldState == null)
-                        state = _aquariumDao.UpdateATOStatus(state);
-                    else
+                    if (oldState != null)
                         state.Id = oldState.Id;
                 }
                 //insert into db
@@ -240,6 +240,37 @@ namespace AquariumApi.Core
                 _logger.LogInformation("Could not retrieve ATO status from device. Loading form cache...");
                 //load from cache
                 return _aquariumDao.GetATOStatus(deviceId).FirstOrDefault();
+            }
+        }
+        public ATOStatus PerformDeviceATO(int deviceId, int maxRuntime)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/WaterChange/ATO";
+            using (var client2 = new HttpClient())
+            {
+                var httpContent = new StringContent(maxRuntime.ToString(), Encoding.UTF8, "application/json");
+                var result = client2.PostAsync(path, httpContent).Result;
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not perform ATO on device");
+
+                var atoStatus = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
+                atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
+                return atoStatus;
+            }
+        }
+        public ATOStatus StopDeviceATO(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            var path = $"http://{device.Address}:{device.Port}/v1/WaterChange/ATO/Stop";
+            using (var client2 = new HttpClient())
+            {
+                var result = client2.PostAsync(path, null).Result;
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not stop ATO on device");
+
+                var atoStatus = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
+                atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
+                return atoStatus;
             }
         }
 
