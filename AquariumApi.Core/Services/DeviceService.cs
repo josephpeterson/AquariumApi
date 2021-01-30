@@ -212,7 +212,16 @@ namespace AquariumApi.Core
 
                 bool update = false;
                 if (!state.Id.HasValue)
-                    update = true;
+                {
+                    //retrieve the latest status
+                    var oldState = _aquariumDao.GetATOStatus(deviceId).Where(s => !s.Completed)
+                        .OrderBy(s => s.UpdatedAt)
+                        .FirstOrDefault();
+                    if (oldState == null)
+                        state = _aquariumDao.UpdateATOStatus(state);
+                    else
+                        state.Id = oldState.Id;
+                }
                 //insert into db
                 state = _aquariumDao.UpdateATOStatus(state);
 
@@ -220,6 +229,7 @@ namespace AquariumApi.Core
                 //This is a new insert in db, backfill the Id to the device
                 if(update)
                 {
+                    //maybe we dont need to do this? todo
                     var httpContent = new StringContent(JsonConvert.SerializeObject(state), Encoding.UTF8, "application/json");
                     client.PutAsync(path,httpContent);
                 }
