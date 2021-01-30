@@ -1290,8 +1290,9 @@ namespace AquariumApi.DataAccess
         }
         public List<ATOStatus> GetATOStatus(int deviceId)
         {
-            var range = _dbAquariumContext.TblDeviceATOStatus.Where(s => s.DeviceId == deviceId).OrderBy(s => s.UpdatedAt);
-            _dbAquariumContext.SaveChanges();
+            var range = _dbAquariumContext.TblDeviceATOStatus
+                .AsNoTracking()
+                .Where(s => s.DeviceId == deviceId).OrderBy(s => s.UpdatedAt);
             return range.ToList();
         }
     }
