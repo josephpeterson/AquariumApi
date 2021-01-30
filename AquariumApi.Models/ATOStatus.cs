@@ -21,9 +21,9 @@ namespace AquariumApi.Models
 
         public virtual AquariumDevice Device { get; set; }
         [NotMapped]
-        public virtual bool Enabled { get; set; }
+        public virtual bool Enabled { get; set; } = false;
         [NotMapped]
-        public virtual DateTime NextRunTime { get; set; }
+        public virtual DateTime? NextRunTime { get; set; }
         [NotMapped]
         public virtual DeviceSensor PumpRelaySensor { get; set; }
         [NotMapped]

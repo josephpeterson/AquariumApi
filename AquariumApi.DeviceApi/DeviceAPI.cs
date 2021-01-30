@@ -59,26 +59,14 @@ namespace AquariumApi.DeviceApi
 
                 //check if ato is enabled
                 _logger.LogInformation("Checking if ATO is enabled...");
-                var atoTask = device.ScheduleAssignments.Where(assignment =>
-                    assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault() != null
-                ).FirstOrDefault();
-                if(atoTask != null)
+                try
                 {
-                    try
-                    {
-                        _atoService.Setup(device);
-                    } catch(Exception e)
-                    {
-                        _logger.LogError("Could not run ATO setup");
-                        _logger.LogError(e.Message);
-                    }
+                    _atoService.Setup(device);
+                } catch(Exception e)
+                {
+                    _logger.LogError("Could not run ATO setup");
+                    _logger.LogError(e.Message);
                 }
-                else
-                    _logger.LogInformation("ATO is not enabled on this device.");
-
-
-
-
 
 
 

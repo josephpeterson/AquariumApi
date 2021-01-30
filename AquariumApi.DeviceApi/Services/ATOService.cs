@@ -25,7 +25,7 @@ namespace AquariumApi.DeviceApi
     public class ATOService : IATOService
     {
         public AquariumDevice Device { get; set; }
-        public ATOStatus Status { get; set; }
+        public ATOStatus Status = new ATOStatus();
         public AutoTopOffRequest Request { get; set; }
 
         private CancellationTokenSource CancelToken;
@@ -56,6 +56,13 @@ namespace AquariumApi.DeviceApi
                 throw new Exception($"Invalid ATO sensors (Pump: {pumpRelaySensor} Sensor: {floatSwitchSensor})");
             floatSwitchSensor.OnSensorTriggered = OnFloatSwitchTriggered;
 
+            var task = device.ScheduleAssignments.Select(assignment => 
+            assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault()
+            ).FirstOrDefault();
+
+            DateTime? nextRunTime = null;
+            if(task != null)
+                nextRunTime = task.StartTime;
 
             _logger.LogInformation($"ATO successfully set up (Pump Relay Pin: {pumpRelaySensor.Pin} Float Sensor Pin: {floatSwitchSensor.Pin})");
             Status = new ATOStatus()
@@ -64,7 +71,8 @@ namespace AquariumApi.DeviceApi
                 FloatSensor = floatSwitchSensor,
                 Enabled = true,
                 DeviceId = _device.Id,
-                UpdatedAt = new DateTime()
+                UpdatedAt = new DateTime(),
+                NextRunTime = nextRunTime
             };
         }
         private DeviceSensor GetFloatSensorPin()
@@ -87,11 +95,11 @@ namespace AquariumApi.DeviceApi
                 throw new Exception($"Invalid ATO pins specified (Pump: {Status.PumpRelaySensor} Sensor: {Status.FloatSensor}");
 
             Request = atoRequest;
-            Status.StartTime = Request.StartTime;
-            Status.EstimatedEndTime = Request.StartTime.AddMinutes(24);
+            Status.StartTime = DateTime.Now.ToUniversalTime();
+            Status.EstimatedEndTime = Status.StartTime.AddMinutes(24);
             Status.MaxRuntime = Request.Runtime;
             Status.RunIndefinitely = Request.RunIndefinitely;
-            Status.UpdatedAt = new DateTime();
+            Status.UpdatedAt = Status.StartTime;
 
 
             //Attempt to tell AquariumApi we are running
@@ -139,9 +147,9 @@ namespace AquariumApi.DeviceApi
 
             Status.PumpRunning = false;
             Status.EndReason = stopReason.ToString();
-            Status.ActualEndTime = new DateTime();
+            Status.ActualEndTime = DateTime.Now.ToUniversalTime();
+            Status.UpdatedAt = Status.ActualEndTime;
             Status.Completed = true;
-            Status.UpdatedAt = new DateTime();
 
             if (Status.Id.HasValue) //this tells us we've recieved a response from the server
                 _aquariumClient.DispatchATOStatus(Status);
@@ -160,7 +168,7 @@ namespace AquariumApi.DeviceApi
         }
         public ATOStatus GetATOStatus()
         {
-            Status.UpdatedAt = new DateTime();
+            Status.UpdatedAt = DateTime.Now.ToUniversalTime();
             return Status;
         }
         public void SetATOStatusId(int id)
