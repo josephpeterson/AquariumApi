@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
@@ -19,9 +20,13 @@ namespace AquariumApi.Models
         public string EndReason { get; set; }
 
         public virtual AquariumDevice Device { get; set; }
+        [NotMapped]
         public virtual bool Enabled { get; set; }
+        [NotMapped]
         public virtual DateTime NextRunTime { get; set; }
+        [NotMapped]
         public virtual DeviceSensor PumpRelaySensor { get; set; }
+        [NotMapped]
         public virtual DeviceSensor FloatSensor { get; set; }
     }
 }
