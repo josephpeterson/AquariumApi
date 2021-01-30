@@ -210,8 +210,19 @@ namespace AquariumApi.Core
                 var data = client.GetStringAsync(path).Result;
                 var state = JsonConvert.DeserializeObject<ATOStatus>(data);
 
+                bool update = false;
+                if (!state.Id.HasValue)
+                    update = true;
                 //insert into db
-                _aquariumDao.UpdateATOStatus(state);
+                state = _aquariumDao.UpdateATOStatus(state);
+
+
+                //This is a new insert in db, backfill the Id to the device
+                if(update)
+                {
+                    var httpContent = new StringContent(JsonConvert.SerializeObject(state), Encoding.UTF8, "application/json");
+                    client.PutAsync(path,httpContent);
+                }
                 return state;
             }
             catch(Exception e)

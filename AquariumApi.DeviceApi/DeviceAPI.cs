@@ -66,7 +66,7 @@ namespace AquariumApi.DeviceApi
                 {
                     try
                     {
-                        _atoService.Setup();
+                        _atoService.Setup(device);
                     } catch(Exception e)
                     {
                         _logger.LogError("Could not run ATO setup");

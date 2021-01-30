@@ -18,11 +18,13 @@ namespace AquariumApi.DeviceApi
     {
         void BeginAutoTopOff(AutoTopOffRequest atoRequest);
         ATOStatus GetATOStatus();
-        void Setup();
+        void SetATOStatusId(int id);
+        void Setup(AquariumDevice device);
         void StopAutoTopOff(AutoTopOffStopReason stopReason = AutoTopOffStopReason.ForceStop);
     }
     public class ATOService : IATOService
     {
+        public AquariumDevice Device { get; set; }
         public ATOStatus Status { get; set; }
         public AutoTopOffRequest Request { get; set; }
 
@@ -32,6 +34,7 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<ATOService> _logger;
         private readonly IGpioService _gpioService;
         private IAquariumClient _aquariumClient;
+        private AquariumDevice _device;
 
         public ATOService(IConfiguration config, ILogger<ATOService> logger, IGpioService gpioService, IHostingEnvironment hostingEnvironment,IAquariumClient aquariumClient)
         {
@@ -42,19 +45,25 @@ namespace AquariumApi.DeviceApi
         }
 
 
-        public void Setup()
+        public void Setup(AquariumDevice device)
         {
+            _device = device;
+
+            //Check pins and sensors
             var pumpRelaySensor = GetPumpRelayPin();
             var floatSwitchSensor = GetFloatSensorPin();
             if (pumpRelaySensor == null || floatSwitchSensor == null)
                 throw new Exception($"Invalid ATO sensors (Pump: {pumpRelaySensor} Sensor: {floatSwitchSensor})");
             floatSwitchSensor.OnSensorTriggered = OnFloatSwitchTriggered;
+
+
             _logger.LogInformation($"ATO successfully set up (Pump Relay Pin: {pumpRelaySensor.Pin} Float Sensor Pin: {floatSwitchSensor.Pin})");
             Status = new ATOStatus()
             {
                 PumpRelaySensor = pumpRelaySensor,
                 FloatSensor = floatSwitchSensor,
                 Enabled = true,
+                DeviceId = _device.Id,
                 UpdatedAt = new DateTime()
             };
         }
@@ -153,6 +162,10 @@ namespace AquariumApi.DeviceApi
         {
             Status.UpdatedAt = new DateTime();
             return Status;
+        }
+        public void SetATOStatusId(int id)
+        {
+            Status.Id = id;
         }
 }
     public class AutoTopOffRequest
