@@ -94,19 +94,18 @@ namespace AquariumApi.DeviceApi
             if(Status.PumpRelaySensor == null || Status.FloatSensor == null)
                 throw new Exception($"Invalid ATO pins specified (Pump: {Status.PumpRelaySensor} Sensor: {Status.FloatSensor}");
 
+            _logger.LogInformation("[ATOService] Beginning ATO...");
+            _gpioService.SetPinValue(Status.PumpRelaySensor, PinValue.High);
+
             Request = atoRequest;
+            Status.Id = null;
             Status.StartTime = DateTime.Now.ToUniversalTime();
             Status.EstimatedEndTime = Status.StartTime.AddMinutes(24);
             Status.MaxRuntime = Request.Runtime;
             Status.RunIndefinitely = Request.RunIndefinitely;
             Status.UpdatedAt = Status.StartTime;
-
-
-            //Attempt to tell AquariumApi we are running
-            Status = _aquariumClient.DispatchATOStatus(Status).Result;
-
-            _logger.LogInformation("[ATOService] Beginning ATO...");
-            _gpioService.SetPinValue(Status.PumpRelaySensor, PinValue.High);
+            Status.PumpRunning = true;
+            DispatchStatus().ConfigureAwait(false);
 
             //Apply a max drain time
             var maxPumpRuntime = Status.MaxRuntime * 1000 * 60;
@@ -175,7 +174,10 @@ namespace AquariumApi.DeviceApi
         {
             Status.Id = id;
         }
-}
+        private async Task DispatchStatus() {
+            Status = await _aquariumClient.DispatchATOStatus(Status);
+        }
+    }
     public class AutoTopOffRequest
     {
         public DateTime StartTime { get; set; }

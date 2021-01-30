@@ -166,6 +166,7 @@ namespace AquariumApi.Controllers
                 }
                 if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
+                atoStatus.DeviceId = aquarium.Device.Id;
 
                 var s = _deviceService.UpdateDeviceATOStatus(atoStatus);
 
