@@ -46,7 +46,7 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                _logger.LogInformation("GET /v1/WaterChange/ATO called");
+                _logger.LogInformation("POST /v1/WaterChange/ATO called");
                 _atoService.BeginAutoTopOff(new AutoTopOffRequest
                 {
                     RunIndefinitely = false,
@@ -56,7 +56,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/WaterChange/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/WaterChange/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return NotFound();
             }

@@ -38,6 +38,7 @@ namespace AquariumApi.Core
         ATOStatus PerformDeviceATO(int deviceId, int maxRuntime);
         ATOStatus StopDeviceATO(int deviceId);
         ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
+        DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
     }
     public class DeviceService : IDeviceService
     {
@@ -294,6 +295,10 @@ namespace AquariumApi.Core
         {
             var deviceSensors = _aquariumDao.GetDeviceSensors(deviceId);
             return deviceSensors;
+        }
+        public DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor)
+        {
+            return _aquariumDao.UpdateDeviceSensor(deviceSensor);
         }
         public void DeleteDeviceSensor(int deviceId,int deviceSensorId)
         {

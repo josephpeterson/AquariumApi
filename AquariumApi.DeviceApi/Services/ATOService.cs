@@ -105,6 +105,7 @@ namespace AquariumApi.DeviceApi
             Status.RunIndefinitely = Request.RunIndefinitely;
             Status.UpdatedAt = Status.StartTime;
             Status.PumpRunning = true;
+            Status.Completed = false;
             DispatchStatus().ConfigureAwait(false);
 
             //Apply a max drain time
@@ -114,7 +115,6 @@ namespace AquariumApi.DeviceApi
 
             Task.Run(() =>
             {
-                Status.PumpRunning = true;
                 Thread.Sleep(maxPumpRuntime);
                 ct.ThrowIfCancellationRequested();
                 if (ct.IsCancellationRequested)
@@ -175,7 +175,14 @@ namespace AquariumApi.DeviceApi
             Status.Id = id;
         }
         private async Task DispatchStatus() {
-            Status = await _aquariumClient.DispatchATOStatus(Status);
+            try
+            {
+                Status = await _aquariumClient.DispatchATOStatus(Status);
+            }
+            catch(Exception e)
+            {
+                _logger.LogError("Unable to dispatch ATO status to server");
+            }
         }
     }
     public class AutoTopOffRequest

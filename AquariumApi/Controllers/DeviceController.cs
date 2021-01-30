@@ -299,7 +299,7 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
-        [HttpPost, DisableRequestSizeLimit]
+        [HttpPost]
         [Route("/v1/Device/{deviceId}/Sensor/Remove")]
         public IActionResult RemoveDeviceSensor(int deviceId,[FromBody] DeviceSensor sensor)
         {
@@ -312,6 +312,22 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Device/{deviceId}/Sensor/Remove: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPut]
+        [Route("/v1/Device/{deviceId}/Sensor/Update")]
+        public IActionResult UpdateDeviceSensor(int deviceId, [FromBody] DeviceSensor sensor)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensor/Update called");
+                sensor = _deviceService.UpdateDeviceSensor(sensor);
+                return new OkObjectResult(sensor);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Device/{deviceId}/Sensor/Update: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
