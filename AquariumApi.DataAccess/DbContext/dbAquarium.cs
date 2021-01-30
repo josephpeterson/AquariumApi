@@ -52,6 +52,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<WaterChange> TblWaterChange { get; set; }
         public virtual DbSet<WaterDosing> TblWaterDosing { get; set; }
         public virtual DbSet<DeviceSensor> TblDeviceSensor { get; set; }
+        public virtual DbSet<ATOStatus> TblDeviceATOStatus { get; set; }
 
 
 
@@ -286,6 +287,12 @@ namespace AquariumApi.DataAccess
             {
                 entity.Ignore(e => e.OnSensorTriggered); //we need to ignore delegates. this is the only way. move this to DeviceSensor class if possible
                 entity.ToTable("tblDeviceSensor");
+                entity.HasOne(e => e.Device);
+
+            });
+            modelBuilder.Entity<ATOStatus>(entity =>
+            {
+                entity.ToTable("tblDeviceATOStatus");
                 entity.HasOne(e => e.Device);
 
             });

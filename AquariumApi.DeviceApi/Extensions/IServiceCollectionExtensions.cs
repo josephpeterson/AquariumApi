@@ -22,8 +22,8 @@ namespace AquariumApi.DeviceApi.Extensions
     {
         services.AddTransient<IHardwareService, HardwareService>();
         services.AddTransient<ISerialService, SerialService>();
-        services.AddTransient<IGpioService, GpioService>();
         services.AddTransient<IAquariumClient, AquariumClient>();
+        services.AddSingleton<IGpioService, GpioService>();
         services.AddSingleton<IDeviceService, DeviceService>();
         services.AddSingleton<IATOService, ATOService>();
         services.AddSingleton<IQueueService, QueueService>();

@@ -202,11 +202,24 @@ namespace AquariumApi.Core
         public ATOStatus GetDeviceATOStatus(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/WaterChange/ATO/Status";
-            HttpClient client = new HttpClient();
-            var data = client.GetStringAsync(path).Result;
-            var state = JsonConvert.DeserializeObject<ATOStatus>(data);
-            return state;
+
+            try
+            {
+                var path = $"http://{device.Address}:{device.Port}/v1/WaterChange/ATO/Status";
+                HttpClient client = new HttpClient();
+                var data = client.GetStringAsync(path).Result;
+                var state = JsonConvert.DeserializeObject<ATOStatus>(data);
+
+                //insert into db
+                _aquariumDao.UpdateATOStatus(state);
+                return state;
+            }
+            catch(Exception e)
+            {
+                _logger.LogInformation("Could not retrieve ATO status from device. Loading form cache...");
+                //load from cache
+                return _aquariumDao.GetATOStatus(deviceId).FirstOrDefault();
+            }
         }
 
 

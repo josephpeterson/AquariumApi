@@ -146,6 +146,9 @@ namespace AquariumApi.DataAccess
         DeviceSensor AddDeviceSensor(DeviceSensor deviceSensor);
         DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
         void DeleteDeviceSensors(List<int> deviceSensorIds);
+        ATOStatus UpdateATOStatus(ATOStatus atoStatus);
+        ATOStatus AddATOStatus(ATOStatus atoStatus);
+        List<ATOStatus> GetATOStatus(int deviceId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1273,6 +1276,24 @@ namespace AquariumApi.DataAccess
 
 
 
+        public ATOStatus AddATOStatus(ATOStatus atoStatus)
+        {
+            _dbAquariumContext.TblDeviceATOStatus.Add(atoStatus);
+            _dbAquariumContext.SaveChanges();
+            return atoStatus;
+        }
+        public ATOStatus UpdateATOStatus(ATOStatus atoStatus)
+        {
+            _dbAquariumContext.TblDeviceATOStatus.Update(atoStatus);
+            _dbAquariumContext.SaveChanges();
+            return atoStatus;
+        }
+        public List<ATOStatus> GetATOStatus(int deviceId)
+        {
+            var range = _dbAquariumContext.TblDeviceATOStatus.Where(s => s.DeviceId == deviceId).OrderBy(s => s.UpdatedAt);
+            _dbAquariumContext.SaveChanges();
+            return range.ToList();
+        }
     }
 }
 

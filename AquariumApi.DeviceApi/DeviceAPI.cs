@@ -26,7 +26,7 @@ namespace AquariumApi.DeviceApi
 
         public void Process()
         {
-            _logger.LogInformation("DeviceAPI Starting...");
+            _logger.LogInformation("\n\n\nDeviceAPI Starting...");
             //Attempt to contact aquarium service
             var response = _deviceService.PingAquariumService().Result;
             AquariumDevice device = null;
@@ -64,8 +64,14 @@ namespace AquariumApi.DeviceApi
                 ).FirstOrDefault();
                 if(atoTask != null)
                 {
-                    _logger.LogInformation("ATO is enabled on this device.....");
-                    _atoService.Setup();
+                    try
+                    {
+                        _atoService.Setup();
+                    } catch(Exception e)
+                    {
+                        _logger.LogError("Could not run ATO setup");
+                        _logger.LogError(e.Message);
+                    }
                 }
                 else
                     _logger.LogInformation("ATO is not enabled on this device.");

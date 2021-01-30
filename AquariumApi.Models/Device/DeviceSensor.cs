@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
@@ -13,6 +14,9 @@ namespace AquariumApi.Models
         public Polarity Polarity {get; set; }
 
         public delegate void SensorTriggered(object sender,int value);
+
+
+        [JsonIgnore]
         public SensorTriggered OnSensorTriggered { get; set; }
 
         public virtual AquariumDevice Device { get; set; }

@@ -17,7 +17,6 @@ namespace AquariumApi.DeviceApi
     {
         void CleanUp();
         List<DeviceSensor> GetAllSensors();
-        void PreparePins();
         void RegisterDevicePin(DeviceSensor deviceSensor);
         void SetPinValue(DeviceSensor pin, PinValue pinValue);
     }
@@ -37,48 +36,43 @@ namespace AquariumApi.DeviceApi
             _logger = logger;
             _serialService = serialService;
             _hostingEnvironment = hostingEnvironment;
+            CreateController();
+        }
+        private void PreparePins()
+        {
+            _logger.LogInformation("GpioService: Preparing pins....");
+            Pins.ForEach(p =>
+            {
+                if (!Controller.IsPinOpen(p.Pin))
+                {
+                    Controller.OpenPin(p.Pin, p.Polarity == 0 ? PinMode.InputPullUp : PinMode.Output);
 
 
+                    if (p.Polarity == 0) // ?? why
+                        Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
+                        {
+                            p.OnSensorTriggered(sender, 0);
+                        });
+
+                }
+                //else
+                //   _logger.LogInformation("GpioService: PreparePins: Pin is already open (" + p.Name + ")");
+            });
+        }
+        private void CreateController()
+        {
+            if (Controller != null)
+                return;
             try
             {
                 Controller = new GpioController();
                 _logger.LogInformation("GpioService: Initiated GpioController successfully.");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("GpioService: Encountered an error\r\n");
                 _logger.LogError(ex.StackTrace);
             }
-        }
-        public void PreparePins()
-        {
-            _logger.LogInformation("GpioService: Preparing pins....");
-            _logger.LogInformation($"Gpio Controller is valid: {Controller != null}");
-            Pins.ForEach(p =>
-            {
-                try
-                {
-                    if (!Controller.IsPinOpen(p.Pin))
-                    {
-                        Controller.OpenPin(p.Pin, p.Polarity == 0 ? PinMode.InputPullUp : PinMode.Output);
-
-
-                        if (p.Polarity == 0) // ?? why
-                            Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
-                            {
-                                p.OnSensorTriggered(sender, 0);
-                            });
-
-                    }
-                    else
-                        _logger.LogInformation("GpioService: PreparePins: Pin is already open (" + p.Name + ")");
-                }
-                catch(Exception e)
-                {
-                    _logger.LogError($"Could not prepare pin (Pin Number: {p.Pin} Type: {p.Type}) ");
-                    _logger.LogError(e.Message);
-                }
-            });
         }
         public void CleanUp()
         {
@@ -90,6 +84,7 @@ namespace AquariumApi.DeviceApi
         }
         public List<DeviceSensor> GetAllSensors()
         {
+            return Pins;
             var inputPins = Pins.Where(p => p.Polarity == Polarity.Input).ToList();
             inputPins.ForEach(p => {
                 var val = Controller.Read(p.Pin);
@@ -100,9 +95,18 @@ namespace AquariumApi.DeviceApi
         }
         public void RegisterDevicePin(DeviceSensor deviceSensor)
         {
+            CreateController();
             Pins.Add(deviceSensor);
-            PreparePins();
-
+            try
+            {
+                PreparePins();
+            }
+            catch(Exception e)
+            {
+                Pins.Remove(deviceSensor);
+                _logger.LogError($"Could not register device sensor ({deviceSensor.Name} Pin Number: {deviceSensor.Pin} Polarity: {deviceSensor.Polarity})");
+                _logger.LogError(e.Message);
+            }
         }
         public void SetPinValue(DeviceSensor pin, PinValue pinValue)
         {
