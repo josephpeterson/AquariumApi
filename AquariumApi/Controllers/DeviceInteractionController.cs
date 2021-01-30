@@ -149,6 +149,35 @@ namespace AquariumApi.Controllers
             }
         }
 
+        //Device is sending us ATO dispatch
+        [HttpPost]
+        [Route("ATO")]
+        public IActionResult RecieveATOStatus(ATOStatus atoStatus)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/DeviceInteraction/ATO called");
+                var userId = _accountService.GetCurrentUserId();
+                var id = _accountService.GetCurrentAquariumId();
+                var aquarium = _aquariumService.GetAquariumById(id);
+                if (aquarium.Device == null)
+                {
+                    return BadRequest("This aquarium does not have a device");
+                }
+                if (!_accountService.CanModify(userId, aquarium))
+                    return BadRequest("You do not own this aquarium");
+
+                var s = _deviceService.UpdateDeviceATOStatus(atoStatus);
+
+                return new OkObjectResult(s);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/DeviceInteraction/ATO: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
 
         //Device is asking for detailed device information
         [HttpGet]

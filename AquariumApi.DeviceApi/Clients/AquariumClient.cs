@@ -186,7 +186,7 @@ namespace AquariumApi.DeviceApi.Clients
 
         public async Task<ATOStatus> DispatchATOStatus(ATOStatus status)
         {
-            var path = $"{_config["AquariumServiceUrl"]}/Auth/Renew";
+            var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction/ATO";
             _logger.LogInformation("Dispatching ATO status...");
             _logger.LogInformation($" - Pump running: {status.PumpRunning}");
             _logger.LogInformation($" - Max Run Time: {status.MaxRuntime}");

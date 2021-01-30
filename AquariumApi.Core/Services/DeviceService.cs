@@ -29,12 +29,15 @@ namespace AquariumApi.Core
         ScheduleState GetDeviceScheduleStatus(int deviceId);
         void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
-        ATOStatus GetDeviceATOStatus(int deviceId);
+
         ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
         DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor);
         void DeleteDeviceSensor(int deviceId, int deviceSensorId);
+
+        ATOStatus GetDeviceATOStatus(int deviceId);
         ATOStatus PerformDeviceATO(int deviceId, int maxRuntime);
         ATOStatus StopDeviceATO(int deviceId);
+        ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
     }
     public class DeviceService : IDeviceService
     {
@@ -272,6 +275,10 @@ namespace AquariumApi.Core
                 atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
                 return atoStatus;
             }
+        }
+        public ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus)
+        {
+            return _aquariumDao.UpdateATOStatus(atoStatus);
         }
 
 
