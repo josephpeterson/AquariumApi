@@ -27,7 +27,7 @@ namespace AquariumApi.DeviceApi
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
         private List<DeviceSensor> Pins = new List<DeviceSensor>();
-        private GpioController Controller;
+        private IGpioControllerWrapper Controller;
         public bool ATOSystemRunning { get; private set; }
 
         public GpioService(IConfiguration config, ILogger<HardwareService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
@@ -65,7 +65,13 @@ namespace AquariumApi.DeviceApi
                 return;
             try
             {
-                Controller = new GpioController();
+                if (_hostingEnvironment.IsDevelopment())
+                {
+                    _logger.LogInformation("GpioService: Using mock GpioController...");
+                    Controller = new MockGpioControllerWrapper();
+                }
+                else
+                    Controller = new GpioControllerWrapper();
                 _logger.LogInformation("GpioService: Initiated GpioController successfully.");
             }
             catch (Exception ex)

@@ -58,7 +58,7 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 _logger.LogError($"POST /v1/WaterChange/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return new BadRequestObjectResult(ex.Message);
             }
         }
         [HttpPost]
@@ -94,26 +94,5 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
-
-
-        //This method is only used to backfill Id upon creation of a new status in database
-        [HttpPut]
-        [Route("/v1/WaterChange/ATO/Status")]
-        public IActionResult WaterChangeATOStatus([FromBody] ATOStatus atoStatus)
-        {
-            try
-            {
-                _logger.LogInformation("PUT /v1/WaterChange/ATO/Status called");
-                _atoService.SetATOStatusId(atoStatus.Id.Value);
-                return new OkObjectResult(_atoService.GetATOStatus());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"PUT /v1/WaterChange/ATO/Status endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-        }
-
     }
 }

@@ -216,6 +216,7 @@ namespace AquariumApi.Core
                 var data = client.GetStringAsync(path).Result;
                 var state = JsonConvert.DeserializeObject<ATOStatus>(data);
 
+                /*
                 bool update = false;
                 if (!state.Id.HasValue)
                 {
@@ -225,18 +226,21 @@ namespace AquariumApi.Core
                         .FirstOrDefault();
                     if (oldState != null)
                         state.Id = oldState.Id;
-                }
+                } remove
+                */
                 //insert into db
                 state = _aquariumDao.UpdateATOStatus(state);
 
 
                 //This is a new insert in db, backfill the Id to the device
+                /*
+                 * remove
                 if(update)
                 {
                     //maybe we dont need to do this? todo
                     var httpContent = new StringContent(JsonConvert.SerializeObject(state), Encoding.UTF8, "application/json");
                     client.PutAsync(path,httpContent);
-                }
+                }*/
                 return state;
             }
             catch(Exception e)
@@ -279,6 +283,18 @@ namespace AquariumApi.Core
         }
         public ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus)
         {
+            //Get last ATO
+            var ato = _aquariumDao.GetATOStatus(atoStatus.DeviceId).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt).FirstOrDefault();
+            if (ato != null && atoStatus.Id == null)
+            {
+                ato.UpdatedAt = DateTime.Now.ToUniversalTime();
+                ato.EndReason = "Error"; //todo
+                ato.Completed = true;
+                _aquariumDao.UpdateATOStatus(ato);
+            }
+            //Its a new ATO, only insert it into the database if it has started running
+            if (!atoStatus.PumpRunning && atoStatus.Id == null)
+                return atoStatus;
             return _aquariumDao.UpdateATOStatus(atoStatus);
         }
 

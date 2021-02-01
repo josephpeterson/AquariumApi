@@ -152,7 +152,7 @@ namespace AquariumApi.Controllers
         //Device is sending us ATO dispatch
         [HttpPost]
         [Route("ATO")]
-        public IActionResult RecieveATOStatus(ATOStatus atoStatus)
+        public IActionResult RecieveATOStatus([FromBody] ATOStatus atoStatus)
         {
             try
             {
