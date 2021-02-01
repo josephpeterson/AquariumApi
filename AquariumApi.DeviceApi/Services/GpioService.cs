@@ -23,14 +23,14 @@ namespace AquariumApi.DeviceApi
     public class GpioService : IGpioService
     {
         private readonly IConfiguration _config;
-        private readonly ILogger<HardwareService> _logger;
+        private readonly ILogger<GpioService> _logger;
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
         private List<DeviceSensor> Pins = new List<DeviceSensor>();
         private IGpioControllerWrapper Controller;
         public bool ATOSystemRunning { get; private set; }
 
-        public GpioService(IConfiguration config, ILogger<HardwareService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
+        public GpioService(IConfiguration config, ILogger<GpioService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
         {
             _config = config;
             _logger = logger;

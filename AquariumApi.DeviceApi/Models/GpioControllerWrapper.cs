@@ -18,7 +18,7 @@ public class GpioControllerWrapper : IGpioControllerWrapper
     public GpioController Controller;
     public GpioControllerWrapper()
     {
-        Controller = new GpioController();
+        Controller = new GpioController(PinNumberingScheme.Board);
     }
     public void ClosePin(int pinNumber) => Controller.ClosePin(pinNumber);
 
@@ -57,7 +57,7 @@ public class MockGpioControllerWrapper : IGpioControllerWrapper
     }
 
     public void OpenPin(int pinNumber, PinMode mode)
-    {
+    { 
         ClosePin(pinNumber);
         PinModes.Add(pinNumber, mode);
     }
