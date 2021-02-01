@@ -22,3 +22,4 @@ AquariumApi.DeviceApi/login.json
 AquariumApi.DeviceApi/Properties/PublishProfiles/*
 AquariumApi/config.json
 AquariumApi/config.json
+AquariumApi.DeviceApi/config.json
