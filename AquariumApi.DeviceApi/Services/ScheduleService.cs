@@ -15,6 +15,7 @@ namespace AquariumApi.DeviceApi
     {
         private readonly ILogger<ScheduleService> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IATOService _atoService;
         private readonly IConfiguration _config;
 
         public CancellationToken token;
@@ -22,11 +23,12 @@ namespace AquariumApi.DeviceApi
 
         public List<DeviceSchedule> _schedules { get; private set; } = new List<DeviceSchedule>();
 
-        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger, IDeviceService deviceService)
+        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger, IDeviceService deviceService,IATOService atoService)
         {
             _config = config;
             _logger = logger;
             _deviceService = deviceService;
+            _atoService = atoService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -193,8 +195,9 @@ namespace AquariumApi.DeviceApi
                 case ScheduleTaskTypes.Snapshot:
                     TakeSnapshotTask(task);
                     break;
-
-                    //todo ato
+                case ScheduleTaskTypes.StartATO:
+                    PerformATOTask(task);
+                    break;
                 default:
                     _logger.LogError($"Invalid task type id (taskId: {task.Id})");
                     break;
@@ -212,7 +215,13 @@ namespace AquariumApi.DeviceApi
             _deviceService.SendAquariumSnapshotToHost(snapshot, photo);
             _logger.LogInformation("Aquarium snapshot sent successfully");
         }
-
+        private void PerformATOTask(DeviceScheduleTask task)
+        {
+            _atoService.BeginAutoTopOff(new AutoTopOffRequest()
+            {
+                Runtime = 20
+            });
+        }
     }
 }
 
