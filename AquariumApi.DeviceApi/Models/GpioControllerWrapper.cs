@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AquariumApi.Models;
+using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Linq;
@@ -9,7 +10,7 @@ public interface IGpioControllerWrapper
     void OpenPin(int pinNumber, PinMode mode);
     bool IsPinOpen(int pinNumber);
     void Write(int pinNumber, PinValue value);
-    PinValue Read(int pinNumber);
+    GpioPinValue Read(int pinNumber);
     void ClosePin(int pinNumber);
 
 }
@@ -31,7 +32,7 @@ public class GpioControllerWrapper : IGpioControllerWrapper
 
 
     public void Write(int pinNumber, PinValue value) => Controller.Write(pinNumber, value);
-    public PinValue Read(int pinNumber) => Controller.Read(pinNumber);
+    public GpioPinValue Read(int pinNumber) => Controller.Read(pinNumber) == PinValue.High ? GpioPinValue.High : GpioPinValue.Low;
 }
 public class MockGpioControllerWrapper : IGpioControllerWrapper
 {
@@ -74,10 +75,13 @@ public class MockGpioControllerWrapper : IGpioControllerWrapper
             PinValues.Remove(pin.Value);
         PinValues[pinNumber] = value;
     }
-    public PinValue Read(int pinNumber)
+    public GpioPinValue Read(int pinNumber)
     {
+        //actual gpio controller: what happens when we read an non open pin
         var k = PinValues.Keys.Where(p => p == pinNumber).FirstOrDefault();
-        var val = PinValues[k];
-        return val;
+        if (k != null)
+            return (k == PinValue.High) ? GpioPinValue.High : GpioPinValue.Low;
+        return GpioPinValue.Low;
+
     }
 }

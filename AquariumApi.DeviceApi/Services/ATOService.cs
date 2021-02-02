@@ -99,6 +99,12 @@ namespace AquariumApi.DeviceApi
             if (atoRequest.Runtime > 60)
                 throw new Exception($"ATO max runtime is larger than maximum allowed (Runtime: {atoRequest.Runtime} Maximum: 60)");
 
+            var currentSensorValue = _gpioService.GetPinValue(floatSwitchSensor);
+
+            if(currentSensorValue == GpioPinValue.High)
+                throw new Exception($"ATO sensor is currently reading maximum water level");
+
+
             _logger.LogInformation("[ATOService] Beginning ATO...");
             _gpioService.SetPinValue(pumpRelaySensor, PinValue.High);
 
@@ -125,7 +131,7 @@ namespace AquariumApi.DeviceApi
                 FloatSensor = floatSwitchSensor,
                 DeviceId = _device.Id,
                 NextRunTime = nextRunTime,
-                FloatSensorValue = _gpioService.GetPinValue(floatSwitchSensor)
+                FloatSensorValue = currentSensorValue
             };
             DispatchStatus().Wait(); //.ConfigureAwait(false);
 

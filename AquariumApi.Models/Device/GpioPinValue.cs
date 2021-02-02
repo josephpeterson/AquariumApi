@@ -2,7 +2,7 @@
 {
     public enum GpioPinValue
     {
-        High,
-        Low
+        Low,
+        High
     }
 }

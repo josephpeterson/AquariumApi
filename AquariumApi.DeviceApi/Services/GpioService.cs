@@ -96,17 +96,15 @@ namespace AquariumApi.DeviceApi
             inputPins.ForEach(p => {
                 var val = Controller.Read(p.Pin);
                 _logger.LogInformation("Pin Value for " + p.Name + ": " + val);
-                GpioPinValue pinValue = val == PinValue.High ? GpioPinValue.High : GpioPinValue.Low;
-                p.Value = pinValue;
+                p.Value = val;
             });
             return inputPins;
         }
         public GpioPinValue GetPinValue(DeviceSensor pin)
         {
             var val = Controller.Read(pin.Pin);
-            GpioPinValue pinValue = val == PinValue.High ? GpioPinValue.High : GpioPinValue.Low;
-            pin.Value = pinValue;
-            return pinValue;
+            pin.Value = val;
+            return val;
         }
         public void RegisterDevicePin(DeviceSensor deviceSensor)
         {
