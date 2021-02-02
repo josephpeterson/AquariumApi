@@ -96,8 +96,8 @@ namespace AquariumApi.DeviceApi
             if (pumpRelaySensor == null || floatSwitchSensor == null)
                 throw new Exception($"Invalid ATO pins specified (Pump: {pumpRelaySensor} Sensor: {floatSwitchSensor})");
 
-            if(atoRequest.Runtime > 60)
-                throw new Exception($"ATO max runtime is larger than maximum allowed (Runtime: {atoRequest.Runtime} Maximum: 60)")
+            if (atoRequest.Runtime > 60)
+                throw new Exception($"ATO max runtime is larger than maximum allowed (Runtime: {atoRequest.Runtime} Maximum: 60)");
 
             _logger.LogInformation("[ATOService] Beginning ATO...");
             _gpioService.SetPinValue(pumpRelaySensor, PinValue.High);
@@ -125,6 +125,7 @@ namespace AquariumApi.DeviceApi
                 FloatSensor = floatSwitchSensor,
                 DeviceId = _device.Id,
                 NextRunTime = nextRunTime,
+                FloatSensorValue = _gpioService.GetPinValue(floatSwitchSensor)
             };
             DispatchStatus().Wait(); //.ConfigureAwait(false);
 
@@ -173,6 +174,7 @@ namespace AquariumApi.DeviceApi
             Status.ActualEndTime = DateTime.Now.ToUniversalTime();
             Status.UpdatedAt = Status.ActualEndTime;
             Status.Completed = true;
+            Status.FloatSensorValue = _gpioService.GetPinValue(floatSwitchSensor);
             DispatchStatus().Wait(); //.ConfigureAwait(false);
 
             _logger.LogInformation($"[ATOService] ATO Stopped! ({stopReason})");
@@ -180,8 +182,10 @@ namespace AquariumApi.DeviceApi
         }
         public void OnFloatSwitchTriggered(object sender,int value)
         {
-            Status.FloatSensorValue = $"{value}";
-            if (Status.PumpRunning)
+            Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
+
+            _logger.LogInformation($"ATOService: Sensor triggered (Value: {Status.FloatSensorValue}");
+            if (Status.PumpRunning && Status.FloatSensorValue == GpioPinValue.High)
             {
                 _logger.LogInformation($"[ATOService] ATO Stopped!");
                 StopAutoTopOff(AutoTopOffStopReason.SensorTriggered);
@@ -190,6 +194,7 @@ namespace AquariumApi.DeviceApi
         public ATOStatus GetATOStatus()
         {
             Status.UpdatedAt = DateTime.Now.ToUniversalTime();
+            Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
             return Status;
         }
         private async Task DispatchStatus() {

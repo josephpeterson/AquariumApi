@@ -17,6 +17,7 @@ namespace AquariumApi.DeviceApi
     {
         void CleanUp();
         List<DeviceSensor> GetAllSensors();
+        GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);
         void SetPinValue(DeviceSensor pin, PinValue pinValue);
     }
@@ -48,7 +49,7 @@ namespace AquariumApi.DeviceApi
                     Controller.OpenPin(p.Pin, p.Polarity == 0 ? PinMode.InputPullUp : PinMode.Output);
 
 
-                    if (p.Polarity == 0) // ?? why
+                    if (p.Polarity == 0) // Input only
                         Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
                         {
                             p.OnSensorTriggered(sender, 0);
@@ -95,9 +96,17 @@ namespace AquariumApi.DeviceApi
             inputPins.ForEach(p => {
                 var val = Controller.Read(p.Pin);
                 _logger.LogInformation("Pin Value for " + p.Name + ": " + val);
-                p.Value = val.ToString();
+                GpioPinValue pinValue = val == PinValue.High ? GpioPinValue.High : GpioPinValue.Low;
+                p.Value = pinValue;
             });
             return inputPins;
+        }
+        public GpioPinValue GetPinValue(DeviceSensor pin)
+        {
+            var val = Controller.Read(pin.Pin);
+            GpioPinValue pinValue = val == PinValue.High ? GpioPinValue.High : GpioPinValue.Low;
+            pin.Value = pinValue;
+            return pinValue;
         }
         public void RegisterDevicePin(DeviceSensor deviceSensor)
         {

@@ -9,7 +9,7 @@ namespace AquariumApi.Models
         public int DeviceId { get; set; }
         public string Name { get; set; }
         public SensorTypes Type { get; set; }
-        public string Value { get; set; }
+        public GpioPinValue Value { get; set; }
         public int Pin { get; set; }
         public Polarity Polarity {get; set; }
 

@@ -8,7 +8,7 @@ namespace AquariumApi.Models
         public int? Id { get; set; }
         public int DeviceId { get; set; }
         public bool PumpRunning { get; set; }
-        public string FloatSensorValue { get; set; }
+        public GpioPinValue FloatSensorValue { get; set; }
         public int MaxRuntime { get; set; }
         public int RuntimeRemaining { get; set; }
         public bool RunIndefinitely { get; set; }
