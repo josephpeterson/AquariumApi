@@ -44,6 +44,22 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpGet]
+        [Route("/v1/Device/{deviceId}/ATO/History")]
+        public IActionResult GetDeviceATOHistory(int deviceId)
+        {
+            try
+            {
+                _logger.LogInformation($"GET /v1/Device/{deviceId}/ATO/History called");
+                List<ATOStatus> atoHistory = _deviceService.GetDeviceATOHistory(deviceId);
+                return new OkObjectResult(atoHistory);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Device/{deviceId}/ATO/History endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
         [HttpPost]
         [Route("/v1/Device/{deviceId}/ATO")]
         public IActionResult RunDeviceATO(int deviceId,[FromBody] int maxRuntime)

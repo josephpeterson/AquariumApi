@@ -39,6 +39,7 @@ namespace AquariumApi.Core
         ATOStatus StopDeviceATO(int deviceId);
         ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
         DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
+        List<ATOStatus> GetDeviceATOHistory(int deviceId);
     }
     public class DeviceService : IDeviceService
     {
@@ -217,40 +218,21 @@ namespace AquariumApi.Core
                 var state = JsonConvert.DeserializeObject<ATOStatus>(data);
                 state.DeviceId = deviceId;
 
-                /*
-                bool update = false;
-                if (!state.Id.HasValue)
-                {
-                    //retrieve the latest status
-                    var oldState = _aquariumDao.GetATOStatus(deviceId).Where(s => !s.Completed)
-                        .OrderBy(s => s.UpdatedAt)
-                        .FirstOrDefault();
-                    if (oldState != null)
-                        state.Id = oldState.Id;
-                } remove
-                */
                 //insert into db
                 if(state.Id.HasValue)
                     state = _aquariumDao.UpdateATOStatus(state);
-
-
-                //This is a new insert in db, backfill the Id to the device
-                /*
-                 * remove
-                if(update)
-                {
-                    //maybe we dont need to do this? todo
-                    var httpContent = new StringContent(JsonConvert.SerializeObject(state), Encoding.UTF8, "application/json");
-                    client.PutAsync(path,httpContent);
-                }*/
                 return state;
             }
             catch(Exception e)
             {
-                _logger.LogInformation("Could not retrieve ATO status from device. Loading form cache...");
+                _logger.LogInformation("Could not retrieve ATO status from device. Loading from cache...");
                 //load from cache
-                return _aquariumDao.GetATOStatus(deviceId).FirstOrDefault();
+                return _aquariumDao.GetATOHistory(deviceId).FirstOrDefault();
             }
+        }
+        public List<ATOStatus> GetDeviceATOHistory(int deviceId)
+        {
+            return _aquariumDao.GetATOHistory(deviceId);
         }
         public ATOStatus PerformDeviceATO(int deviceId, int maxRuntime)
         {
@@ -286,7 +268,7 @@ namespace AquariumApi.Core
         public ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus)
         {
             //Get last ATO
-            var uncompletedATOs = _aquariumDao.GetATOStatus(atoStatus.DeviceId).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
+            var uncompletedATOs = _aquariumDao.GetATOHistory(atoStatus.DeviceId).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
             uncompletedATOs.ToList().ForEach(ato =>
             {
                 ato.UpdatedAt = DateTime.Now.ToUniversalTime();

@@ -101,7 +101,7 @@ namespace AquariumApi.DeviceApi
 
             var currentSensorValue = _gpioService.GetPinValue(floatSwitchSensor);
 
-            if(currentSensorValue == GpioPinValue.High)
+            if(currentSensorValue == GpioPinValue.Low)
                 throw new Exception($"ATO sensor is currently reading maximum water level");
 
 

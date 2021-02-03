@@ -148,7 +148,7 @@ namespace AquariumApi.DataAccess
         void DeleteDeviceSensors(List<int> deviceSensorIds);
         ATOStatus UpdateATOStatus(ATOStatus atoStatus);
         ATOStatus AddATOStatus(ATOStatus atoStatus);
-        List<ATOStatus> GetATOStatus(int deviceId);
+        List<ATOStatus> GetATOHistory(int deviceId);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1288,7 +1288,7 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return atoStatus;
         }
-        public List<ATOStatus> GetATOStatus(int deviceId)
+        public List<ATOStatus> GetATOHistory(int deviceId)
         {
             var range = _dbAquariumContext.TblDeviceATOStatus
                 .AsNoTracking()
