@@ -122,11 +122,16 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"GET /v1/Device/{deviceId}/Ping called");
-                bool pong = _deviceService.Ping(deviceId);
-                if (pong)
+                try
+                {
+                    _deviceService.Ping(deviceId);
                     return new OkResult();
-                else
+                }
+                catch
+                {
                     return new NotFoundResult();
+
+                }
             }
             catch (Exception ex)
             {

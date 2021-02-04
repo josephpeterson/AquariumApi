@@ -44,14 +44,16 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet]
+        [HttpPost]
         [Route("/v1/Device/{deviceId}/ATO/History")]
-        public IActionResult GetDeviceATOHistory(int deviceId)
+        public IActionResult GetDeviceATOHistory(int deviceId,[FromBody] PaginationSliver pagination = null)
         {
+            if (pagination == null)
+                pagination = new PaginationSliver();
             try
             {
                 _logger.LogInformation($"GET /v1/Device/{deviceId}/ATO/History called");
-                List<ATOStatus> atoHistory = _deviceService.GetDeviceATOHistory(deviceId);
+                List<ATOStatus> atoHistory = _deviceService.GetDeviceATOHistory(deviceId, pagination);
                 return new OkObjectResult(atoHistory);
             }
             catch (Exception ex)

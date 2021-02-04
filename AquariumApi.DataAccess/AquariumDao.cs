@@ -148,7 +148,7 @@ namespace AquariumApi.DataAccess
         void DeleteDeviceSensors(List<int> deviceSensorIds);
         ATOStatus UpdateATOStatus(ATOStatus atoStatus);
         ATOStatus AddATOStatus(ATOStatus atoStatus);
-        List<ATOStatus> GetATOHistory(int deviceId);
+        List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver sliver);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1288,12 +1288,16 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return atoStatus;
         }
-        public List<ATOStatus> GetATOHistory(int deviceId)
+        public List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver pagination)
         {
             var range = _dbAquariumContext.TblDeviceATOStatus
                 .AsNoTracking()
                 .Where(s => s.DeviceId == deviceId).OrderBy(s => s.UpdatedAt);
-            return range.ToList();
+
+            if (pagination.Descending)
+                range = range.OrderByDescending(p => p.UpdatedAt);
+            var sliver = range.Skip(pagination.Start).Take(pagination.Count);
+            return sliver.ToList();
         }
     }
 }

@@ -39,7 +39,7 @@ namespace AquariumApi.Core
         ATOStatus StopDeviceATO(int deviceId);
         ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
         DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
-        List<ATOStatus> GetDeviceATOHistory(int deviceId);
+        List<ATOStatus> GetDeviceATOHistory(int deviceId,PaginationSliver pagination);
     }
     public class DeviceService : IDeviceService
     {
@@ -227,12 +227,16 @@ namespace AquariumApi.Core
             {
                 _logger.LogInformation("Could not retrieve ATO status from device. Loading from cache...");
                 //load from cache
-                return _aquariumDao.GetATOHistory(deviceId).FirstOrDefault();
+                return _aquariumDao.GetATOHistory(deviceId,new PaginationSliver
+                {
+                    Count = 1,
+                    Descending = true
+                }).FirstOrDefault();
             }
         }
-        public List<ATOStatus> GetDeviceATOHistory(int deviceId)
+        public List<ATOStatus> GetDeviceATOHistory(int deviceId,PaginationSliver paginationSliver)
         {
-            return _aquariumDao.GetATOHistory(deviceId);
+            return _aquariumDao.GetATOHistory(deviceId, paginationSliver);
         }
         public ATOStatus PerformDeviceATO(int deviceId, int maxRuntime)
         {
@@ -268,7 +272,10 @@ namespace AquariumApi.Core
         public ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus)
         {
             //Get last ATO
-            var uncompletedATOs = _aquariumDao.GetATOHistory(atoStatus.DeviceId).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
+            var uncompletedATOs = _aquariumDao.GetATOHistory(atoStatus.DeviceId,new PaginationSliver
+            {
+                Count = 1
+            }).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
             uncompletedATOs.ToList().ForEach(ato =>
             {
                 ato.UpdatedAt = DateTime.Now.ToUniversalTime();
