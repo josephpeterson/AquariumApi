@@ -47,9 +47,7 @@ namespace AquariumApi.Core
         private readonly IAquariumDao _aquariumDao;
         private AquariumDevice Device;
 
-        private Dictionary<string, string> HostOveride = new Dictionary<string, string>()
-        {
-        };
+        private Dictionary<string, string> HostOveride = new Dictionary<string, string>();
 
         public DeviceClient(IConfiguration config,IHostingEnvironment hostingEnvironment,IAquariumDao aquariumDao, ILogger<DeviceClient> logger)
         {
@@ -57,6 +55,8 @@ namespace AquariumApi.Core
             _aquariumDao = aquariumDao;
             _logger = logger;
             _hostingEnvironment = hostingEnvironment;
+
+            _config.GetSection("HostOverride").Bind(HostOveride);
         }
 
         
