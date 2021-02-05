@@ -20,7 +20,7 @@ namespace AquariumApi.Controllers
         public readonly ILogger<SnapshotController> _logger;
         private readonly IPhotoManager _photoManager;
 
-        public SnapshotController(IConfiguration config, IActivityService activityService, IAquariumService aquariumService, IDeviceService deviceService, ILogger<SnapshotController> logger,IPhotoManager photoManager)
+        public SnapshotController(IConfiguration config, IActivityService activityService, IAquariumService aquariumService, IDeviceClient deviceService, ILogger<SnapshotController> logger,IPhotoManager photoManager)
         {
             _config = config;
             _aquariumService = aquariumService;

@@ -22,11 +22,11 @@ namespace AquariumApi.Core
     {
         private readonly IAquariumDao _aquariumDao;
         private readonly ILogger<AdministrativeService> _logger;
-        private readonly IDeviceService _deviceService;
+        private readonly IDeviceClient _deviceService;
         private readonly IPhotoManager _photoManager;
         private readonly IConfiguration _config;
 
-        public AdministrativeService(IConfiguration config, IAquariumDao aquariumDao, IDeviceService deviceService, ILogger<AdministrativeService> logger, IPhotoManager photoManager)
+        public AdministrativeService(IConfiguration config, IAquariumDao aquariumDao, IDeviceClient deviceService, ILogger<AdministrativeService> logger, IPhotoManager photoManager)
         {
             _config = config;
             _aquariumDao = aquariumDao;

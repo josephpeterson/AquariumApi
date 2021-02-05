@@ -22,9 +22,9 @@ namespace AquariumApi.Controllers
     {
         private readonly IAccountService _accountService;
         public readonly IAquariumService _aquariumService;
-        public readonly IDeviceService _deviceService;
+        public readonly IDeviceClient _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public AquariumsController(IAccountService accountService,IAquariumService aquariumService, IDeviceService deviceService,ILogger<DeviceController> logger)
+        public AquariumsController(IAccountService accountService,IAquariumService aquariumService, IDeviceClient deviceService,ILogger<DeviceController> logger)
         {
             _accountService = accountService;
             _aquariumService = aquariumService;

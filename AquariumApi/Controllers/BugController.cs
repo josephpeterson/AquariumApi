@@ -22,9 +22,9 @@ namespace AquariumApi.Controllers
         private IAccountService _accountService;
         private readonly IEmailerService _emailerService;
         public readonly IAquariumService _aquariumService;
-        public readonly IDeviceService _deviceService;
+        public readonly IDeviceClient _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public BugController(IAquariumService aquariumService, IAccountService accountService,IDeviceService deviceService, ILogger<DeviceController> logger,IEmailerService emailerService)
+        public BugController(IAquariumService aquariumService, IAccountService accountService,IDeviceClient deviceService, ILogger<DeviceController> logger,IEmailerService emailerService)
         {
             _accountService = accountService;
             _emailerService = emailerService;

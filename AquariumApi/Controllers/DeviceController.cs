@@ -18,13 +18,11 @@ namespace AquariumApi.Controllers
     {
         private readonly IAccountService _accountService;
         public readonly IAquariumService _aquariumService;
-        public readonly IDeviceService _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public DeviceController(IAccountService accountService,IAquariumService aquariumService, IDeviceService deviceService,ILogger<DeviceController> logger)
+        public DeviceController(IAccountService accountService,IAquariumService aquariumService,ILogger<DeviceController> logger)
         {
             _accountService = accountService;
             _aquariumService = aquariumService;
-            _deviceService = deviceService;
             _logger = logger;
         }
         [HttpGet]
@@ -104,7 +102,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Scan called");
-                var updatedDevice = _deviceService.ScanHardware(deviceId);
+                var updatedDevice = _aquariumService.ScanHardware(deviceId);
                 var deviceToUpdate = _aquariumService.ApplyAquariumDeviceHardware(deviceId,updatedDevice);
                 return new OkObjectResult(deviceToUpdate);
             }
@@ -119,19 +117,17 @@ namespace AquariumApi.Controllers
         [Route("/v1/Device/{deviceId}/Ping")]
         public IActionResult PingAquariumDevice(int deviceId)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
             try
             {
-                _logger.LogInformation($"GET /v1/Device/{deviceId}/Ping called");
-                try
-                {
-                    _deviceService.Ping(deviceId);
-                    return new OkResult();
-                }
-                catch
-                {
-                    return new NotFoundResult();
 
-                }
+                _logger.LogInformation($"GET /v1/Device/{deviceId}/Ping called");
+                 if(_aquariumService.Ping(deviceId))
+                    return new OkResult();
+                else
+                    return new NotFoundResult();
             }
             catch (Exception ex)
             {
@@ -208,7 +204,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Log called");
-                var deviceLog = _deviceService.GetDeviceLog(deviceId);
+                var deviceLog = _aquariumService.GetDeviceLog(deviceId);
                 return new OkObjectResult(deviceLog);
             }
             catch (Exception ex)
@@ -224,7 +220,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Log/Clear called");
-                _deviceService.ClearDeviceLog(deviceId);
+                _aquariumService.ClearDeviceLog(deviceId);
                 return new OkResult();
             }
             catch (Exception ex)
@@ -241,7 +237,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Information called");
-                var deviceInformation = _deviceService.GetDeviceInformation(deviceId);
+                var deviceInformation = _aquariumService.GetDeviceInformation(deviceId);
                 return new OkObjectResult(deviceInformation);
             }
             catch (Exception ex)
@@ -260,7 +256,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Information called");
-                var deviceInformation = _deviceService.GetDeviceInformation(deviceId);
+                var deviceInformation = _aquariumService.GetDeviceInformation(deviceId);
                 return new OkObjectResult(deviceInformation);
             }
             catch (Exception ex)
@@ -279,7 +275,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensors called");
-                var deviceSensors = _deviceService.GetDeviceSensors(deviceId);
+                var deviceSensors = _aquariumService.GetDeviceSensors(deviceId);
                 return new OkObjectResult(deviceSensors);
             }
             catch (Exception ex)
@@ -295,7 +291,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensor/Create called");
-                var deviceSensor = _deviceService.CreateDeviceSensor(deviceId,sensor);
+                var deviceSensor = _aquariumService.CreateDeviceSensor(deviceId,sensor);
                 return new OkObjectResult(deviceSensor);
             }
             catch (Exception ex)
@@ -311,7 +307,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensor/Remove called");
-                _deviceService.DeleteDeviceSensor(deviceId,sensor.Id);
+                _aquariumService.DeleteDeviceSensor(deviceId,sensor.Id);
                 return new OkResult();
             }
             catch (Exception ex)
@@ -327,7 +323,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Sensor/Update called");
-                sensor = _deviceService.UpdateDeviceSensor(sensor);
+                sensor = _aquariumService.UpdateDeviceSensor(sensor);
                 return new OkObjectResult(sensor);
             }
             catch (Exception ex)
@@ -381,7 +377,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Schedule/Status called");
-                ScheduleState scheduleState = _deviceService.GetDeviceScheduleStatus(deviceId);
+                ScheduleState scheduleState = _aquariumService.GetDeviceScheduleStatus(deviceId);
                 return new OkObjectResult(scheduleState);
             }
             catch (Exception ex)
@@ -398,7 +394,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/Schedule/PerformTask called");
-                _deviceService.PerformScheduleTask(deviceId,deviceScheduleTask);
+                _aquariumService.PerformScheduleTask(deviceId,deviceScheduleTask);
                 return new OkResult();
             }
             catch (Exception ex)
@@ -408,5 +404,14 @@ namespace AquariumApi.Controllers
             }
         }
 
+
+
+
+        private bool ValidateRequest(int deviceId)
+        {
+            var id = _accountService.GetCurrentUserId();
+            var aquariums = _aquariumService.GetAquariumsByAccountId(id);
+            return aquariums.Where(a => a.Device.Id == deviceId).Any();
+        }
     }
 }

@@ -18,11 +18,11 @@ namespace AquariumApi.Controllers
     public class DeviceInteractionController : Controller
     {
         public readonly IAquariumService _aquariumService;
-        public readonly IDeviceService _deviceService;
+        public readonly IDeviceClient _deviceService;
         private readonly IAccountService _accountService;
         private readonly INotificationService _notificationService;
         public readonly ILogger<DeviceInteractionController> _logger;
-        public DeviceInteractionController(IAquariumService aquariumService, IDeviceService deviceService,
+        public DeviceInteractionController(IAquariumService aquariumService, IDeviceClient deviceService,
             IAccountService accountService,
             INotificationService notificationService,
             ILogger<DeviceInteractionController> logger)
@@ -168,7 +168,7 @@ namespace AquariumApi.Controllers
                     return BadRequest("You do not own this aquarium");
                 atoStatus.DeviceId = aquarium.Device.Id;
 
-                var s = _deviceService.UpdateDeviceATOStatus(atoStatus);
+                var s = _aquariumService.UpdateDeviceATOStatus(atoStatus);
 
                 return new OkObjectResult(s);
             }

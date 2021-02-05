@@ -18,13 +18,11 @@ namespace AquariumApi.Controllers
     {
         public readonly IAquariumService _aquariumService;
         private readonly IAccountService _accountService;
-        public readonly IDeviceService _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public DeviceATOController(IAquariumService aquariumService, IAccountService accountService, IDeviceService deviceService, ILogger<DeviceController> logger)
+        public DeviceATOController(IAquariumService aquariumService, IAccountService accountService, ILogger<DeviceController> logger)
         {
             _aquariumService = aquariumService;
             _accountService = accountService;
-            _deviceService = deviceService;
             _logger = logger;
         }
 
@@ -32,10 +30,13 @@ namespace AquariumApi.Controllers
         [Route("/v1/Device/{deviceId}/ATO")]
         public IActionResult GetDeviceATOStatus(int deviceId)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
             try
             {
                 _logger.LogInformation($"GET /v1/Device/{deviceId}/ATO/Status called");
-                var atoStatus = _deviceService.GetDeviceATOStatus(deviceId);
+                var atoStatus = _aquariumService.GetDeviceATOStatus(deviceId);
                 return new OkObjectResult(atoStatus);
             }
             catch (Exception ex)
@@ -48,12 +49,15 @@ namespace AquariumApi.Controllers
         [Route("/v1/Device/{deviceId}/ATO/History")]
         public IActionResult GetDeviceATOHistory(int deviceId,[FromBody] PaginationSliver pagination = null)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
             if (pagination == null)
                 pagination = new PaginationSliver();
             try
             {
                 _logger.LogInformation($"GET /v1/Device/{deviceId}/ATO/History called");
-                List<ATOStatus> atoHistory = _deviceService.GetDeviceATOHistory(deviceId, pagination);
+                List<ATOStatus> atoHistory = _aquariumService.GetDeviceATOHistory(deviceId, pagination);
                 return new OkObjectResult(atoHistory);
             }
             catch (Exception ex)
@@ -66,10 +70,13 @@ namespace AquariumApi.Controllers
         [Route("/v1/Device/{deviceId}/ATO")]
         public IActionResult RunDeviceATO(int deviceId,[FromBody] int maxRuntime)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/ATO called");
-                var atoStatus = _deviceService.PerformDeviceATO(deviceId, maxRuntime);
+                var atoStatus = _aquariumService.PerformDeviceATO(deviceId, maxRuntime);
                 return new OkObjectResult(atoStatus);
             }
             catch (Exception ex)
@@ -82,10 +89,13 @@ namespace AquariumApi.Controllers
         [Route("/v1/Device/{deviceId}/ATO/Stop")]
         public IActionResult StopDeviceATO(int deviceId)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
             try
             {
                 _logger.LogInformation($"POST /v1/Device/{deviceId}/ATO/Stop called");
-                var atoStatus = _deviceService.StopDeviceATO(deviceId);
+                var atoStatus = _aquariumService.StopDeviceATO(deviceId);
                 return new OkObjectResult(atoStatus);
             }
             catch (Exception ex)
@@ -93,6 +103,14 @@ namespace AquariumApi.Controllers
                 _logger.LogError($"POST /v1/Device/{deviceId}/ATO/Stop endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
+        }
+    
+    
+        private bool ValidateRequest(int deviceId)
+        {
+            var id = _accountService.GetCurrentUserId();
+            var aquariums = _aquariumService.GetAquariumsByAccountId(id);
+            return aquariums.Where(a => a.Device.Id == deviceId).Any();
         }
     }
 }

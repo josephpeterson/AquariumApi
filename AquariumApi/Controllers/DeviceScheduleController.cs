@@ -18,9 +18,9 @@ namespace AquariumApi.Controllers
     {
         public readonly IAquariumService _aquariumService;
         private readonly IAccountService _accountService;
-        public readonly IDeviceService _deviceService;
+        public readonly IDeviceClient _deviceService;
         public readonly ILogger<DeviceController> _logger;
-        public DeviceScheduleController(IAquariumService aquariumService, IAccountService accountService, IDeviceService deviceService,ILogger<DeviceController> logger)
+        public DeviceScheduleController(IAquariumService aquariumService, IAccountService accountService, IDeviceClient deviceService,ILogger<DeviceController> logger)
         {
             _aquariumService = aquariumService;
             _accountService = accountService;

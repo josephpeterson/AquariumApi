@@ -24,7 +24,7 @@ namespace AquariumApi.Controllers
 
         public AccountController(IConfiguration config, 
             IAquariumService aquariumService, 
-            IDeviceService deviceService, 
+            IDeviceClient deviceService, 
             IAccountService accountService, 
             INotificationService notificationService,
             ILogger<AccountController> logger,

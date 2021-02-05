@@ -20,7 +20,6 @@ namespace AquariumApi.Controllers
     {
         public readonly IAquariumService _aquariumService;
         private readonly IPostService _postService;
-        private readonly IPhotoManager _photoManager;
         public readonly ILogger<PostController> _logger;
         public PostController(IAquariumService aquariumService, IPostService postService, ILogger<PostController> logger)
         {

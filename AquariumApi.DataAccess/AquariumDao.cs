@@ -368,6 +368,8 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Fish).First();
 
             _dbAquariumContext.TblSnapshot.RemoveRange(_dbAquariumContext.TblSnapshot.Where(aq => aq.AquariumId == aquariumId));
+            _dbAquariumContext.TblWaterDosing.RemoveRange(_dbAquariumContext.TblWaterDosing.Where(aq => aq.AquariumId == aquariumId));
+            _dbAquariumContext.TblWaterChange.RemoveRange(_dbAquariumContext.TblWaterChange.Where(aq => aq.AquariumId == aquariumId));
             _dbAquariumContext.TblAquariumPhoto.RemoveRange(_dbAquariumContext.TblAquariumPhoto.Where(aq => aq.AquariumId == aquariumId));
             _dbAquariumContext.TblAquariumEquipment.RemoveRange(aquarium.Equipment);
 
@@ -473,9 +475,11 @@ namespace AquariumApi.DataAccess
             var device = _dbAquariumContext.TblDevice
                 .Include(e => e.CameraConfiguration)
                 .Include(e => e.ScheduleAssignments)
+                .Include(e => e.Sensors)
                 .SingleOrDefault(d => d.Id == deviceId);
             if (device == null)
                 throw new KeyNotFoundException();
+            _dbAquariumContext.TblDeviceATOStatus.RemoveRange(_dbAquariumContext.TblDeviceATOStatus.Where(aq => aq.DeviceId == deviceId));
             _dbAquariumContext.Remove(device);
             _dbAquariumContext.SaveChanges();
             return device;

@@ -32,14 +32,14 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation("GET /v1/Aquariums called");
+                _logger.LogInformation("GET /v1/Aquarium/All called");
                 var id = _accountService.GetCurrentUserId();
                 var aquariums = _aquariumService.GetAquariumsByAccountId(id);
                 return new OkObjectResult(aquariums);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/Aquarium/All endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -96,7 +96,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Update called");
+                _logger.LogInformation("POST /v1/Aquarium/Update called");
                 var id = _accountService.GetCurrentUserId();
                 var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
                 if (aq.OwnerId != id) return new UnauthorizedResult();
@@ -105,7 +105,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/Update endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -115,7 +115,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquariums/Delete called");
+                _logger.LogInformation("POST /v1/Aquarium/Delete called");
                 var id = _accountService.GetCurrentUserId();
                 var aq = _aquariumService.GetAquariumById(removeAquariumId);
                 if (aq.OwnerId != id) return new UnauthorizedResult();
@@ -124,7 +124,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquariums endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

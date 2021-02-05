@@ -21,7 +21,7 @@ namespace AquariumApi.Controllers
         public readonly ILogger<AccountController> _logger;
         private readonly IPhotoManager _photoManager;
 
-        public ActivityController(IConfiguration config, IActivityService activityService,IAquariumService aquariumService, IDeviceService deviceService, ILogger<AccountController> logger,IPhotoManager photoManager)
+        public ActivityController(IConfiguration config, IActivityService activityService,IAquariumService aquariumService, IDeviceClient deviceService, ILogger<AccountController> logger,IPhotoManager photoManager)
         {
             _config = config;
             _aquariumService = aquariumService;

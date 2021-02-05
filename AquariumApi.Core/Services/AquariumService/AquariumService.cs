@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.Core
 {
-    public interface IAquariumService
+    public partial interface IAquariumService
     {
         /* Aquarium */
         Aquarium AddAquarium(Aquarium aquarium);
@@ -26,45 +26,19 @@ namespace AquariumApi.Core
         List<AquariumSnapshot> GetSnapshots(int aquariumId);
         AquariumSnapshot GetSnapshotById(int snapshotId);
         void DeleteSnapshot(int removeSnapshotId);
-
-        /* Species */
-        Species AddSpecies(Species species);
-        List<Species> GetAllSpecies();
-        Species UpdateSpecies(Species species);
-        void DeleteSpecies(int speciesId);
+        AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
 
 
-        /* Fish */
-        Fish AddFish(Fish fish);
-        Fish GetFishById(int fishId);
-        Fish UpdateFish(Fish fish);
-        List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id);
+
+
+
         AquariumProfile GetProfileById(int profileId);
         BugReport SubmitBugReport(BugReport report);
-        void DeleteFish(int fishId);
 
-        Feeding AddFeeding(Feeding feeding);
         AquariumUser GetAccountDetailed(int id, int id1);
-        Feeding GetFeedingById(int feedingId);
-        List<Feeding> GetFeedingByAquariumId(int aquariumId);
-        Feeding UpdateFeeding(Feeding feeding);
-        void DeleteFeeding(int feedingId);
-        Species GetSpeciesById(int speciesId);
 
-        /* Aquarium Device */
-        AquariumDevice AddAquariumDevice(AquariumDevice device);
-        AquariumDevice GetAquariumDeviceById(int deviceId);
-        AquariumDevice DeleteAquariumDevice(int deviceId);
-        void DeleteDeviceSchedule(int scheduleId);
-        AquariumDevice UpdateAquariumDevice(int userId,AquariumDevice aquariumDevice);
-        AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
-        AquariumPhoto GetAquariumPhotoById(int photoId);
-        AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
-        List<AquariumPhoto> GetAquariumPhotos(int aquariumId,PaginationSliver pagination);
-        AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey);
-        AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
-        AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage);
-        DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
+
+
         FishPhoto AddFishPhoto(int fishId,IFormFile photo);
         FishPhoto GetFishPhotoById(int photoId);
         AccountRelationship GetAccountRelationship(int aquariumId, int targetId);
@@ -73,35 +47,32 @@ namespace AquariumApi.Core
         List<Aquarium> GetAquariumsByAccountId(int userId);
         List<AquariumSnapshot> GetAquariumTemperatureHistogram(int id);
         List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId,int offset, int max);
-        DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
-        List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId);
-        List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId);
+        List<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
+
         void DeleteAllSnapshots(int aquariumId);
         void DeleteSnapshots(List<int> snapshotIds);
+
+
+
         void DeleteAquariumPhotos(List<int> aquariumPhotoIds);
         List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
+        AquariumPhoto GetAquariumPhotoById(int photoId);
+        AquariumPhoto AddAquariumPhoto(AquariumPhoto photo);
+        List<AquariumPhoto> GetAquariumPhotos(int aquariumId, PaginationSliver pagination);
+
+
         List<AquariumSnapshot> GetAquariumSnapshotPhotos(int aquariumId, PaginationSliver pagination);
         List<FishPhoto> GetAquariumFishPhotos(int aquariumId, PaginationSliver pagination);
         AquariumPhoto AddAquariumPhoto(int aquariumId, IFormFile photo);
-        WaterChange AddWaterChange(WaterChange waterChange);
-        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId);
-        WaterChange UpdateWaterChange(WaterChange waterChange);
-        void DeleteWaterChanges(List<int> waterChangeIds);
-        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId);
-        WaterDosing AddWaterDosing(WaterDosing waterDosing);
-        WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
-        void DeleteWaterDosings(List<int> waterDosingIds);
-        List<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
-
 
         /* Form Components */
         List<KeyValuePair<string,int>> GetSelectOptionsBySelectType(string selectType);
     }
-    public class AquariumService : IAquariumService
+    public partial class AquariumService : IAquariumService
     {
         private readonly IAquariumDao _aquariumDao;
         private readonly ILogger<AquariumService> _logger;
-        private readonly IDeviceService _deviceService;
+        private readonly IDeviceClient _deviceClient;
         private readonly IPhotoManager _photoManager;
 
         private readonly INotificationService _notificationService;
@@ -113,14 +84,14 @@ namespace AquariumApi.Core
         private readonly IAccountService _accountService;
 
         public AquariumService(IConfiguration config, ILogger<AquariumService> logger, IAquariumDao aquariumDao, IAccountService accountService,
-                               IActivityService activityService,IDeviceService deviceService,IPhotoManager photoManager,INotificationService notificationService)
+                               IActivityService activityService,IDeviceClient deviceClient,IPhotoManager photoManager,INotificationService notificationService)
         {
             _config = config;
             _activityService = activityService;
             _accountService = accountService;
             _aquariumDao = aquariumDao;
             _logger = logger;
-            _deviceService = deviceService;
+            _deviceClient = deviceClient;
             _photoManager = photoManager;
             _notificationService = notificationService;
         }
@@ -174,17 +145,7 @@ namespace AquariumApi.Core
         }
 
 
-        /* Device Camera configuration */
-        public AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config)
-        {
-            var deviceToUpdate = _aquariumDao.GetAquariumDeviceById(0);
-            deviceToUpdate.CameraConfiguration = config;
-            var device = _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
-            _deviceService.ApplyUpdatedDevice(device);
-            return device;
-        }
-
-
+        
         /* Snapshots */
         public List<AquariumSnapshot> GetSnapshots(int aquariumId)
         {
@@ -212,11 +173,11 @@ namespace AquariumApi.Core
             Aquarium aquarium = _aquariumDao.GetAquariumById(aquariumId);
             var deviceId = aquarium.Device.Id;
 
-            AquariumSnapshot snapshot = _deviceService.TakeSnapshot(deviceId); //todo tell device to take with image
+            AquariumSnapshot snapshot = _deviceClient.TakeSnapshot(deviceId); //todo tell device to take with image
 
             if (takePhoto)
             {
-                var photoData = _deviceService.TakePhoto(deviceId);
+                var photoData = _deviceClient.TakePhoto(deviceId);
                 var photo = _photoManager.StorePhoto(photoData).Result;
                 snapshot.PhotoId = photo.Id;
             }
@@ -224,128 +185,11 @@ namespace AquariumApi.Core
             return newSnapshot;
         }
         
-        public List<Species> GetAllSpecies()
-        {
-            return _aquariumDao.GetAllSpecies();
-        }
-        public Species GetSpeciesById(int speciesId)
-        {
-            return _aquariumDao.GetSpeciesById(speciesId);
-        }
-        public Species AddSpecies(Species species)
-        {
-            species.Name = species.Name.Trim();
-            if (species.Name == null)
-                throw new Exception("Species must have a name");
-            var exists = _aquariumDao.GetAllSpecies().Where(s => s.Name == species.Name).Any(); //todo move this into new method maybe
-            if(exists)
-                throw new Exception("Species with this name already exists");
-
-            return _aquariumDao.AddSpecies(species);
-        }
-        public Species UpdateSpecies(Species species)
-        {
-            return _aquariumDao.UpdateSpecies(species);
-        }
-        public void DeleteSpecies(int speciesId)
-        {
-            _aquariumDao.DeleteSpecies(speciesId);
-        }
+        
 
 
-
-
-
-        public Fish GetFishById(int fishId)
-        {
-            return _aquariumDao.GetFishById(fishId);
-        }
-        public Fish AddFish(Fish fish)
-        {
-            fish.Name = fish.Name.Trim();
-
-            fish.Description = fish.Description?.Trim();
-
-            if (string.IsNullOrEmpty(fish.Name))
-                throw new InvalidDataException();
-
-            return _aquariumDao.AddFish(fish);
-        }
-        public Fish UpdateFish(Fish fish)
-        {
-            return _aquariumDao.UpdateFish(fish);
-        }
-        public void DeleteFish(int fishId)
-        {
-            _aquariumDao.DeleteFish(fishId);
-        }
-
-
-        public Feeding AddFeeding(Feeding feeding)
-        {
-            //Make sure the fed fish is currently in the tank
-            var fish = _aquariumDao.GetFishById(feeding.FishId);
-            if (fish.AquariumId != feeding.AquariumId)
-                throw new KeyNotFoundException();
-
-            return _aquariumDao.AddFeeding(feeding);
-        }
-        public Feeding GetFeedingById(int feedingId)
-        {
-            return _aquariumDao.GetFeedingById(feedingId);
-        }
-        public List<Feeding> GetFeedingByAquariumId(int aquariumId)
-        {
-            return _aquariumDao.GetFeedingByAquariumId(aquariumId);
-        }
-        public Feeding UpdateFeeding(Feeding feeding)
-        {
-            return _aquariumDao.UpdateFeeding(feeding);
-        }
-        public void DeleteFeeding(int feedId)
-        {
-            _aquariumDao.DeleteFeeding(feedId);
-        }
-
-        public AquariumDevice AddAquariumDevice(AquariumDevice device)
-        {
-            var newDevice = _aquariumDao.AddAquariumDevice(device);
-            //_deviceService.SetAquarium(newDevice.Id, device.AquariumId);
-            return newDevice;
-        }
-        public AquariumDevice GetAquariumDeviceById(int deviceId)
-        {
-            return _aquariumDao.GetAquariumDeviceById(deviceId);
-        }
-        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress,string deviceKey)
-        {
-            return _aquariumDao.GetAquariumDeviceByIpAndKey(ipAddress, deviceKey);
-        }
-        public AquariumDevice DeleteAquariumDevice(int deviceId)
-        {
-            return _aquariumDao.DeleteAquariumDevice(deviceId);
-        }
-        public AquariumDevice UpdateAquariumDevice(int userId,AquariumDevice device)
-        {
-            var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
-            try
-            {
-                _deviceService.ApplyUpdatedDevice(updatedDevice);
-            }
-            catch(Exception ex)
-            {
-                //Could not  tell devices that we updated
-                _logger.LogError("Could not send update to devices.");
-                _notificationService.EmitAsync(userId, "Aquarium Device", $"[{device.Name}] Unable to connect to aquarium device. Your device may be offline. " +
-                    $"We attempted to contact: " +
-                    $"${device.Address}:{device.Port}").Wait();
-            }
-            return updatedDevice;
-        }
-        public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
-        {
-            return _aquariumDao.ApplyAquariumDeviceHardware(deviceId, updatedDevice);
-        }
+        
+       
         public AquariumSnapshot AddSnapshot(int aquariumId, AquariumSnapshot snapshot, IFormFile snapshotImage)
         {
             if (snapshotImage != null)
@@ -493,92 +337,7 @@ namespace AquariumApi.Core
             return _aquariumDao.GetAquariumSnapshots(aquariumId,offset, max);
         }
 
-
-
-
-        /* Device Schedule */
-        public List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id)
-        {
-            return _aquariumDao.GetDeviceSchedulesByAccount(id);
-        }
-        public void DeleteDeviceSchedule(int scheduleId)
-        {
-            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
-            _aquariumDao.DeleteDeviceSchedule(scheduleId);
-            affectedDevices.ForEach(device =>
-            {
-                try
-                {
-
-                    _deviceService.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
-                }
-                catch (Exception e)
-                {
-                    //todo could not update schedule assignment (pi is offline maybe)
-                }
-            });
-
-        }
-        public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
-        {
-            return _aquariumDao.AddDeviceSchedule(deviceSchedule);
-        }
-        public List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId)
-        {
-            _aquariumDao.AssignDeviceSchedule(scheduleId, deviceId);
-            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
-            try
-            {
-
-                _deviceService.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Could not apply schedule assignment");
-            }
-            return assignments;
-
-        }
-        public List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId)
-        {
-            _aquariumDao.UnassignDeviceSchedule(scheduleId, deviceId);
-            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
-
-            try
-            {
-
-             _deviceService.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
-            }
-            catch(Exception e)
-            {
-                _logger.LogError("Could not apply schedule assignment");
-            }
-
-
-            return assignments;
-        }
-        public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
-        {
-            var updatedSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
-            UpdateDeviceSchedulesByScheduleId(deviceSchedule.Id);
-            return updatedSchedule;
-        }
-        public void UpdateDeviceSchedulesByScheduleId(int scheduleId)
-        {
-            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
-            affectedDevices.ForEach(device =>
-            {
-                try
-                {
-
-                _deviceService.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
-                }
-                catch(Exception e)
-                {
-                    //todo could not update schedule assignment (pi is offline maybe)
-                }
-            });
-        }
+        
 
         public void DeleteAllSnapshots(int aquariumId)
         {
@@ -593,44 +352,10 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DeleteAquariumPhotos(aquariumPhotoIds);
         }
-
-        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
-        {
-            return _aquariumDao.GetWaterChangesByAquarium(aquariumId);
-        }
-        public WaterChange AddWaterChange(WaterChange waterChange)
-        {
-            return _aquariumDao.AddWaterChange(waterChange);
-        }
-        public WaterChange UpdateWaterChange(WaterChange waterChange)
-        {
-            return _aquariumDao.UpdateWaterChange(waterChange);
-        }
-        public void DeleteWaterChanges(List<int> waterChangeIds)
-        {
-            _aquariumDao.DeleteWaterChanges(waterChangeIds);
-        }
-        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId)
-        {
-            return _aquariumDao.GetWaterDosingsByAquarium(aquariumId);
-        }
-        public WaterDosing AddWaterDosing(WaterDosing waterDosing)
-        {
-            return _aquariumDao.AddWaterDosing(waterDosing);
-        }
-        public WaterDosing UpdateWaterDosing(WaterDosing waterDosing)
-        {
-            return _aquariumDao.UpdateWaterDosing(waterDosing);
-        }
-        public void DeleteWaterDosings(List<int> waterDosingIds)
-        {
-             _aquariumDao.DeleteWaterDosings(waterDosingIds);
-        }
-
-        public List<KeyValuePair<string,int>> GetSelectOptionsBySelectType(string selectType)
+        public List<KeyValuePair<string, int>> GetSelectOptionsBySelectType(string selectType)
         {
             List<KeyValuePair<string, int>> options;
-            switch(selectType)
+            switch (selectType)
             {
                 case "SpeciesCategories":
                     options = new List<KeyValuePair<string, int>>()
@@ -668,8 +393,9 @@ namespace AquariumApi.Core
                     options = new List<KeyValuePair<string, int>>();
                     break;
             }
-            
+
             return options;
         }
+
     }
 }

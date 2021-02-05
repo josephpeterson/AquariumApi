@@ -168,7 +168,7 @@ namespace AquariumApi
             services.AddTransient<IFishService, FishService>();
             services.AddTransient<IAdministrativeService, AdministrativeService>();
             services.AddTransient<IWebScraperService, WebScraperService>();
-            services.AddTransient<IDeviceService, DeviceService>();
+            services.AddTransient<IDeviceClient, DeviceClient>();
             services.AddTransient<IAccountService, AccountService>();
             services.AddTransient<IAzureService, AzureService>();
             services.AddTransient<IActivityService, ActivityService>();

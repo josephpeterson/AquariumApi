@@ -1,0 +1,333 @@
+﻿using AquariumApi.DataAccess;
+using AquariumApi.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace AquariumApi.Core
+{
+    public partial interface IAquariumService
+    {
+        /* Aquarium Device */
+        AquariumDevice AddAquariumDevice(AquariumDevice device);
+        AquariumDevice GetAquariumDeviceById(int deviceId);
+        AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress, string deviceKey);
+        AquariumDevice DeleteAquariumDevice(int deviceId);
+        AquariumDevice UpdateAquariumDevice(int userId, AquariumDevice aquariumDevice);
+
+        /* Device Schedules */
+        List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id);
+        void DeleteDeviceSchedule(int scheduleId);
+        DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
+        List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId);
+        List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId);
+        DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
+        void PerformScheduleTask(int deviceId,DeviceScheduleTask deviceScheduleTask);
+        ScheduleState GetDeviceScheduleStatus(int deviceId);
+
+
+
+        [System.Obsolete]
+        AquariumDevice ScanHardware(int deviceId);
+        AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
+        AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
+
+        /* ATO */
+        ATOStatus GetDeviceATOStatus(int deviceId);
+        ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
+        List<ATOStatus> GetDeviceATOHistory(int deviceId, PaginationSliver paginationSliver);
+        ATOStatus PerformDeviceATO(int deviceId,int maxRuntime);
+        ATOStatus StopDeviceATO(int deviceId);
+
+        /* Device Sensors */
+        DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
+        void DeleteDeviceSensor(int deviceId, int deviceSensorId);
+        ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
+        DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor);
+
+
+
+        bool Ping(int deviceId);
+        string GetDeviceLog(int deviceId);
+        void ClearDeviceLog(int deviceId);
+        DeviceInformation GetDeviceInformation(int deviceId);
+
+    }
+    public partial class AquariumService : IAquariumService
+    {
+        public AquariumDevice AddAquariumDevice(AquariumDevice device)
+        {
+            var newDevice = _aquariumDao.AddAquariumDevice(device);
+            //_deviceService.SetAquarium(newDevice.Id, device.AquariumId);
+            return newDevice;
+        }
+        public AquariumDevice GetAquariumDeviceById(int deviceId)
+        {
+            return _aquariumDao.GetAquariumDeviceById(deviceId);
+        }
+        public AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress, string deviceKey)
+        {
+            return _aquariumDao.GetAquariumDeviceByIpAndKey(ipAddress, deviceKey);
+        }
+        public AquariumDevice DeleteAquariumDevice(int deviceId)
+        {
+            return _aquariumDao.DeleteAquariumDevice(deviceId);
+        }
+        public AquariumDevice UpdateAquariumDevice(int userId, AquariumDevice device)
+        {
+            var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
+            try
+            {
+                _deviceClient.ApplyUpdatedDevice(updatedDevice);
+            }
+            catch (Exception ex)
+            {
+                //Could not  tell devices that we updated
+                _logger.LogError("Could not send update to devices.");
+                _notificationService.EmitAsync(userId, "Aquarium Device", $"[{device.Name}] Unable to connect to aquarium device. Your device may be offline. " +
+                    $"We attempted to contact: " +
+                    $"${device.Address}:{device.Port}").Wait();
+            }
+            return updatedDevice;
+        }
+
+        /* Device Schedule */
+        public List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id)
+        {
+            return _aquariumDao.GetDeviceSchedulesByAccount(id);
+        }
+        public void DeleteDeviceSchedule(int scheduleId)
+        {
+            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
+            _aquariumDao.DeleteDeviceSchedule(scheduleId);
+            affectedDevices.ForEach(device =>
+            {
+                try
+                {
+
+                    _deviceClient.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
+                }
+                catch (Exception e)
+                {
+                    //todo could not update schedule assignment (pi is offline maybe)
+                }
+            });
+
+        }
+        public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            return _aquariumDao.AddDeviceSchedule(deviceSchedule);
+        }
+        public List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId)
+        {
+            _aquariumDao.AssignDeviceSchedule(scheduleId, deviceId);
+            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
+            try
+            {
+
+                _deviceClient.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Could not apply schedule assignment");
+            }
+            return assignments;
+
+        }
+        public List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId)
+        {
+            _aquariumDao.UnassignDeviceSchedule(scheduleId, deviceId);
+            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
+
+            try
+            {
+
+                _deviceClient.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Could not apply schedule assignment");
+            }
+
+
+            return assignments;
+        }
+        public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            var updatedSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
+            UpdateDeviceSchedulesByScheduleId(deviceSchedule.Id);
+            return updatedSchedule;
+        }
+        public void UpdateDeviceSchedulesByScheduleId(int scheduleId)
+        {
+            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
+            affectedDevices.ForEach(device =>
+            {
+                try
+                {
+
+                    _deviceClient.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
+                }
+                catch (Exception e)
+                {
+                    //todo could not update schedule assignment (pi is offline maybe)
+                }
+            });
+        }
+        public void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.PerformScheduleTask(deviceScheduleTask);
+        }
+
+        public ScheduleState GetDeviceScheduleStatus(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.GetDeviceScheduleStatus();
+        }
+
+        /* Device Camera configuration */
+        public AquariumDevice ScanHardware(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.ScanHardware();
+        }
+        public AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config)
+        {
+            var deviceToUpdate = _aquariumDao.GetAquariumDeviceById(0);
+            deviceToUpdate.CameraConfiguration = config;
+            var device = _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
+            _deviceClient.ApplyUpdatedDevice(device);
+            return device;
+        }
+        public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
+        {
+            return _aquariumDao.ApplyAquariumDeviceHardware(deviceId, updatedDevice);
+        }
+
+        /* ATO */
+        public ATOStatus GetDeviceATOStatus(int deviceId)
+        {
+            try
+            {
+                //attempt to get status from pi
+                var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+                _deviceClient.Configure(device);
+                var state = _deviceClient.GetDeviceATOStatus();
+
+                //insert into db
+                if (state.Id.HasValue)
+                    state = _aquariumDao.UpdateATOStatus(state);
+                return state;
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation("Could not retrieve ATO status from device. Loading from cache...");
+                //load from cache
+                return _aquariumDao.GetATOHistory(deviceId, new PaginationSliver
+                {
+                    Count = 1,
+                    Descending = true
+                }).FirstOrDefault();
+            }
+        }
+        public ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus)
+        {
+            //Get last ATO
+            var uncompletedATOs = _aquariumDao.GetATOHistory(atoStatus.DeviceId, new PaginationSliver
+            {
+                Count = 1
+            }).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
+            uncompletedATOs.ToList().ForEach(ato =>
+            {
+                ato.UpdatedAt = DateTime.Now.ToUniversalTime();
+                ato.EndReason = "Error"; //todo
+                ato.Completed = true;
+                _aquariumDao.UpdateATOStatus(ato);
+            });
+            if (!atoStatus.PumpRunning && atoStatus.Id == null)
+                return atoStatus;
+            return _aquariumDao.UpdateATOStatus(atoStatus);
+        }
+        public List<ATOStatus> GetDeviceATOHistory(int deviceId, PaginationSliver paginationSliver)
+        {
+            return _aquariumDao.GetATOHistory(deviceId, paginationSliver);
+        }
+        public ATOStatus PerformDeviceATO(int deviceId, int maxRuntime)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.PerformDeviceATO(maxRuntime);
+        }
+
+        public ATOStatus StopDeviceATO(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.StopDeviceATO();
+        }
+        /* Device Sensors */
+        public DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor)
+        {
+            deviceSensor.DeviceId = deviceId;
+            deviceSensor = _aquariumDao.AddDeviceSensor(deviceSensor);
+            /* todo tell rpi that sensors updated */
+            return deviceSensor;
+        }
+        public ICollection<DeviceSensor> GetDeviceSensors(int deviceId)
+        {
+            var deviceSensors = _aquariumDao.GetDeviceSensors(deviceId);
+            return deviceSensors;
+        }
+        public DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor)
+        {
+            return _aquariumDao.UpdateDeviceSensor(deviceSensor);
+        }
+        public void DeleteDeviceSensor(int deviceId, int deviceSensorId)
+        {
+            var l = new List<int>()
+            {
+                deviceSensorId
+            };
+            _aquariumDao.DeleteDeviceSensors(l);
+            return;
+        }
+
+
+        public bool Ping(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.Ping();
+        }
+        public string GetDeviceLog(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.GetDeviceLog();
+        }
+        public void ClearDeviceLog(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.ClearDeviceLog();
+        }
+        public DeviceInformation GetDeviceInformation(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.GetDeviceInformation();
+        }
+        
+    }
+}
