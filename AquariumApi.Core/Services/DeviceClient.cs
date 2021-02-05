@@ -1,5 +1,6 @@
 ﻿using AquariumApi.DataAccess;
 using AquariumApi.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -41,20 +42,22 @@ namespace AquariumApi.Core
     public class DeviceClient : IDeviceClient
     {
         private readonly ILogger<DeviceClient> _logger;
+        private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IConfiguration _config;
         private readonly IAquariumDao _aquariumDao;
         private AquariumDevice Device;
 
         private Dictionary<string, string> HostOveride = new Dictionary<string, string>()
         {
-            { "162.200.68.142","raspberrypi" }
+            
         };
 
-        public DeviceClient(IConfiguration config,IAquariumDao aquariumDao, ILogger<DeviceClient> logger)
+        public DeviceClient(IConfiguration config,IHostingEnvironment hostingEnvironment,IAquariumDao aquariumDao, ILogger<DeviceClient> logger)
         {
             _config = config;
             _aquariumDao = aquariumDao;
             _logger = logger;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         
@@ -71,7 +74,7 @@ namespace AquariumApi.Core
 
             //check for host override
             var overrideHost = HostOveride.Keys.Where(k => k == Device.Address).FirstOrDefault();
-            if(overrideHost != null)
+            if(_hostingEnvironment.IsDevelopment() && overrideHost != null)
             {
                 var newHost = HostOveride[Device.Address];
                 _logger.LogInformation($"Overriding host name {Device.Address}:{Device.Port} with {newHost}");
