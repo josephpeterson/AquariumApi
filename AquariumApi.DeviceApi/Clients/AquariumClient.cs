@@ -22,7 +22,7 @@ namespace AquariumApi.DeviceApi.Clients
         Task<Aquarium> ApplyDeviceHardware(AquariumDevice aquariumDevice);
         AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
         Task<AquariumUser> RetrieveLoginToken(DeviceLoginRequest loginRequest);
-        Task<DeviceLoginResponse> ValidateAuthenticationToken();
+        Task<DeviceLoginResponse> PingAquariumService();
         void ClearLoginToken();
         Task<DeviceLoginResponse> RenewAuthenticationToken();
         Task<ATOStatus> DispatchATOStatus(ATOStatus status);
@@ -91,25 +91,19 @@ namespace AquariumApi.DeviceApi.Clients
             return aquarium;
         }
         /* Retrieve current token information */
-        public async Task<DeviceLoginResponse> ValidateAuthenticationToken()
+        public async Task<DeviceLoginResponse> PingAquariumService()
         {
             var path = $"{_config["AquariumServiceUrl"]}/DeviceInteraction";
-            _logger.LogInformation("Validating authentication token...");
 
             HttpClient client = GetHttpClient();
             var result = await client.GetAsync(path);
             if (!result.IsSuccessStatusCode)
-                throw new UnauthorizedAccessException("Could not validate token against server");
+                throw new UnauthorizedAccessException(result.ReasonPhrase);
 
             var res = await result.Content.ReadAsStringAsync();
             var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
             var aquarium = response.Aquarium;
             var account = response.Account;
-
-            _logger.LogInformation($"- Account: {account.Username}");
-            _logger.LogInformation($"- Aquarium: {aquarium.Name}");
-            _logger.LogInformation($"- Aquarium Device: {aquarium.Device.Name}");
-            _logger.LogInformation("Token successfully validated.");
             return response;
         }
 

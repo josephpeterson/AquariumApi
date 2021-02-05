@@ -110,6 +110,7 @@ namespace AquariumApi.Controllers
                 if (!_accountService.CanModify(userId, aquarium))
                     return BadRequest("You do not own this aquarium");
 
+                aquarium.Device = _aquariumService.GetAquariumDeviceById(aquarium.Device.Id); //get detailed device
                 return new OkObjectResult(new DeviceLoginResponse
                 {
                     Account = _aquariumService.GetAccountDetailed(userId, userId),

@@ -15,6 +15,7 @@ namespace AquariumApi.DeviceApi
 {
     public interface IGpioService
     {
+        void Setup(AquariumDevice device);
         void CleanUp();
         List<DeviceSensor> GetAllSensors();
         GpioPinValue GetPinValue(DeviceSensor pin);
@@ -80,6 +81,16 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError("GpioService: Encountered an error\r\n");
                 _logger.LogError(ex.StackTrace);
             }
+        }
+        public void Setup(AquariumDevice device)
+        {
+            CleanUp();
+            var sensors = device.Sensors;
+            _logger.LogInformation($"{sensors.Count()} sensors found...");
+            sensors.ToList().ForEach(s =>
+            {
+                RegisterDevicePin(s);
+            });
         }
         public void CleanUp()
         {

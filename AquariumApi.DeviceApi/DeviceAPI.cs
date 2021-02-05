@@ -28,79 +28,57 @@ namespace AquariumApi.DeviceApi
         {
             _logger.LogInformation("\n\n\nDeviceAPI Starting...");
             //Attempt to contact aquarium service
-            var response = _deviceService.PingAquariumService().Result;
-            AquariumDevice device = null;
-
-            if (response != null)
-            {
-                //Send current hardware
-                _logger.LogInformation("Scanning hardware...");
-                _deviceService.ApplyDeviceHardware().Wait();
-                device = _deviceService.GetDeviceFromService().Result;
-            }
-            //Get detailed device information
-            if(device != null)
-            {
-                //apply gpio infomation
-                _logger.LogInformation("Setting up GPIO information...");
-                var sensors = device.Sensors;
-                _logger.LogInformation($"{sensors.Count()} sensors found...");
-                sensors.ToList().ForEach(s =>
-                {
-                    _gpioService.RegisterDevicePin(s);
-                });
-
-
-
-
-
-
-
-
-                //check if ato is enabled
-                _logger.LogInformation("Checking if ATO is enabled...");
-                try
-                {
-                    _atoService.Setup(device);
-                } catch(Exception e)
-                {
-                    _logger.LogError("Could not run ATO setup");
-                    _logger.LogError(e.Message);
-                }
-
-
-
-                //Check schedules
-                _logger.LogInformation("Checking schedule information...");
-                var sa = device.ScheduleAssignments;
-                if (sa != null)
-                {
-                    _logger.LogInformation($"{sa.Count()} Schedules found");
-                    var schedules = sa.Select(s => s.Schedule).ToList();
-                    _scheduleService.SaveSchedulesToCache(schedules);
-                    _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
-                }
-                else
-                    _logger.LogInformation("No schedules are deployed on this device.");
-            }
-
-
-
-            /*
-            //Attempt to enable wiringPi
-            _logger.LogInformation("*** Attempting to enable WiringPi ***");
             try
             {
-                //Pi.Init<BootstrapWiringPi>();
-
-                _logger.LogInformation("WiringPi Enabled");
+                var response = _deviceService.PingAquariumService().Result;
+                _logger.LogInformation("Device information found for aquarium \"" + response.Aquarium.Name + "\"");
+                Setup(response.Aquarium);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Could not enable wiring: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
             }
-            */
+        }
+         
+        public void Setup(Aquarium aquarium)
+        {
+            var device = aquarium.Device;
+
+            _logger.LogInformation("Setting up GPIO Service...");
+            try
+            {
+                _gpioService.Setup(device);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
+
+            _logger.LogInformation("Setting up ATO Service...");
+            try
+            {
+                _atoService.Setup(device);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
+
+            _logger.LogInformation("Checking schedule information...");
+            try
+            {
+                _scheduleService.Setup(device);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
         }
 
+        public void Cleanup()
+        {
+            _gpioService.CleanUp();
+
+        }
     }
 }

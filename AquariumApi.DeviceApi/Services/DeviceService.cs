@@ -60,18 +60,9 @@ namespace AquariumApi.DeviceApi
 
         public async Task<DeviceLoginResponse> PingAquariumService()
         {
-            try
-            {
-                var response = await _aquariumClient.ValidateAuthenticationToken();
-                _accountLogin = response;
-                _logger.LogInformation("Device information found for aquarium \"" + _accountLogin.Aquarium.Name + "\"");
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
-                return null;
-            }
+            var response = await _aquariumClient.PingAquariumService();
+            _accountLogin = response;
+            return response;
         }
         public async Task<AquariumDevice> GetDeviceFromService()
         {

@@ -60,7 +60,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("GET /ClientApp called");
-                var data = _aquariumClient.ValidateAuthenticationToken().Result;
+                var data = _aquariumClient.PingAquariumService().Result;
                 return new OkObjectResult(data);
             }
             catch (Exception ex)

@@ -57,7 +57,7 @@ namespace AquariumApi.DeviceApi
                     var task = GetNextTask(_schedules, DateTime.Now);
                     if (task != null)
                     {
-                        _logger.LogInformation($"Next task scheduled in {task.eta.TotalMinutes} minutes (Schedule: {task.task.Schedule.Name})");
+                        _logger.LogInformation($"Next task scheduled in {Math.Ceiling(task.eta.TotalMinutes)} minutes (Schedule: {task.task.Schedule.Name})");
                         await Task.Delay(task.eta, stoppingToken);
                         try
                         {
@@ -184,7 +184,19 @@ namespace AquariumApi.DeviceApi
             };
         }
 
-
+        public void Setup(AquariumDevice device)
+        {
+            var sa = device.ScheduleAssignments;
+            if (sa != null)
+            {
+                _logger.LogInformation($"{sa.Count()} Schedules found");
+                var schedules = sa.Select(s => s.Schedule).ToList();
+                SaveSchedulesToCache(schedules);
+                StartAsync(new System.Threading.CancellationToken()).Wait();
+            }
+            else
+                _logger.LogInformation("No schedules are deployed on this device.");
+        }
 
         /* Tasks */
 
