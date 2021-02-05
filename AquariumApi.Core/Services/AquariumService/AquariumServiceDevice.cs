@@ -85,6 +85,7 @@ namespace AquariumApi.Core
             var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
             try
             {
+                _deviceClient.Configure(updatedDevice);
                 _deviceClient.ApplyUpdatedDevice(updatedDevice);
             }
             catch (Exception ex)
@@ -128,58 +129,54 @@ namespace AquariumApi.Core
         public List<DeviceScheduleAssignment> DeployDeviceSchedule(int deviceId, int scheduleId)
         {
             _aquariumDao.AssignDeviceSchedule(scheduleId, deviceId);
-            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             try
             {
-
-                _deviceClient.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+                _deviceClient.Configure(device);
+                _deviceClient.ApplyUpdatedDevice(device);
             }
             catch (Exception e)
             {
                 _logger.LogError("Could not apply schedule assignment");
             }
-            return assignments;
+            return device.ScheduleAssignments.ToList();
 
         }
         public List<DeviceScheduleAssignment> RemoveDeviceSchedule(int deviceId, int scheduleId)
         {
             _aquariumDao.UnassignDeviceSchedule(scheduleId, deviceId);
-            var assignments = _aquariumDao.GetAssignedDeviceSchedules(deviceId);
-
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             try
             {
-
-                _deviceClient.ApplyScheduleAssignment(deviceId, assignments.Select(sa => sa.Schedule).ToList());
+                _deviceClient.Configure(device);
+                _deviceClient.ApplyUpdatedDevice(device);
             }
             catch (Exception e)
             {
                 _logger.LogError("Could not apply schedule assignment");
             }
-
-
-            return assignments;
+            return device.ScheduleAssignments.ToList();
         }
         public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
         {
             var updatedSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
-            UpdateDeviceSchedulesByScheduleId(deviceSchedule.Id);
-            return updatedSchedule;
-        }
-        public void UpdateDeviceSchedulesByScheduleId(int scheduleId)
-        {
-            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(scheduleId);
+
+
+            var affectedDevices = _aquariumDao.GetDevicesInUseBySchedule(updatedSchedule.Id);
             affectedDevices.ForEach(device =>
             {
                 try
                 {
-
-                    _deviceClient.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
+                    var d = _aquariumDao.GetAquariumDeviceById(device.Id);
+                    _deviceClient.Configure(d);
+                    _deviceClient.ApplyUpdatedDevice(d);
                 }
                 catch (Exception e)
                 {
                     //todo could not update schedule assignment (pi is offline maybe)
                 }
             });
+            return updatedSchedule;
         }
         public void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask)
         {
@@ -207,6 +204,9 @@ namespace AquariumApi.Core
             var deviceToUpdate = _aquariumDao.GetAquariumDeviceById(0);
             deviceToUpdate.CameraConfiguration = config;
             var device = _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
+
+            //tell the pi
+            _deviceClient.Configure(device);
             _deviceClient.ApplyUpdatedDevice(device);
             return device;
         }
@@ -281,7 +281,11 @@ namespace AquariumApi.Core
         {
             deviceSensor.DeviceId = deviceId;
             deviceSensor = _aquariumDao.AddDeviceSensor(deviceSensor);
-            /* todo tell rpi that sensors updated */
+
+            //tell the pi
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.ApplyUpdatedDevice(device);
             return deviceSensor;
         }
         public ICollection<DeviceSensor> GetDeviceSensors(int deviceId)
@@ -291,7 +295,12 @@ namespace AquariumApi.Core
         }
         public DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor)
         {
-            return _aquariumDao.UpdateDeviceSensor(deviceSensor);
+            var updated = _aquariumDao.UpdateDeviceSensor(deviceSensor);
+            //tell the pi
+            var device = _aquariumDao.GetAquariumDeviceById(updated.DeviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.ApplyUpdatedDevice(device);
+            return updated;
         }
         public void DeleteDeviceSensor(int deviceId, int deviceSensorId)
         {
@@ -300,6 +309,11 @@ namespace AquariumApi.Core
                 deviceSensorId
             };
             _aquariumDao.DeleteDeviceSensors(l);
+
+            //tell the pi
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.ApplyUpdatedDevice(device);
             return;
         }
 

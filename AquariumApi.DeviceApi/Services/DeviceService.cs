@@ -26,6 +26,7 @@ namespace AquariumApi.DeviceApi
         void ApplyAquariumDevice(AquariumDevice aquariumDevice);
         Task<Aquarium> ApplyDeviceHardware();
         Task<AquariumDevice> GetDeviceFromService();
+        void Setup(DeviceService.SetupMethod testc);
     }
     public class DeviceService : IDeviceService
     {
@@ -34,6 +35,7 @@ namespace AquariumApi.DeviceApi
         private DeviceLoginResponse _accountLogin;
         private IHardwareService _hardwareService;
         private IAquariumClient _aquariumClient;
+        private SetupMethod _bootstrapSetup;
 
         public DeviceService(IConfiguration config, ILogger<DeviceService> logger, IHardwareService hardwareService, IAquariumClient aquariumClient)
         {
@@ -118,6 +120,19 @@ namespace AquariumApi.DeviceApi
         public void ApplyAquariumDevice(AquariumDevice aquariumDevice)
         {
             _accountLogin.Aquarium.Device = aquariumDevice;
+            //_deviceAPI.Setup(_accountLogin.Aquarium);
+            _logger.LogInformation("Running bootstrap process...");
+            _bootstrapSetup(_accountLogin.Aquarium);
         }
+
+        public void Setup(SetupMethod testc)
+        {
+            _bootstrapSetup = testc;
+            //todo: this is a bad idea
+        }
+    
+    
+        public delegate void SetupMethod(Aquarium aquarium);
     }
+
 }

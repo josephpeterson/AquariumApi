@@ -475,6 +475,7 @@ namespace AquariumApi.DataAccess
             var device = _dbAquariumContext.TblDevice
                 .Include(e => e.CameraConfiguration)
                 .Include(e => e.ScheduleAssignments)
+                .ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .Include(e => e.Sensors)
                 .SingleOrDefault(d => d.Id == deviceId);
             if (device == null)

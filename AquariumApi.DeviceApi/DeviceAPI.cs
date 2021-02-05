@@ -44,6 +44,8 @@ namespace AquariumApi.DeviceApi
         {
             var device = aquarium.Device;
 
+            _deviceService.Setup(Setup);
+
             _logger.LogInformation("Setting up GPIO Service...");
             try
             {
@@ -73,12 +75,6 @@ namespace AquariumApi.DeviceApi
             {
                 _logger.LogError(e.Message);
             }
-        }
-
-        public void Cleanup()
-        {
-            _gpioService.CleanUp();
-
         }
     }
 }

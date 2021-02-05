@@ -192,6 +192,7 @@ namespace AquariumApi.DeviceApi
                 _logger.LogInformation($"{sa.Count()} Schedules found");
                 var schedules = sa.Select(s => s.Schedule).ToList();
                 SaveSchedulesToCache(schedules);
+                StopAsync(token).Wait();
                 StartAsync(new System.Threading.CancellationToken()).Wait();
             }
             else

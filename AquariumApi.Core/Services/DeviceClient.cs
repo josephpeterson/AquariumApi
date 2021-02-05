@@ -49,7 +49,6 @@ namespace AquariumApi.Core
 
         private Dictionary<string, string> HostOveride = new Dictionary<string, string>()
         {
-            
         };
 
         public DeviceClient(IConfiguration config,IHostingEnvironment hostingEnvironment,IAquariumDao aquariumDao, ILogger<DeviceClient> logger)
@@ -198,9 +197,9 @@ namespace AquariumApi.Core
         }
         public void ApplyUpdatedDevice(AquariumDevice aquariumDevice)
         {
-            var path = $"http://{aquariumDevice.Address}:{aquariumDevice.Port}/v1/Device";
+            var path = $"/v1/Device";
 
-            using (var client2 = new HttpClient())
+            using (var client2 = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
                 jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
