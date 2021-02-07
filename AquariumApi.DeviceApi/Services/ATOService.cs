@@ -56,7 +56,7 @@ namespace AquariumApi.DeviceApi
             floatSwitchSensor.OnSensorTriggered = OnFloatSwitchTriggered;
 
             var task = device.ScheduleAssignments.Select(assignment => 
-            assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault()
+            assignment.Schedule.Tasks.Where(t => t.TaskId == ScheduleTaskTypes.StartATO).FirstOrDefault()
             ).FirstOrDefault();
 
             DateTime? nextRunTime = null;

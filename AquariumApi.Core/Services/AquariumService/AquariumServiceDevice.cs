@@ -206,8 +206,14 @@ namespace AquariumApi.Core
             var device = _aquariumDao.UpdateAquariumDevice(deviceToUpdate);
 
             //tell the pi
-            _deviceClient.Configure(device);
-            _deviceClient.ApplyUpdatedDevice(device);
+            try
+            {
+                ApplyUpdatedDevice(device.Id);
+            }
+            catch
+            {
+                _logger.LogError("Could not send update to devices.");
+            }
             return device;
         }
         public AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice)
@@ -283,9 +289,14 @@ namespace AquariumApi.Core
             deviceSensor = _aquariumDao.AddDeviceSensor(deviceSensor);
 
             //tell the pi
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            _deviceClient.ApplyUpdatedDevice(device);
+            try
+            {
+                ApplyUpdatedDevice(deviceId);
+            }
+            catch
+            {
+                _logger.LogError("Could not send update to devices.");
+            }
             return deviceSensor;
         }
         public ICollection<DeviceSensor> GetDeviceSensors(int deviceId)
@@ -297,9 +308,14 @@ namespace AquariumApi.Core
         {
             var updated = _aquariumDao.UpdateDeviceSensor(deviceSensor);
             //tell the pi
-            var device = _aquariumDao.GetAquariumDeviceById(updated.DeviceId);
-            _deviceClient.Configure(device);
-            _deviceClient.ApplyUpdatedDevice(device);
+            try
+            {
+                ApplyUpdatedDevice(updated.DeviceId);
+            }
+            catch
+            {
+                _logger.LogError("Could not send update to devices.");
+            }
             return updated;
         }
         public void DeleteDeviceSensor(int deviceId, int deviceSensorId)
@@ -311,9 +327,14 @@ namespace AquariumApi.Core
             _aquariumDao.DeleteDeviceSensors(l);
 
             //tell the pi
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            _deviceClient.ApplyUpdatedDevice(device);
+            try
+            {
+                ApplyUpdatedDevice(deviceId);
+            }
+            catch
+            {
+                _logger.LogError("Could not send update to devices.");
+            }
             return;
         }
 
@@ -343,5 +364,12 @@ namespace AquariumApi.Core
             return _deviceClient.GetDeviceInformation();
         }
         
+
+        public void ApplyUpdatedDevice(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.ApplyUpdatedDevice(device);
+        }
     }
 }

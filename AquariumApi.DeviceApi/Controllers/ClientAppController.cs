@@ -43,7 +43,8 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("POST /ClientApp/Login called");
-                var data = _aquariumClient.RetrieveLoginToken(loginRequest).Result;
+                var data = _aquariumClient.RetrieveLoginToken(loginRequest).Result; //todo redo this
+                _deviceService.PingAquariumService();
                 return new OkObjectResult(data);
             }
             catch (Exception ex)

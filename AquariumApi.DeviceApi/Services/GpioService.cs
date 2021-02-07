@@ -99,6 +99,7 @@ namespace AquariumApi.DeviceApi
                 if (Controller.IsPinOpen(p.Pin))
                     Controller.ClosePin(p.Pin);
             });
+            Pins.Clear();
         }
         public List<DeviceSensor> GetAllSensors()
         {
