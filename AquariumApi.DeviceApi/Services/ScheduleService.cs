@@ -17,6 +17,7 @@ namespace AquariumApi.DeviceApi
         private readonly IDeviceService _deviceService;
         private readonly IATOService _atoService;
         private readonly IConfiguration _config;
+        private AquariumDevice _device;
 
         public CancellationToken token;
         public bool Running;
@@ -37,7 +38,7 @@ namespace AquariumApi.DeviceApi
             //stoppingToken.Register(() => Cleanup());
 
             _logger.LogInformation($"Schedule job starting...");
-            _schedules = LoadSchedulesFromCache();
+            //_schedules = LoadSchedulesFromCache();
             _logger.LogInformation($"{_schedules.Count} schedules have been found");
             try
             {
@@ -48,13 +49,14 @@ namespace AquariumApi.DeviceApi
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     //Check if we should renew token
+                    //todo: move this into its own background service
                     if(lastTokenRenewalTime == null || DateTime.Now - lastTokenRenewalTime > TimeSpan.FromDays(1))
                     {
                         lastTokenRenewalTime = DateTime.Now;
                         await _deviceService.RenewAuthenticationToken();
                     }
 
-                    var task = GetNextTask(_schedules, DateTime.Now);
+                    var task = GetNextTask(GetAllSchedules(), DateTime.Now);
                     if (task != null)
                     {
                         _logger.LogInformation($"Next task scheduled in {Math.Ceiling(task.eta.TotalMinutes)} minutes (Schedule: {task.task.Schedule.Name})");
@@ -95,8 +97,9 @@ namespace AquariumApi.DeviceApi
             Running = false;
         }
 
-        public void SaveSchedulesToCache(List<DeviceSchedule> deviceSchedules)
+        public void SaveSchedulesToCache()
         {
+            var deviceSchedules = GetAllSchedules();
             var filepath = _config["ScheduleAssignmentPath"];
             var json = JsonConvert.SerializeObject(deviceSchedules);
             System.IO.File.WriteAllText(filepath, json);
@@ -118,25 +121,30 @@ namespace AquariumApi.DeviceApi
 
         public List<DeviceSchedule> GetAllSchedules()
         {
-            return _schedules;
+            var sa = _device.ScheduleAssignments;
+            if (sa == null)
+                return new List<DeviceSchedule>();
+            return sa.Select(s => s.Schedule).ToList();
+
         }
         public ScheduleState GetStatus()
         {
-            var nextTask = GetNextTask(_schedules, DateTime.Now);
+            var nextTask = GetNextTask(DateTime.Now);
             return new ScheduleState
             {
                 Running = Running,
                 NextTask = nextTask,
                 Schedules = _schedules,
-                TaskCount = _schedules.SelectMany(s => s.ExpandTasks()).Count()
+                TaskCount = GetAllScheduledTasks().Count()
             };
         }
-        public FutureTask GetNextTask(List<DeviceSchedule> schedules, DateTime? currentTime = null)
+        public FutureTask GetNextTask(DateTime? currentTime = null)
         {
             var now = DateTime.Now;
             if (currentTime != null)
                 now = currentTime.Value;
 
+            var schedules = GetAllSchedules();
             var allScheduledTasks = schedules.SelectMany(s => s.ExpandTasks()).ToList();
 
             if (allScheduledTasks.Count() == 0)
@@ -184,19 +192,27 @@ namespace AquariumApi.DeviceApi
             };
         }
 
+
+        public List<DeviceScheduleTask> GetAllScheduledTasks()
+        {
+            var schedules = GetAllSchedules();
+            return schedules.SelectMany(s => s.ExpandTasks()).ToList();
+        }
         public void Setup(AquariumDevice device)
         {
-            var sa = device.ScheduleAssignments;
-            if (sa != null)
+            _device = device;
+            var schedules = GetAllSchedules();
+            if(schedules.Count() == 0)
             {
-                _logger.LogInformation($"{sa.Count()} Schedules found");
-                var schedules = sa.Select(s => s.Schedule).ToList();
-                SaveSchedulesToCache(schedules);
-                StopAsync(token).Wait();
-                StartAsync(new System.Threading.CancellationToken()).Wait();
-            }
-            else
                 _logger.LogInformation("No schedules are deployed on this device.");
+                return;
+
+            }
+
+            _logger.LogInformation($"{schedules.Count()} Schedules found");
+            SaveSchedulesToCache();
+            StopAsync(token).Wait();
+            StartAsync(new System.Threading.CancellationToken()).Wait();
         }
 
         /* Tasks */
