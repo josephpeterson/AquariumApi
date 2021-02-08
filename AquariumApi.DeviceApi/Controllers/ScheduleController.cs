@@ -27,25 +27,8 @@ namespace AquariumApi.DeviceApi.Controllers
             _scheduleService = scheduleManagerService;
 
         }
-        // GET schedule/ - Retrieve all schedules on this device
+        // GET schedule/ - Get schedule status
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
-        {
-            try
-            {
-                _logger.LogInformation($"GET /v1/Schedule called");
-                var deviceSchedules = _scheduleService.GetAllSchedules();
-                return new OkObjectResult(deviceSchedules);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Schedule endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-            
-        }
-        [HttpGet("Status")]
         public ActionResult<IEnumerable<string>> GetScheduleStatus()
         {
             try
@@ -62,44 +45,6 @@ namespace AquariumApi.DeviceApi.Controllers
             }
 
         }
-        [HttpPost]
-        public IActionResult ApplyScheduleAssignment([FromBody] List<DeviceSchedule> deviceSchedules)
-        {
-            try
-            {
-                deviceSchedules.ForEach(s =>
-                {
-                    s.Host = _config["AquariumServiceUrl"];
-                });
-                _logger.LogInformation("POST /v1/Schedule called");
-                _scheduleService.SaveSchedulesToCache(deviceSchedules);
-                _scheduleService.StopAsync(_scheduleService.token).Wait();
-                _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Schedule endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-        }
-        [HttpPost("PerformTask")]
-        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
-        {
-            try
-            {
-                _scheduleService.PerformTask(deviceScheduleTask);
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-        }
-
         [HttpGet("Start")]
         public IActionResult Start()
         {
@@ -133,5 +78,36 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost("PerformTask")]
+        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
+        {
+            try
+            {
+                _scheduleService.PerformTask(deviceScheduleTask);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
+        [HttpGet("Scheduled")]
+        public IActionResult GetRemainingTasks()
+        {
+            try
+            {
+                var tasks = _scheduleService.GetAllScheduledTasks();
+                return new OkObjectResult(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Remaining endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
+
     }
 }

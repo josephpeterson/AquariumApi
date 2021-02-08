@@ -20,5 +20,10 @@ namespace AquariumApi.Models
 
         [ForeignKey("ScheduleId")]
         public DeviceSchedule Schedule { get; set; }
+
+        public TimeSpan GetTaskETA()
+        {
+            return (StartTime - DateTime.UtcNow);
+        }
     }   
 }

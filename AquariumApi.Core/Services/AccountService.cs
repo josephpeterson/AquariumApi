@@ -63,7 +63,14 @@ namespace AquariumApi.Core
         }
         public int GetCurrentUserId()
         {
-            return Convert.ToInt16(_context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            try
+            {
+                return Convert.ToInt16(_context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            }
+            catch
+            {
+                return -1;
+            }
         }
         public int GetCurrentAquariumId()
         {

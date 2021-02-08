@@ -13,10 +13,8 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
-    public interface IGpioService
+    public interface IGpioService: IDeviceSetupService
     {
-        void Setup(AquariumDevice device);
-        void CleanUp();
         List<DeviceSensor> GetAllSensors();
         GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);

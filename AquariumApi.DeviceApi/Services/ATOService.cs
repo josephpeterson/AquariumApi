@@ -14,11 +14,10 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
-    public interface IATOService
+    public interface IATOService: IDeviceSetupService
     {
         void BeginAutoTopOff(AutoTopOffRequest atoRequest);
         ATOStatus GetATOStatus();
-        void Setup(AquariumDevice device);
         void StopAutoTopOff(AutoTopOffStopReason stopReason = AutoTopOffStopReason.ForceStop);
     }
     public class ATOService : IATOService
@@ -83,6 +82,18 @@ namespace AquariumApi.DeviceApi
         {
             var sensors = _gpioService.GetAllSensors();
             return sensors.Where(p => p.Type == SensorTypes.ATOPumpRelay).FirstOrDefault();
+        }
+        private async Task DispatchStatus()
+        {
+            try
+            {
+                var s = await _aquariumClient.DispatchATOStatus(Status);
+                Status.Id = s.Id;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Unable to dispatch ATO status to server");
+            }
         }
 
         public void BeginAutoTopOff(AutoTopOffRequest atoRequest)
@@ -203,16 +214,10 @@ namespace AquariumApi.DeviceApi
             Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
             return Status;
         }
-        private async Task DispatchStatus() {
-            try
-            {
-                var s = await _aquariumClient.DispatchATOStatus(Status);
-                Status.Id = s.Id;
-            }
-            catch(Exception e)
-            {
-                _logger.LogError("Unable to dispatch ATO status to server");
-            }
+
+        public void CleanUp()
+        {
+            throw new NotImplementedException();
         }
     }
     public class AutoTopOffRequest

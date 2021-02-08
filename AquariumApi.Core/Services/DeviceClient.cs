@@ -218,7 +218,7 @@ namespace AquariumApi.Core
 
         public ScheduleState GetDeviceScheduleStatus()
         {
-            var path = "/v1/Schedule/Status";
+            var path = "/v1/Schedule";
             using (var client = GetHttpClient())
             {
                 var data = client.GetStringAsync(path).Result;
@@ -229,7 +229,7 @@ namespace AquariumApi.Core
 
         public void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
         {
-            var path = "/v1/Schedule";
+            var path = "/v1/Schedule/Perform";
             using (var client = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();

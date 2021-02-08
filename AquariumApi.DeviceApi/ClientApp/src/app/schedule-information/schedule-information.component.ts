@@ -3,7 +3,7 @@ import { LoginInformationResponse } from '../models/LoginInformationResponse';
 import { DeviceScheduleState } from '../models/DeviceScheduleState';
 import { ClientService } from '../services/client.service';
 import * as moment from 'moment';
-import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
+import { DeviceScheduleTask, DeviceScheduleTaskTypes } from '../models/DeviceScheduleTask';
 import { NotifierService } from 'angular-notifier';
 
 @Component({
@@ -49,7 +49,20 @@ export class ScheduleInformationComponent implements OnInit {
         this.notifier.notify("error", "Could not perform task on device");
       })
   }
-  public readableDuration(timespan: string) {
-    return moment.duration(timespan).humanize();
+  public readableDuration(task: DeviceScheduleTask) {
+    var d = moment(task.startTime).diff(moment());
+    console.log(d);
+    return moment.duration(d).humanize();
+  }
+  public readableDate(date: string) {
+    return moment(date).local().calendar();
+  }
+  public getTaskNameFromId(taskId: number) {
+    var types = DeviceScheduleTaskTypes;
+    for (var name in types) {
+      if(DeviceScheduleTaskTypes[name] == `${taskId}`)
+        return name;
+    }
+    return DeviceScheduleTaskTypes.Unknown;
   }
 }
