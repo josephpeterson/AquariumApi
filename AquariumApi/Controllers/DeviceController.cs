@@ -400,7 +400,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Device/{deviceId}/Schedule/Status: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 

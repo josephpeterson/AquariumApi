@@ -229,7 +229,7 @@ namespace AquariumApi.Core
 
         public void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
         {
-            var path = "/v1/Schedule/Perform";
+            var path = "/v1/Schedule/PerformTask";
             using (var client = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
@@ -240,7 +240,10 @@ namespace AquariumApi.Core
                 var httpContent = new StringContent(JsonConvert.SerializeObject(deviceScheduleTask, jss), Encoding.UTF8, "application/json");
                 var result = client.PostAsync(path, httpContent).Result;
                 if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not perform task on device");
+                {
+                    var error = result.Content.ReadAsStringAsync().Result;
+                    throw new Exception(error);
+                }
             }
         }
 
