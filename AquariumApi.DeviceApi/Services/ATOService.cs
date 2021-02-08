@@ -27,25 +27,30 @@ namespace AquariumApi.DeviceApi
         public AutoTopOffRequest Request { get; set; }
 
         private CancellationTokenSource CancelToken;
-        private IHostingEnvironment _hostingEnvironment;
         private readonly IConfiguration _config;
         private readonly ILogger<ATOService> _logger;
+        private readonly IAquariumAuthService _aquariumAuthService;
         private readonly IGpioService _gpioService;
+        private readonly ScheduleService _scheduleService;
         private IAquariumClient _aquariumClient;
-        private AquariumDevice _device;
 
-        public ATOService(IConfiguration config, ILogger<ATOService> logger, IGpioService gpioService, IHostingEnvironment hostingEnvironment,IAquariumClient aquariumClient)
+        public ATOService(IConfiguration config, ILogger<ATOService> logger, IAquariumAuthService aquariumAuthService,IGpioService gpioService, ScheduleService scheduleService,IAquariumClient aquariumClient)
         {
             _config = config;
             _logger = logger;
+            _aquariumAuthService = aquariumAuthService;
             _gpioService = gpioService;
+            _scheduleService = scheduleService;
             _aquariumClient = aquariumClient;
         }
 
 
-        public void Setup(AquariumDevice device)
+        public void Setup()
         {
-            _device = device;
+            var device = _aquariumAuthService.GetAquarium().Device;
+
+            //Register associated device tasks
+            RegisterDeviceTasks();
 
             //Check pins and sensors
             var pumpRelaySensor = GetPumpRelayPin();
@@ -68,7 +73,7 @@ namespace AquariumApi.DeviceApi
                 PumpRelaySensor = pumpRelaySensor,
                 FloatSensor = floatSwitchSensor,
                 Enabled = true,
-                DeviceId = _device.Id,
+                DeviceId = device.Id,
                 UpdatedAt = new DateTime(),
                 NextRunTime = nextRunTime
             };
@@ -116,14 +121,17 @@ namespace AquariumApi.DeviceApi
                 throw new Exception($"ATO sensor is currently reading maximum water level");
 
 
+
+
             _logger.LogInformation("[ATOService] Beginning ATO...");
+            var maxPumpRuntime = atoRequest.Runtime * 1000 * 60;
             _gpioService.SetPinValue(pumpRelaySensor, PinValue.High);
 
-            var maxPumpRuntime = atoRequest.Runtime * 1000 * 60;
-            var task = _device.ScheduleAssignments.Select(assignment =>
+            //Next run time
+            var device = _aquariumAuthService.GetAquarium().Device;
+            var task = device.ScheduleAssignments.Select(assignment =>
             assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault()
             ).FirstOrDefault();
-
             DateTime? nextRunTime = null;
             if (task != null)
                 nextRunTime = task.StartTime.ToUniversalTime();
@@ -140,7 +148,7 @@ namespace AquariumApi.DeviceApi
                 Enabled = true,
                 PumpRelaySensor = pumpRelaySensor,
                 FloatSensor = floatSwitchSensor,
-                DeviceId = _device.Id,
+                DeviceId = device.Id,
                 NextRunTime = nextRunTime,
                 FloatSensorValue = currentSensorValue
             };
@@ -212,12 +220,28 @@ namespace AquariumApi.DeviceApi
         {
             Status.UpdatedAt = DateTime.Now.ToUniversalTime();
             Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
+
+            var nextRun = _scheduleService.GetAllScheduledTasks().Where(t => t.TaskId == ScheduleTaskTypes.StartATO).FirstOrDefault();
+            if (nextRun != null)
+                Status.NextRunTime = nextRun.StartTime;
             return Status;
         }
 
         public void CleanUp()
         {
-            throw new NotImplementedException();
+            var pumpRelay = GetPumpRelayPin();
+            if (pumpRelay != null && Status.PumpRunning)
+                _gpioService.SetPinValue(pumpRelay, PinValue.Low);
+        }
+        private void RegisterDeviceTasks()
+        {
+            _scheduleService.RegisterDeviceTask(ScheduleTaskTypes.StartATO, (DeviceScheduleTask t) =>
+            {
+                BeginAutoTopOff(new AutoTopOffRequest()
+                {
+                    Runtime = 30
+                });
+            });
         }
     }
     public class AutoTopOffRequest

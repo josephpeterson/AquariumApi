@@ -14,35 +14,34 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
-    public interface IDeviceService
+    public interface IDeviceService: IDeviceSetupService
     {
         AquariumSnapshot TakeSnapshot();
         byte[] TakePhoto(CameraConfiguration configuration);
 
-        Task<DeviceLoginResponse> PingAquariumService();
+        Task<AquariumDevice> PingAquariumService();
         AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
-        DeviceLoginResponse GetConnectionInformation();
-        Task<bool> RenewAuthenticationToken();
-        void ApplyAquariumDevice(AquariumDevice aquariumDevice);
-        Task<Aquarium> ApplyDeviceHardware();
-        Task<AquariumDevice> GetDeviceFromService();
-        void Setup(DeviceService.SetupMethod testc);
+
+
+        void PerformSnapshotTask(DeviceScheduleTask task);
     }
     public class DeviceService : IDeviceService
     {
         private IConfiguration _config;
         private ILogger<DeviceService> _logger;
-        private DeviceLoginResponse _accountLogin;
         private IHardwareService _hardwareService;
+        private ScheduleService _scheduleService;
         private IAquariumClient _aquariumClient;
-        private SetupMethod _bootstrapSetup;
+        private IAquariumAuthService _aquariumAuthService;
 
-        public DeviceService(IConfiguration config, ILogger<DeviceService> logger, IHardwareService hardwareService, IAquariumClient aquariumClient)
+        public DeviceService(IConfiguration config, ILogger<DeviceService> logger, IHardwareService hardwareService, IAquariumAuthService aquariumAuthService, ScheduleService scheduleService,IAquariumClient aquariumClient)
         {
             _config = config;
             _logger = logger;
             _hardwareService = hardwareService;
+            _scheduleService = scheduleService;
             _aquariumClient = aquariumClient;
+            _aquariumAuthService = aquariumAuthService;
         }
 
         public byte[] TakePhoto(CameraConfiguration configuration)
@@ -56,83 +55,46 @@ namespace AquariumApi.DeviceApi
             {
                 Date = DateTime.Now.ToUniversalTime()
             };
-            if (_accountLogin.Aquarium.Device.EnabledTemperature) snapshot.Temperature = _hardwareService.GetTemperatureC();
+            //if (_accountLogin.Aquarium.Device.EnabledTemperature) snapshot.Temperature = _hardwareService.GetTemperatureC();
             return snapshot;
         }
 
-        public async Task<DeviceLoginResponse> PingAquariumService()
+        public async Task<AquariumDevice> PingAquariumService()
         {
             var response = await _aquariumClient.PingAquariumService();
-            _accountLogin = response;
             return response;
-        }
-        public async Task<AquariumDevice> GetDeviceFromService()
-        {
-            try
-            {
-                AquariumDevice response = await _aquariumClient.GetDeviceFromService();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Could not get device information from AquariumService: { ex.Message } Details: { ex.ToString() }");
-                return null;
-            }
-        }
-        public async Task<bool> RenewAuthenticationToken()
-        {
-            try
-            {
-                var response = await _aquariumClient.RenewAuthenticationToken();
-                _accountLogin = response;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Could not renew authentication token from AquariumService: { ex.Message } Details: { ex.ToString() }");
-                return false;
-            }
-        }
-        public async Task<Aquarium> ApplyDeviceHardware()
-        {
-            try
-            {
-                var response = await _aquariumClient.ApplyDeviceHardware(_hardwareService.ScanHardware());
-                _accountLogin.Aquarium = response;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Could not apply current device hardware");
-                return null;
-            }
         }
 
         public AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo)
         {
             return _aquariumClient.SendAquariumSnapshotToHost(snapshot, photo);
         }
-        public DeviceLoginResponse GetConnectionInformation()
+
+        public void Setup()
         {
-            return _accountLogin;
+            RegisterDeviceTasks();
+        }
+        private void RegisterDeviceTasks()
+        {
+            _scheduleService.RegisterDeviceTask(ScheduleTaskTypes.Snapshot,PerformSnapshotTask);
         }
 
-        public void ApplyAquariumDevice(AquariumDevice aquariumDevice)
+        public void PerformSnapshotTask(DeviceScheduleTask task)
         {
-            _accountLogin.Aquarium.Device = aquariumDevice;
-            //_deviceAPI.Setup(_accountLogin.Aquarium);
-            _logger.LogInformation("Running bootstrap process...");
-            _bootstrapSetup(_accountLogin.Aquarium);
+            _logger.LogInformation("Taking aquarium snapshot...");
+            var device = _aquariumAuthService.GetAquarium().Device;
+            var cameraConfiguration = device.CameraConfiguration;
+            var snapshot = TakeSnapshot();
+            var photo = TakePhoto(cameraConfiguration);
+
+            SendAquariumSnapshotToHost(snapshot, photo);
+            _logger.LogInformation("Aquarium snapshot sent successfully");
         }
 
-        public void Setup(SetupMethod testc)
+        public void CleanUp()
         {
-            _bootstrapSetup = testc;
-            //todo: this is a bad idea
+            //dont need to do anything
         }
-    
-    
-        public delegate void SetupMethod(Aquarium aquarium);
     }
 
 }

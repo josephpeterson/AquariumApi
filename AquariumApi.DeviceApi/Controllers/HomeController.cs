@@ -81,7 +81,7 @@ namespace AquariumApi.DeviceApi.Controllers
                 _logger.LogInformation("POST /v1/Information called");
                 var information = new DeviceInformation()
                 {
-                    Aquarium = _deviceService.GetConnectionInformation().Aquarium,
+                    Aquarium = _aquariumAuthService.GetAquarium(),
                     config = System.IO.File.ReadAllText("config.json"),
                     Schedules = _scheduleService.GetAllSchedules()
                 };
@@ -101,7 +101,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("POST /v1/Device called");
-                _deviceService.ApplyAquariumDevice(aquariumDevice);
+                _aquariumAuthService.ApplyAquariumDeviceFromService(aquariumDevice);
                 return Ok();
             }
             catch (Exception ex)

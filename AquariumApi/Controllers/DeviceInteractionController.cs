@@ -111,12 +111,7 @@ namespace AquariumApi.Controllers
                     return BadRequest("You do not own this aquarium");
 
                 aquarium.Device = _aquariumService.GetAquariumDeviceById(aquarium.Device.Id); //get detailed device
-                return new OkObjectResult(new DeviceLoginResponse
-                {
-                    Account = _aquariumService.GetAccountDetailed(userId, userId),
-                    Aquarium = aquarium,
-                    AquariumId = id
-                });
+                return new OkObjectResult(aquarium.Device);
             }
             catch (Exception ex)
             {

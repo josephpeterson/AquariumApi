@@ -11,22 +11,21 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
-    public class ScheduleService : BackgroundService
+    public class ScheduleService : BackgroundService, IDeviceSetupService
     {
         private readonly ILogger<ScheduleService> _logger;
-        private readonly IDeviceService _deviceService;
-        private readonly IATOService _atoService;
+        private IAquariumAuthService _aquariumAuthService;
         private readonly IConfiguration _config;
-        private AquariumDevice _device = new AquariumDevice();
+        private Dictionary<ScheduleTaskTypes, DeviceTaskProcess> _deviceTaskCallbacks = new Dictionary<ScheduleTaskTypes, DeviceTaskProcess>();
         public CancellationToken token;
         public bool Running;
 
-        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger, IDeviceService deviceService,IATOService atoService)
+
+        public ScheduleService(IConfiguration config, ILogger<ScheduleService> logger,IAquariumAuthService aquariumAuthService)
         {
             _config = config;
             _logger = logger;
-            _deviceService = deviceService;
-            _atoService = atoService;
+            _aquariumAuthService = aquariumAuthService;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -37,24 +36,17 @@ namespace AquariumApi.DeviceApi
             try
             {
                 Running = true;
-
-                DateTime? lastTokenRenewalTime = null;
-
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    //Check if we should renew token
-                    //todo: move this into its own background service
-                    if(lastTokenRenewalTime == null || DateTime.Now - lastTokenRenewalTime > TimeSpan.FromDays(1))
-                    {
-                        lastTokenRenewalTime = DateTime.Now;
-                        await _deviceService.RenewAuthenticationToken();
-                    }
-
                     var task = GetNextTask();
                     if (task != null)
                     {
                         var eta = task.GetTaskETA();
-                        _logger.LogInformation($"Next task scheduled in {Math.Ceiling(eta.TotalMinutes)} minutes (Schedule: {task.Schedule.Name})");
+
+                        //readable time
+                        string time = string.Format("{0:D2}h:{1:D2}m",eta.Hours,eta.Minutes);
+
+                        _logger.LogInformation($"Next task scheduled in {time} (Schedule: {task.Schedule.Name} Task: {task.TaskId})");
                         await Task.Delay(eta, stoppingToken);
                         try
                         {
@@ -83,13 +75,8 @@ namespace AquariumApi.DeviceApi
             {
                 _logger.LogError($"Error occured during schedule: {e.Message}");
             }
-            Cleanup();
-        }
-
-        private void Cleanup()
-        {
             _logger.LogInformation($"Schedule job stopped");
-            Running = false;
+            CleanUp();
         }
 
         public void SaveSchedulesToCache()
@@ -116,7 +103,8 @@ namespace AquariumApi.DeviceApi
 
         public List<DeviceSchedule> GetAllSchedules()
         {
-            var sa = _device.ScheduleAssignments;
+            var device = _aquariumAuthService.GetAquarium().Device;
+            var sa = device.ScheduleAssignments;
             if (sa == null)
                 return new List<DeviceSchedule>();
             return sa.Select(s => s.Schedule).ToList();
@@ -186,9 +174,8 @@ namespace AquariumApi.DeviceApi
             
             return allScheduledTasks;
         }
-        public void Setup(AquariumDevice device)
+        public void Setup()
         {
-            _device = device;
             var schedules = GetAllSchedules();
             if(schedules.Count() == 0)
             {
@@ -207,38 +194,24 @@ namespace AquariumApi.DeviceApi
 
         public void PerformTask(DeviceScheduleTask task)
         {
-            switch (task.TaskId)
-            {
-                case ScheduleTaskTypes.Snapshot:
-                    TakeSnapshotTask(task);
-                    break;
-                case ScheduleTaskTypes.StartATO:
-                    PerformATOTask(task);
-                    break;
-                default:
-                    _logger.LogError($"Invalid task type id (taskId: {task.Id})");
-                    break;
-            }
+            if (_deviceTaskCallbacks.ContainsKey(task.TaskId))
+                _deviceTaskCallbacks[task.TaskId](task);
+            else
+                throw new Exception($"Invalid task type id (taskId: {task.Id})");
         }
-        private void TakeSnapshotTask(DeviceScheduleTask task)
+        public void RegisterDeviceTask(ScheduleTaskTypes taskType,DeviceTaskProcess callback)
         {
-            _logger.LogInformation("Taking aquarium snapshot...");
-            var con = _deviceService.GetConnectionInformation();
-            var device = con.Aquarium.Device;
-            var cameraConfiguration = device.CameraConfiguration;
-            var snapshot = _deviceService.TakeSnapshot();
-            var photo = _deviceService.TakePhoto(cameraConfiguration);
+            _deviceTaskCallbacks[taskType] = callback;
+            _logger.LogInformation($"Registered callback for task id: {taskType}");
+        }
 
-            _deviceService.SendAquariumSnapshotToHost(snapshot, photo);
-            _logger.LogInformation("Aquarium snapshot sent successfully");
-        }
-        private void PerformATOTask(DeviceScheduleTask task)
+        public void CleanUp()
         {
-            _atoService.BeginAutoTopOff(new AutoTopOffRequest()
-            {
-                Runtime = 20
-            });
+            StopAsync(token).Wait();
+            Running = false;
         }
+
+        public delegate void DeviceTaskProcess(DeviceScheduleTask task);
     }
 }
 

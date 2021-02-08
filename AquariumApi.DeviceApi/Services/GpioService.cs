@@ -26,21 +26,22 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<GpioService> _logger;
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IAquariumAuthService _aquariumAuthService;
         private List<DeviceSensor> Pins = new List<DeviceSensor>();
         private IGpioControllerWrapper Controller;
         public bool ATOSystemRunning { get; private set; }
 
-        public GpioService(IConfiguration config, ILogger<GpioService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
+        public GpioService(IConfiguration config, ILogger<GpioService> logger, IAquariumAuthService aquariumAuthService,ISerialService serialService,IHostingEnvironment hostingEnvironment)
         {
             _config = config;
             _logger = logger;
             _serialService = serialService;
             _hostingEnvironment = hostingEnvironment;
+            _aquariumAuthService = aquariumAuthService;
             CreateController();
         }
         private void PreparePins()
         {
-            _logger.LogInformation("GpioService: Preparing pins....");
             Pins.ForEach(p =>
             {
                 if (!Controller.IsPinOpen(p.Pin))
@@ -80,9 +81,10 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError(ex.StackTrace);
             }
         }
-        public void Setup(AquariumDevice device)
+        public void Setup()
         {
             CleanUp();
+            var device = _aquariumAuthService.GetAquarium().Device;
             var sensors = device.Sensors;
             _logger.LogInformation($"{sensors.Count()} sensors found...");
             sensors.ToList().ForEach(s =>

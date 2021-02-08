@@ -46,7 +46,8 @@ export class ScheduleInformationComponent implements OnInit {
         this.notifier.notify("success", "Task was performed successfully!");
       }, err => {
         this.performingTask = false;
-        this.notifier.notify("error", "Could not perform task on device");
+        console.log(err);
+        this.notifier.notify("error", "Task: " + err.error);
       })
   }
   public readableDuration(task: DeviceScheduleTask) {

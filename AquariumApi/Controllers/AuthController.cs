@@ -55,6 +55,7 @@ namespace AquariumApi.Controllers
                     var aquariumId = _accountService.GetCurrentAquariumId();
                     var aquarium = _aquariumService.GetAquariumById(aquariumId);
                     string token = _accountService.IssueDeviceLoginToken(user, aquariumId);
+                    aquarium.Device = _aquariumService.GetAquariumDeviceById(aquarium.Device.Id);
                     var res = new DeviceLoginResponse
                     {
                         Account = user,
@@ -116,6 +117,17 @@ namespace AquariumApi.Controllers
 
 
                 user.Aquariums = _aquariumService.GetAquariumsByAccountId(user.Id);
+
+
+
+                var data = new DeviceLoginResponse
+                {
+                    Account = user,
+                    Token = token,
+                    AquariumId = deviceLogin.AquariumId
+                };
+
+
                 if (deviceLogin.AquariumId.HasValue)
                 {
                     var aq = user.Aquariums.First(a => a.Id == deviceLogin.AquariumId);
@@ -149,15 +161,13 @@ namespace AquariumApi.Controllers
                             PrivateKey = "",
                             AquariumId = aq.Id
                         };
-                        _aquariumService.AddAquariumDevice(d);
+                        aq.Device = _aquariumService.AddAquariumDevice(d);
                     }
+                    else
+                        aq.Device = _aquariumService.GetAquariumDeviceById(aq.Device.Id);
+                    data.Aquarium = aq;
                 }
-                var data = new DeviceLoginResponse
-                {
-                    Account = user,
-                    Token = token,
-                    AquariumId = deviceLogin.AquariumId
-                };
+                
                 return new OkObjectResult(data);
             }
             catch (Exception ex)

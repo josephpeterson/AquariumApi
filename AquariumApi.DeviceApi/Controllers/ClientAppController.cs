@@ -18,41 +18,20 @@ namespace AquariumApi.DeviceApi.Controllers
     {
         private IDeviceService _deviceService;
         private ScheduleService _scheduleService;
-        private IHardwareService _hardwareService;
-        private IAquariumClient _aquariumClient;
+        private IAquariumAuthService _aquariumAuthService;
         private ILogger<ClientAppController> _logger;
         private IConfiguration _config;
 
         public ClientAppController(IDeviceService deviceService,
             ScheduleService scheduleService,
-            IHardwareService hardwareService,
-            IAquariumClient aquariumClient,
+            IAquariumAuthService aquariumAuthService,
             ILogger<ClientAppController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
             _scheduleService = scheduleService;
-            _hardwareService = hardwareService;
-            _aquariumClient = aquariumClient;
+            _aquariumAuthService = aquariumAuthService;
             _logger = logger;
             _config = config;
-        }
-        [HttpPost]
-        [Route("/ClientApp/Login")]
-        public IActionResult AttemptLogin([FromBody] DeviceLoginRequest loginRequest)
-        {
-            try
-            {
-                _logger.LogInformation("POST /ClientApp/Login called");
-                var data = _aquariumClient.RetrieveLoginToken(loginRequest).Result; //todo redo this
-                _deviceService.PingAquariumService();
-                return new OkObjectResult(data);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/ClientApp/Login caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
         }
         [HttpGet]
         [Route("ClientApp")]
@@ -61,29 +40,20 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("GET /ClientApp called");
-                var data = _aquariumClient.PingAquariumService().Result;
-                return new OkObjectResult(data);
+                var account = _aquariumAuthService.GetAccount();
+                var aquarium = _aquariumAuthService.GetAquarium();
+
+                if (account is null)
+                    return Unauthorized();
+                return new OkObjectResult(new
+                {
+                    Account = account,
+                    Aquarium = aquarium
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/ClientApp caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return Unauthorized();
-            }
-        }
-        [HttpGet]
-        [Route("ClientApp/Schedule")]
-        public IActionResult GetScheduleInformation()
-        {
-            try
-            {
-                _logger.LogInformation($"GET /v1/ClientApp/Schedule called");
-                var scheduleStatus = _scheduleService.GetStatus();
-                return new OkObjectResult(scheduleStatus);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/ClientApp/Schedule caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return Unauthorized();
             }
@@ -106,6 +76,28 @@ namespace AquariumApi.DeviceApi.Controllers
                 return new BadRequestResult();
             }
         }
+
+
+
+
+        [HttpPost]
+        [Route("/ClientApp/Login")]
+        public IActionResult AttemptLogin([FromBody] DeviceLoginRequest loginRequest)
+        {
+            try
+            {
+                _logger.LogInformation("POST /ClientApp/Login called");
+                var data = _aquariumAuthService.AttemptLogin(loginRequest).Result;
+                return new OkObjectResult(data.Account);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/ClientApp/Login caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
+
         [HttpDelete]
         [Route("ClientApp/Logout")]
         public IActionResult Logout()
@@ -113,28 +105,13 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("DELETE /ClientApp/Logout called");
-                _aquariumClient.ClearLoginToken();
-                _scheduleService.StopAsync(_scheduleService.token).Wait();
+                _aquariumAuthService.Logout();
+                _scheduleService.StopAsync(_scheduleService.token).Wait();  //todo refactor this
                 return new OkResult();
             }
             catch (Exception ex)
             {
                 _logger.LogError($"DELETE /v1/ClientApp/Logout caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-        }
-        [HttpPost("ClientApp/PerformTask")]
-        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
-        {
-            try
-            {
-                _scheduleService.PerformTask(deviceScheduleTask);
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/ClientApp/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return NotFound();
             }
@@ -146,11 +123,8 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation("GET /ClientApp/Auth/Renew called");
-                var res = _deviceService.RenewAuthenticationToken().Result;
-                if (res)
-                    return Ok();
-                else
-                    return Unauthorized();
+                _aquariumAuthService.RenewAuthenticationToken().Wait();
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -159,27 +133,5 @@ namespace AquariumApi.DeviceApi.Controllers
                 return BadRequest();
             }
         }
-        [HttpGet]
-        [Route("ClientApp/Hardware/Scan")]
-        public IActionResult ApplyDeviceHardware()
-        {
-            try
-            {
-                var r = Request;
-                _logger.LogInformation("GET /ClientApp/Hardware/Scan called");
-                var aquarium = _deviceService.ApplyDeviceHardware().Result;
-                if (aquarium != null)
-                    return new OkObjectResult(aquarium);
-                else
-                    return Unauthorized();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/ClientApp/Hardware/Scan caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return BadRequest();
-            }
-        }
-
     }
 }

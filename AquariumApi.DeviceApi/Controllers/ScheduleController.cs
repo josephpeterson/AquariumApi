@@ -89,8 +89,7 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(ex.Message);
             }
         }
         [HttpGet("Scheduled")]

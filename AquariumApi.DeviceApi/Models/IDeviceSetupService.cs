@@ -8,7 +8,7 @@ namespace AquariumApi.DeviceApi
 {
     public interface IDeviceSetupService
     {
-        void Setup(AquariumDevice device);
+        void Setup();
         void CleanUp();
     }
 }

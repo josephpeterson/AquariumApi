@@ -42,13 +42,13 @@ export class ClientService {
         return this.http.get(this._url + "/ClientApp");
     }
     public getDeviceScheduleInformation() {
-        return this.http.get(this._url + "/ClientApp/Schedule");
+        return this.http.get(this._url + "/v1/Schedule");
     }
     public getDeviceLog() {
         return this.http.get(this._url + "/ClientApp/Log",{ responseType: "text" });
     }
     public performScheduleTask(task: DeviceScheduleTask) {
-        return this.http.post(this._url + "/ClientApp/PerformTask",task);
+        return this.http.post(this._url + "/v1/Schedule/PerformTask",task);
     }
     public renewAuthToken() {
         return this.http.get(this._url + "/ClientApp/Auth/Renew");

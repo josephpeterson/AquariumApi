@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,44 +19,155 @@ namespace AquariumApi.DeviceApi
 {
     public interface IAquariumAuthService
     {
-        void DeleteToken();
+        void Setup(Action setupCallback, Action cleanUpCallback);
         DeviceLoginResponse GetToken();
-        DeviceLoginResponse LoadTokenFromCache();
-        void SaveTokenToCache(DeviceLoginResponse deviceLoginResponse);
+        Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest);
+        Task RenewAuthenticationToken();
+        void Logout();
+        void ApplyAquariumDeviceFromService(AquariumDevice aquariumDevice);
+        Aquarium GetAquarium();
+        AquariumUser GetAccount();
+        
+        [System.Obsolete]
+        void RequestAquariumDeviceFromService();
     }
     public class AquariumAuthService : IAquariumAuthService
     {
         private IConfiguration _config;
         private ILogger<AquariumAuthService> _logger;
         private DeviceLoginResponse _token;
+        private Action _bootstrapSetup;
+        private Action _bootstrapCleanup;
 
         public AquariumAuthService(IConfiguration config, ILogger<AquariumAuthService> logger)
         {
             _config = config;
             _logger = logger;
         }
-        public void SaveTokenToCache(DeviceLoginResponse deviceLoginResponse)
+        private void SaveTokenToCache(DeviceLoginResponse deviceLoginResponse)
         {
             _token = deviceLoginResponse;
             File.WriteAllText("login.json", JsonConvert.SerializeObject(deviceLoginResponse));
         }
-        public DeviceLoginResponse LoadTokenFromCache()
+        private DeviceLoginResponse LoadTokenFromCache()
         {
             if (!File.Exists("login.json")) return null;
 
             _token = JsonConvert.DeserializeObject<DeviceLoginResponse>(File.ReadAllText("login.json"));
             return _token;
         }
-        public void DeleteToken()
-        {
-            _token = null;
-            File.Delete("login.json");
-        }
         public DeviceLoginResponse GetToken()
         {
             if (_token != null)
                 return _token;
             return LoadTokenFromCache();
+        }
+
+
+        public async Task RenewAuthenticationToken()
+        {
+            if (_token == null)
+                throw new Exception("No authentication token available");
+
+            _logger.LogInformation("Renewing authentication token...");
+            var path = $"/v1/Auth/Renew";
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
+                client.Timeout = TimeSpan.FromMinutes(5);
+
+                var result = await client.GetAsync(path);
+                if (!result.IsSuccessStatusCode)
+                {
+                    throw new Exception("Could not renew authentication token");
+                }
+
+                _logger.LogInformation("Authentication Token Successfully Renewed");
+
+                var res = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
+                SaveTokenToCache(response);
+                return;
+            }
+    
+        }
+        /* Attempt to retrieve login token */
+        /* First attempt will log user with no aquarium */
+        /* Second attempt will select an aquarium */
+        public async Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest)
+        {
+            var path = $"/v1/Auth/Login/Device";
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
+                client.Timeout = TimeSpan.FromMinutes(5);
+
+                var result = await client.PostAsJsonAsync(path, loginRequest);
+                if (!result.IsSuccessStatusCode)
+                {
+                    if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
+                        throw new Exception("Invalid request");
+                    if (result.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                        throw new Exception("Service does not have this device key on record. Please check your device key and IP combination");
+                    else
+                        throw new Exception(result.ReasonPhrase);
+                }
+                var res = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
+                SaveTokenToCache(response);
+
+                if (loginRequest.AquariumId.HasValue)
+                    _bootstrapSetup();
+
+                return response;
+            }
+        }
+
+        public void Logout()
+        {
+            _token = null;
+            File.Delete("login.json");
+            _bootstrapCleanup();
+        }
+
+        public void Setup(Action setupCallback, Action cleanUpCallback)
+        {
+            _bootstrapSetup = setupCallback;
+            _bootstrapCleanup = cleanUpCallback;
+        }
+
+        public void ApplyAquariumDeviceFromService(AquariumDevice aquariumDevice)
+        {
+            _token.Aquarium.Device = aquariumDevice;
+            SaveTokenToCache(_token);
+            _bootstrapSetup();
+        }
+        public void RequestAquariumDeviceFromService()
+        {
+            var path = $"/v1/DeviceInteraction";
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
+                client.Timeout = TimeSpan.FromMinutes(5);
+
+                var result = client.GetAsync(path).Result;
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception(result.ReasonPhrase);
+                var res = result.Content.ReadAsStringAsync().Result;
+                var response = JsonConvert.DeserializeObject<AquariumDevice>(res);
+                ApplyAquariumDeviceFromService(response);
+            }
+        }
+        public Aquarium GetAquarium()
+        {
+            return _token?.Aquarium;
+        }
+        public AquariumUser GetAccount()
+        {
+            return _token?.Account;
         }
     }
 }
