@@ -39,6 +39,8 @@ namespace AquariumApi.DeviceApi
         private Action _bootstrapSetup;
         private Action _bootstrapCleanup;
 
+        public CancellationTokenSource RenewTokenTick { get; private set; }
+
         public AquariumAuthService(IConfiguration config, ILogger<AquariumAuthService> logger)
         {
             _config = config;
@@ -68,6 +70,8 @@ namespace AquariumApi.DeviceApi
         {
             if (_token == null)
                 throw new Exception("No authentication token available");
+            if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
+                RenewTokenTick.Cancel();
 
             _logger.LogInformation("Renewing authentication token...");
             var path = $"/v1/Auth/Renew";
@@ -88,7 +92,20 @@ namespace AquariumApi.DeviceApi
                 var res = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
                 SaveTokenToCache(response);
-                return;
+
+                //Schedule a new renew
+                var delay = TimeSpan.FromMinutes(30);
+                RenewTokenTick = new CancellationTokenSource();
+                CancellationToken ct = RenewTokenTick.Token;
+                _ = Task.Run(() =>
+                  {
+                      string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
+                      _logger.LogInformation($"Renewing auth token in {time}");
+                      Thread.Sleep(delay);
+                      if (ct.IsCancellationRequested)
+                          return;
+                      RenewAuthenticationToken().Wait();
+                  }).ConfigureAwait(false);//Fire and forget
             }
     
         }

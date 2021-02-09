@@ -103,9 +103,14 @@ namespace AquariumApi.DeviceApi
 
         public void BeginAutoTopOff(AutoTopOffRequest atoRequest)
         {
-            if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            if (Status.PumpRunning)
             {
                 throw new Exception($"ATO is currently running...");
+            }
+            if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Canceled by new ATO process"); //todo remove all these cancel logs when we solve the issue of random ato cancels
+                CancelToken.Cancel();
             }
             var pumpRelaySensor = GetPumpRelayPin();
             var floatSwitchSensor = GetFloatSensorPin();
@@ -158,13 +163,22 @@ namespace AquariumApi.DeviceApi
             CancelToken = new CancellationTokenSource();
             CancellationToken ct = CancelToken.Token;
 
+
+            var statusId = Status.Id;
             Task.Run(() =>
             {
-                _logger.LogInformation($"[ATOService] Running (Max run time: {maxPumpRuntime}ms)");
+                var t = TimeSpan.FromMilliseconds(maxPumpRuntime);
+                string time = string.Format("{0:D2}h:{1:D2}m", t.Hours, t.Minutes);
+                _logger.LogInformation($"[ATOService] Running (Max run time: {time})");
                 Thread.Sleep(maxPumpRuntime);
                 //ct.ThrowIfCancellationRequested();
                 if (ct.IsCancellationRequested)
                 {
+                    if(statusId != Status.Id)
+                    {
+                        _logger.LogError("Attempted to cancel water change. The Status IDs of the water changes do not match!");
+                        return;
+                    }
                     StopAutoTopOff(AutoTopOffStopReason.Canceled);
                     //_gpioService.SetPinValue(pumpRelaySensor.Pin, PinValue.Low); //maybe enable this in case we run into pin issues
                     return;
@@ -181,7 +195,10 @@ namespace AquariumApi.DeviceApi
         public void StopAutoTopOff(AutoTopOffStopReason stopReason = AutoTopOffStopReason.ForceStop)
         {
             if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Canceled via StopAutoTopOff");
                 CancelToken.Cancel();
+            }
 
 
             var pumpRelaySensor = Status.PumpRelaySensor;
@@ -209,8 +226,8 @@ namespace AquariumApi.DeviceApi
         {
             Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
 
-            _logger.LogInformation($"ATOService: Sensor triggered (Value: {Status.FloatSensorValue}");
-            if (Status.PumpRunning && Status.FloatSensorValue == GpioPinValue.High)
+            _logger.LogInformation($"ATOService: Sensor triggered (Value: {Status.FloatSensorValue})");
+            if (Status.PumpRunning && Status.FloatSensorValue == GpioPinValue.Low)
             {
                 _logger.LogInformation($"[ATOService] ATO Stopped!");
                 StopAutoTopOff(AutoTopOffStopReason.SensorTriggered);
@@ -232,6 +249,11 @@ namespace AquariumApi.DeviceApi
             var pumpRelay = GetPumpRelayPin();
             if (pumpRelay != null && Status.PumpRunning)
                 _gpioService.SetPinValue(pumpRelay, PinValue.Low);
+            if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Canceled via CleanUp");
+                CancelToken.Cancel();
+            }
         }
         private void RegisterDeviceTasks()
         {
