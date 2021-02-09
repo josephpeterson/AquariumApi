@@ -257,6 +257,8 @@ namespace AquariumApi.Core
             }).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
             uncompletedATOs.ToList().ForEach(ato =>
             {
+                if (ato.Id == atoStatus.Id)
+                    return;
                 ato.UpdatedAt = DateTime.Now.ToUniversalTime();
                 ato.EndReason = "Error"; //todo
                 ato.Completed = true;

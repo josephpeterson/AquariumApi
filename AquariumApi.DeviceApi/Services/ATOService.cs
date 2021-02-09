@@ -177,6 +177,7 @@ namespace AquariumApi.DeviceApi
                     if(statusId != Status.Id)
                     {
                         _logger.LogError("Attempted to cancel water change. The Status IDs of the water changes do not match!");
+                        //so this definitely happens occasionally 
                         return;
                     }
                     StopAutoTopOff(AutoTopOffStopReason.Canceled);
