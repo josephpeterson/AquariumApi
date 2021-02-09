@@ -252,6 +252,7 @@ namespace AquariumApi.Core
             //Get last ATO
             var uncompletedATOs = _aquariumDao.GetATOHistory(atoStatus.DeviceId, new PaginationSliver
             {
+                Descending = true,
                 Count = 10 //doesn't matter, just not all of them
             }).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
             uncompletedATOs.ToList().ForEach(ato =>
