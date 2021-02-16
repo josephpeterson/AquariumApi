@@ -29,24 +29,29 @@ namespace AquariumApi.Models
         public bool Running { get; set; }
 
 
-        public List<DeviceScheduleTask> ExpandTasks()
+        public List<DeviceScheduleTask> ExpandTasks(DateTime startDate)
         {
             if (Tasks == null) return new List<DeviceScheduleTask>();
 
-            var tasks = new List<DeviceScheduleTask>();
+            var allScheduledTasks = new List<DeviceScheduleTask>();
             var indvidualTasks = Tasks.ToList();
+
+
             indvidualTasks.ForEach(t =>
             {
-                t.StartTime = t.StartTime.ToLocalTime();
-                t.EndTime = t.EndTime?.ToLocalTime();
-                //Reset the day
-                tasks.Add(new DeviceScheduleTask()
+                var tod = t.StartTime.TimeOfDay;
+                var startTime = startDate.Date + tod;
+                if (startTime < startDate)
+                    startTime = startTime.AddDays(1);
+                //t.EndTime = t.EndTime?.ToLocalTime();
+
+                var newTask = new DeviceScheduleTask()
                 {
                     TaskId = t.TaskId,
-                    StartTime = t.StartTime,
-                    ScheduleId = Id,
-                    Schedule = this
-                });
+                    StartTime = startTime,
+                    ScheduleId = Id
+                };
+                allScheduledTasks.Add(newTask);
                 if (t.Interval != null)
                 {
                     var lengthInMinutes = TimeSpan.FromDays(1).TotalMinutes;
@@ -55,19 +60,18 @@ namespace AquariumApi.Models
                         lengthInMinutes = t.EndTime.Value.TimeOfDay.Subtract(t.StartTime.TimeOfDay).TotalMinutes;
 
                     var mod = lengthInMinutes % t.Interval;
-                    for (var i = 1; i < ((lengthInMinutes - mod) / t.Interval); i++)
+                    for (var i = 1; i <= ((lengthInMinutes - mod) / t.Interval); i++)
                     {
-                        tasks.Add(new DeviceScheduleTask()
+                        allScheduledTasks.Add(new DeviceScheduleTask()
                         {
-                            TaskId = t.TaskId,
-                            StartTime = t.StartTime.AddMinutes(i * t.Interval.Value),
-                            ScheduleId = Id,
-                            Schedule = this
+                            TaskId = newTask.TaskId,
+                            StartTime = newTask.StartTime.AddMinutes(i * t.Interval.Value),
+                            ScheduleId = Id
                         });
                     }
                 }
             });
-            return tasks.OrderBy(t => t.StartTime).ToList();
+            return allScheduledTasks.OrderBy(t => t.StartTime).ToList();
         }
     }
 }

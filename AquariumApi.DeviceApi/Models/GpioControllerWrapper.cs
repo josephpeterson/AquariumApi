@@ -79,9 +79,9 @@ public class MockGpioControllerWrapper : IGpioControllerWrapper
     {
         //actual gpio controller: what happens when we read an non open pin
         var k = PinValues.Keys.Where(p => p == pinNumber).FirstOrDefault();
-        if (k != null)
-            return (k == PinValue.High) ? GpioPinValue.High : GpioPinValue.Low;
-        return GpioPinValue.Low;
+        //if (k != null)
+        //    return (k != PinValue.High) ? GpioPinValue.High : GpioPinValue.Low;
+        return GpioPinValue.High;
 
     }
 }

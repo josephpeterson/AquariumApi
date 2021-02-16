@@ -94,7 +94,8 @@ namespace AquariumApi.DeviceApi
                 SaveTokenToCache(response);
 
                 //Schedule a new renew
-                var delay = TimeSpan.FromMinutes(30);
+                var renewTime = Convert.ToInt32(_config["AuthTokenRenewTime"]);
+                var delay = TimeSpan.FromHours(renewTime);
                 RenewTokenTick = new CancellationTokenSource();
                 CancellationToken ct = RenewTokenTick.Token;
                 _ = Task.Run(() =>
