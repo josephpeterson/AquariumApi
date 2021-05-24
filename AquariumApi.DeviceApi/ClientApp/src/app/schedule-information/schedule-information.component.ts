@@ -66,4 +66,12 @@ export class ScheduleInformationComponent implements OnInit {
     }
     return DeviceScheduleTaskTypes.Unknown;
   }
+  public getScheduleFromId(scheduleId: number) {
+    var sch;
+    this.scheduleState.schedules.forEach(s => {
+      if(s.id == scheduleId)
+        sch = s;
+    })
+    return sch;
+  }
 }

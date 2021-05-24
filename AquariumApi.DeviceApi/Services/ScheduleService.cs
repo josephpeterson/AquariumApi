@@ -33,12 +33,13 @@ namespace AquariumApi.DeviceApi
             //stoppingToken.Register(() => Cleanup());
 
             //_schedules = LoadSchedulesFromCache();
+            DeviceScheduleTask task;
             try
             {
                 Running = true;
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    var task = GetNextTask();
+                    task = GetNextTask();
                     if (task != null)
                     {
                         var eta = task.GetTaskETA();
@@ -68,7 +69,7 @@ namespace AquariumApi.DeviceApi
                     }
                 }
             }
-            catch (TaskCanceledException e)
+            catch (TaskCanceledException)
             {
                 //do nothing, it was canceled
             }
@@ -97,7 +98,7 @@ namespace AquariumApi.DeviceApi
                 var json = System.IO.File.ReadAllText(filepath);
                 return JsonConvert.DeserializeObject<List<DeviceSchedule>>(json);
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 return new List<DeviceSchedule>();
             }

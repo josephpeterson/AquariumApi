@@ -7,6 +7,7 @@ import { LoginInformationModel } from '../models/LoginInformation.model';
 import { LoginInformationResponse } from '../models/LoginInformationResponse';
 import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
 import { Aquarium } from '../models/Aquarium';
+import { BaseException } from '../models/BaseException';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -55,5 +56,8 @@ export class ClientService {
     }
     public scanHardware() {
         return this.http.get<Aquarium>(this._url + "/ClientApp/Hardware/Scan");
+    }
+    public getExceptions() {
+        return this.http.get<BaseException[]>(this._url + "/v1/Exception");
     }
 }

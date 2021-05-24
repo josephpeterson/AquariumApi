@@ -104,13 +104,14 @@ namespace AquariumApi.DeviceApi
         public List<DeviceSensor> GetAllSensors()
         {
             return Pins;
-            var inputPins = Pins.Where(p => p.Polarity == Polarity.Input).ToList();
+            /* var inputPins = Pins.Where(p => p.Polarity == Polarity.Input).ToList();
             inputPins.ForEach(p => {
                 var val = Controller.Read(p.Pin);
                 _logger.LogInformation("Pin Value for " + p.Name + ": " + val);
                 p.Value = val;
             });
             return inputPins;
+            */
         }
         public GpioPinValue GetPinValue(DeviceSensor pin)
         {

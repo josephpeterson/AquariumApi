@@ -23,6 +23,7 @@ import { LoginContainerComponent } from './containers/login/login-container.comp
 import { NotifierModule } from "angular-notifier";
 import { DeviceNotifierConfig } from './config/DeviceNotifierConfig';
 import { HardwareInformationComponent } from './hardware-information/hardware-information.component';
+import { ExceptionListComponent } from './exception-list/exception-list.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { HardwareInformationComponent } from './hardware-information/hardware-in
     DashboardContainerComponent,
     LoginContainerComponent,
     ApplicationLogViewComponent,
-    HardwareInformationComponent
+    HardwareInformationComponent,
+    ExceptionListComponent
   ],
   imports: [
     BrowserModule,

@@ -17,7 +17,15 @@
   </div>
 </div>
 
-<h4>Hardware</h4>
-<hardware-information [loginInformation]="loginInformation"></hardware-information>
+<div class="row">
+  <div class="col-md">
+    <h4>Hardware</h4>
+    <hardware-information [loginInformation]="loginInformation"></hardware-information>
+  </div>
+  <div class="col-md">
+    <h4>Exceptions</h4>
+    <exception-list></exception-list>
+  </div>
+</div>
 <h4>Schedules</h4>
 <schedule-information [loginInformation]="loginInformation"></schedule-information>

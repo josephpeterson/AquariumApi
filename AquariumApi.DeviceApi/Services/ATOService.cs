@@ -33,8 +33,14 @@ namespace AquariumApi.DeviceApi
         private readonly IGpioService _gpioService;
         private readonly ScheduleService _scheduleService;
         private IAquariumClient _aquariumClient;
+        private IExceptionService _exceptionService;
 
-        public ATOService(IConfiguration config, ILogger<ATOService> logger, IAquariumAuthService aquariumAuthService,IGpioService gpioService, ScheduleService scheduleService,IAquariumClient aquariumClient)
+        public ATOService(IConfiguration config, ILogger<ATOService> logger, 
+            IAquariumAuthService aquariumAuthService,
+            IGpioService gpioService, 
+            ScheduleService scheduleService,
+            IExceptionService exceptionService,
+            IAquariumClient aquariumClient)
         {
             _config = config;
             _logger = logger;
@@ -42,6 +48,7 @@ namespace AquariumApi.DeviceApi
             _gpioService = gpioService;
             _scheduleService = scheduleService;
             _aquariumClient = aquariumClient;
+            _exceptionService = exceptionService;
         }
 
 
@@ -100,6 +107,7 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError("Unable to dispatch ATO status to server");
                 _logger.LogError(e.Message);
                 _logger.LogError(e.StackTrace);
+                await _exceptionService.Throw(e);
             }
         }
 

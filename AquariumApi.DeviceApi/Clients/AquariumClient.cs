@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -15,6 +16,7 @@ namespace AquariumApi.DeviceApi.Clients
         AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
         Task<AquariumDevice> PingAquariumService();
         Task<ATOStatus> DispatchATOStatus(ATOStatus status);
+        Task DispatchExceptions(List<BaseException> exceptions);
     }
     public class AquariumClient : IAquariumClient
     {
@@ -89,10 +91,26 @@ namespace AquariumApi.DeviceApi.Clients
                 {
                     throw new Exception("Could not dispatch ATO status");
                 }
-                _logger.LogInformation($"ATO status successfully dispatched to server.");
+                _logger.LogInformation($"ATO status successfully dispatched to service.");
                 var res = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<ATOStatus>(res);
                 return response;
+            }
+        }
+        public async Task DispatchExceptions(List<BaseException> exceptions)
+        {
+            var path = $"/v1/DeviceInteraction/Exception";
+            _logger.LogInformation($"Dispatching {exceptions.Count} exceptions to aquarium service...");
+
+            using (HttpClient client = GetHttpClient())
+            {
+                var httpContent = new StringContent(JsonConvert.SerializeObject(exceptions), Encoding.UTF8, "application/json");
+                var result = await client.PostAsync(path, httpContent);
+                if (!result.IsSuccessStatusCode)
+                {
+                    throw new Exception("Could not dispatch exceptions to service");
+                }
+                _logger.LogInformation($"Exceptions successfully dispatched to service.");
             }
         }
 
