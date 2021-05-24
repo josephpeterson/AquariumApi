@@ -45,20 +45,21 @@ namespace AquariumApi.DeviceApi
 
                         //readable time
                         string time = string.Format("{0:D2}h:{1:D2}m",eta.Hours,eta.Minutes);
-                        string scheduleName = GetAllSchedules().Where(s => s.Id == task.ScheduleId).FirstOrDefault()?.Name;
+                        var schedule = GetAllSchedules().Where(s => s.Id == task.ScheduleId).FirstOrDefault();
+                        var scheduleName = schedule == null ? "Unknown" : schedule.Name;
                         _logger.LogInformation($"Next task scheduled in {time} (Schedule: {scheduleName} Task: {task.TaskId})");
                         await Task.Delay(eta, stoppingToken);
                         try
                         {
-                            _logger.LogInformation($"\n\n ** Performing task (TaskId: {task.TaskId} Schedule: {task.Schedule.Name}) **");
+                            _logger.LogInformation($"\n\n ** Performing task (TaskId: {task.TaskId} Schedule: {scheduleName}) **");
                             PerformTask(task);
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError($"Could not perform task [taskId:{task.TaskId} Schedule: {task.Schedule.Name}]: Error: {e.Message}");
+                            _logger.LogError($"Could not perform task [taskId:{task.TaskId} Schedule: {scheduleName}]: Error: {e.Message}");
                             _logger.LogError(e.StackTrace);
                         }
-                        _logger.LogInformation($"\n\n ** Task completed successfully (TaskId: {task.TaskId} Schedule: {task.Schedule.Name}) **");
+                        _logger.LogInformation($"\n\n ** Task completed successfully (TaskId: {task.TaskId} Schedule: {scheduleName}) **");
                     }
                     else
                     {
@@ -104,12 +105,13 @@ namespace AquariumApi.DeviceApi
 
         public List<DeviceSchedule> GetAllSchedules()
         {
-            var device = _aquariumAuthService.GetAquarium().Device;
-            var sa = device.ScheduleAssignments;
+            var aq = _aquariumAuthService.GetAquarium();
+            if(aq == null || aq.Device == null)
+                return new List<DeviceSchedule>();
+            var sa = aq.Device.ScheduleAssignments;
             if (sa == null)
                 return new List<DeviceSchedule>();
             return sa.Select(s => s.Schedule).ToList();
-
         }
         public ScheduleState GetStatus()
         {

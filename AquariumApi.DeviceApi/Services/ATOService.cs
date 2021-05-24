@@ -98,6 +98,8 @@ namespace AquariumApi.DeviceApi
             catch (Exception e)
             {
                 _logger.LogError("Unable to dispatch ATO status to server");
+                _logger.LogError(e.Message);
+                _logger.LogError(e.StackTrace);
             }
         }
 
