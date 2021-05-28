@@ -166,11 +166,15 @@ namespace AquariumApi.Controllers
 
                 var s = _aquariumService.UpdateDeviceATOStatus(atoStatus);
 
+                if(s.Completed)
+                    _logger.LogInformation($"ATO was completed for aquarium id: {id}");
+
                 return new OkObjectResult(s);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/DeviceInteraction/ATO: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
                 return BadRequest(ex.Message);
             }
         }
