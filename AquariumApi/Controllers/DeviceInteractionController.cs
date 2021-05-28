@@ -171,7 +171,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/DeviceInteraction/ATO: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 
