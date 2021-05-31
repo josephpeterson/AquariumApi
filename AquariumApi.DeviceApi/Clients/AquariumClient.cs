@@ -89,7 +89,7 @@ namespace AquariumApi.DeviceApi.Clients
                 var result = await client.PostAsync(path, httpContent);
                 if (!result.IsSuccessStatusCode)
                 {
-                    throw new Exception($"Could not dispatch ATO status. Response: {result.StatusCode}: {result.ReasonPhrase}");
+                    throw new Exception($"Could not dispatch ATO status. Response: {result.StatusCode}: {result.ReasonPhrase} Destination: {client.BaseAddress + path}");
                 }
                 _logger.LogInformation($"ATO status successfully dispatched to service.");
                 var res = await result.Content.ReadAsStringAsync();

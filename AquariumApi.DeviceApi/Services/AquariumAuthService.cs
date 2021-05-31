@@ -70,8 +70,6 @@ namespace AquariumApi.DeviceApi
         {
             if (_token == null)
                 throw new Exception("No authentication token available");
-            if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
-                RenewTokenTick.Cancel();
 
             _logger.LogInformation("Renewing authentication token...");
             var path = $"/v1/Auth/Renew";
@@ -92,23 +90,27 @@ namespace AquariumApi.DeviceApi
                 var res = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
                 SaveTokenToCache(response);
-
-                //Schedule a new renew
-                var renewTime = Convert.ToInt32(_config["AuthTokenRenewTime"]);
-                var delay = TimeSpan.FromHours(renewTime);
-                RenewTokenTick = new CancellationTokenSource();
-                CancellationToken ct = RenewTokenTick.Token;
-                _ = Task.Run(() =>
-                  {
-                      string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
-                      _logger.LogInformation($"Renewing auth token in {time}");
-                      Thread.Sleep(delay);
-                      if (ct.IsCancellationRequested)
-                          return;
-                      RenewAuthenticationToken().Wait();
-                  }).ConfigureAwait(false);//Fire and forget
+                ScheduleRenewToken();
             }
     
+        }
+        private void ScheduleRenewToken()
+        {
+            if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
+                RenewTokenTick.Cancel();
+            var renewTime = Convert.ToInt32(_config["AuthTokenRenewTime"]);
+            var delay = TimeSpan.FromHours(renewTime);
+            RenewTokenTick = new CancellationTokenSource();
+            CancellationToken ct = RenewTokenTick.Token;
+            _ = Task.Run(() =>
+            {
+                string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
+                _logger.LogInformation($"Renewing auth token in {time}");
+                Thread.Sleep(delay);
+                if (ct.IsCancellationRequested)
+                    return;
+                RenewAuthenticationToken().Wait();
+            }).ConfigureAwait(false);//Fire and forget
         }
         /* Attempt to retrieve login token */
         /* First attempt will log user with no aquarium */
@@ -138,6 +140,8 @@ namespace AquariumApi.DeviceApi
                 if (loginRequest.AquariumId.HasValue)
                     _bootstrapSetup();
 
+                //Schedule a renew
+                ScheduleRenewToken();
                 return response;
             }
         }
