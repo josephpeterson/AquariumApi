@@ -13,11 +13,20 @@ namespace AquariumApi.DeviceApi
         public static IConfiguration Configuration { get; set; }
         public static void Main(string[] args)
         {
-            var builder = new ConfigurationBuilder()
-                .AddJsonFile("config.json");
-            Configuration = builder.Build();
-            CreateWebHostBuilder(args).Build().Run();
+            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
 
+            try
+            {
+                var builder = new ConfigurationBuilder()
+                .AddJsonFile("config.json");
+                Configuration = builder.Build();
+                CreateWebHostBuilder(args).Build().Run();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Stopped program because of exception");
+                throw;
+            }
         }
 
 
