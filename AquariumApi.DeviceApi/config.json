@@ -6,5 +6,6 @@
   "AquariumServiceUrl": "https://aquarium-api-dev.azurewebsites.net",
   //"AquariumServiceUrl": "http://localhost:5000",
   "ScheduleAssignmentPath": "aquarium_schedules.json",
-  "ATOMaximumRuntime": 600
+  "ATOMaximumRuntime": 600,
+  "ATOScheduledRuntime": 90
 }

@@ -271,11 +271,13 @@ namespace AquariumApi.DeviceApi
         }
         private void RegisterDeviceTasks()
         {
+            var scheduledRuntime = Convert.ToInt32(_config["ATOScheduledRuntime"]);
+            _logger.LogInformation($"Registering ScheduleTaskType StartATO with scheduled runtime: {scheduledRuntime}");
             _scheduleService.RegisterDeviceTask(ScheduleTaskTypes.StartATO, (DeviceScheduleTask t) =>
             {
                 BeginAutoTopOff(new AutoTopOffRequest()
                 {
-                    Runtime = 30
+                    Runtime = scheduledRuntime //standard ATO time
                 });
             });
         }
