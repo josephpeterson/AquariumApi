@@ -127,8 +127,11 @@ namespace AquariumApi.DeviceApi
             if (pumpRelaySensor == null || floatSwitchSensor == null)
                 throw new Exception($"Invalid ATO pins specified (Pump: {pumpRelaySensor} Sensor: {floatSwitchSensor})");
 
-            if (atoRequest.Runtime > 60)
-                throw new Exception($"ATO max runtime is larger than maximum allowed (Runtime: {atoRequest.Runtime} Maximum: 60)");
+
+            //Check if they passed a number larger than the maximum ATO time allowed
+            var maxATOTime = Convert.ToInt32(_config["ATOMaximumRuntime"]);
+            if (atoRequest.Runtime > maxATOTime) //max run time
+                throw new Exception($"ATO max runtime is larger than maximum allowed (Runtime: {atoRequest.Runtime} Maximum: {maxATOTime})");
 
             var currentSensorValue = _gpioService.GetPinValue(floatSwitchSensor);
 
