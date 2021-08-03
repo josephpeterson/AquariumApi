@@ -168,7 +168,8 @@ namespace AquariumApi.DeviceApi
                 FloatSensor = floatSwitchSensor,
                 DeviceId = device.Id,
                 NextRunTime = nextRunTime,
-                FloatSensorValue = currentSensorValue
+                FloatSensorValue = currentSensorValue,
+                MlPerSec = 1.25 //Calculated 150ml in 2min = 1.2mlps
             };
             DispatchStatus().Wait(); //.ConfigureAwait(false);
 
