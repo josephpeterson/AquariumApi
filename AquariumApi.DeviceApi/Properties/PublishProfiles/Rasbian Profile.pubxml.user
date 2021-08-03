@@ -7,6 +7,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   <PropertyGroup>
     <TimeStampOfAssociatedLegacyPublishXmlFile />
     <_PublishTargetUrl>J:\Joseph\Desktop\pi</_PublishTargetUrl>
+    <History>True|2021-08-03T03:40:46.1578185Z;True|2021-07-31T15:02:51.5928722-05:00;True|2021-06-08T02:07:17.9573679-05:00;True|2021-05-31T09:04:44.7398328-05:00;True|2021-05-30T22:00:02.3231898-05:00;True|2021-05-28T10:50:09.6719317-05:00;True|2021-05-28T10:45:17.0036465-05:00;True|2021-05-24T07:44:33.8958825-05:00;True|2021-05-23T23:23:16.6424500-05:00;False|2021-05-23T23:21:13.2049730-05:00;False|2021-05-23T23:13:30.1587294-05:00;False|2021-05-23T23:10:50.3787272-05:00;</History>
   </PropertyGroup>
   <ItemGroup>
     <File Include="appsettings.Development.json">

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
-    public class ATOStatus
+    public class ATOStatus : Indexable  //allow pagination of this object
     {
         public int? Id { get; set; }
         public int DeviceId { get; set; }
@@ -14,9 +14,8 @@ namespace AquariumApi.Models
         public int RuntimeRemaining { get; set; }
         public bool RunIndefinitely { get; set; }
         public bool Completed { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime? EstimatedEndTime { get; set; }
         public DateTime? ActualEndTime { get; set; }
+        public DateTime? EstimatedEndTime { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string EndReason { get; set; }
 

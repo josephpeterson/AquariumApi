@@ -1297,12 +1297,9 @@ namespace AquariumApi.DataAccess
         {
             var range = _dbAquariumContext.TblDeviceATOStatus
                 .AsNoTracking()
-                .Where(s => s.DeviceId == deviceId).OrderBy(s => s.UpdatedAt);
-
-            if (pagination.Descending)
-                range = range.OrderByDescending(p => p.UpdatedAt);
-            var sliver = range.Skip(pagination.Start).Take(pagination.Count);
-            return sliver.ToList();
+                .Where(s => s.DeviceId == deviceId).ApplyPaginationSliver<ATOStatus>(pagination);
+            var list = range.ToList();
+            return list;
         }
     }
 }
