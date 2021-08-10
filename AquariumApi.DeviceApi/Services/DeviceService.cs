@@ -53,7 +53,7 @@ namespace AquariumApi.DeviceApi
         {
             var snapshot = new AquariumSnapshot()
             {
-                Date = DateTime.Now.ToUniversalTime()
+                StartDate = DateTime.Now.ToUniversalTime()
             };
             //if (_accountLogin.Aquarium.Device.EnabledTemperature) snapshot.Temperature = _hardwareService.GetTemperatureC();
             return snapshot;

@@ -422,7 +422,7 @@ namespace AquariumApi.DataAccess
         {
             return _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId)
                 .Include(s => s.Photo)
-                .OrderByDescending(s => s.Date)
+                .OrderByDescending(s => s.StartDate)
                 .Skip(offset)
                 .Take(max)
                 .ToList();
