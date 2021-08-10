@@ -27,6 +27,11 @@ namespace AquariumApi.Models
         public decimal? Ph { get; set; }
         public int? Temperature { get; set; }
 
+        public float Salinity { get; set; }
+        public float Calcium { get; set; }
+        public float Alkalinity { get; set; }
+        public float Magnesium { get; set; }
+
         public bool? ManualEntry { get; set; } = false;
 
 
