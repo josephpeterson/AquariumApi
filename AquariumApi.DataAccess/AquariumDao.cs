@@ -419,11 +419,12 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return snapshot;
         }
+        [System.Obsolete]
         public List<AquariumSnapshot> GetAquariumSnapshots(int aquariumId, int offset, int max)
         {
             return _dbAquariumContext.TblSnapshot.Where(s => s.AquariumId == aquariumId)
                 .Include(s => s.Photo)
-                .OrderByDescending(s => s.StartDate)
+                .OrderByDescending(s => s.StartTime)
                 .Skip(offset)
                 .Take(max)
                 .ToList();
