@@ -47,5 +47,31 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost]
+        [Route("/v1/Water/{aquariumId}/Parameters/Add")]
+        [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult AddWaterParameter(int aquariumId, [FromBody] AquariumSnapshot parameters)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Water/{aquariumId}/Parameters/Add called");
+                AquariumSnapshot s = _aquariumService.AddWaterParametersByAquarium(aquariumId, parameters);
+
+                //Activity Writer
+                var uid = _aquariumService.GetAquariumById(aquariumId).OwnerId;
+                _activityService.RegisterActivity(new CreateAquariumTestResultsActivity()
+                {
+                    AccountId = uid,
+                    SnapshotId = s.Id
+                });
+                return new OkObjectResult(s);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST /v1/Water/{aquariumId}/Parameters/Add: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
     }
 }

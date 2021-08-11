@@ -24,6 +24,7 @@ namespace AquariumApi.Core
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
         ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId, PaginationSliver pagination);
+        AquariumSnapshot AddWaterParametersByAquarium(int aquariumId, AquariumSnapshot snapshot);
     }
     public partial class AquariumService : IAquariumService
     {
@@ -31,6 +32,11 @@ namespace AquariumApi.Core
         public ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId,PaginationSliver pagination)
         {
             return _aquariumDao.GetWaterParametersByAquarium(aquariumId,pagination);
+        }
+        public AquariumSnapshot AddWaterParametersByAquarium(int aquariumId, AquariumSnapshot snapshot)
+        {
+            snapshot.AquariumId = aquariumId;
+            return _aquariumDao.AddSnapshot(snapshot);
         }
         public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
         {
