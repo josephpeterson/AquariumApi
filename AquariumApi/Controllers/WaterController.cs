@@ -30,7 +30,7 @@ namespace AquariumApi.Controllers
             _logger = logger;
             _photoManager = photoManager;
         }
-        [HttpGet]
+        [HttpPost]
         [Route("/v1/Water/{aquariumId}/Parameters")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
