@@ -149,6 +149,7 @@ namespace AquariumApi.DataAccess
         ATOStatus UpdateATOStatus(ATOStatus atoStatus);
         ATOStatus AddATOStatus(ATOStatus atoStatus);
         List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver sliver);
+        ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId, PaginationSliver pagination);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1197,6 +1198,14 @@ namespace AquariumApi.DataAccess
                 //.ThenInclude(n => n.Dispatcher)
                 .Where(n => notificationIds.Contains(n.Id))
                 .ToList();
+        }
+        public ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId,PaginationSliver pagination)
+        {
+            var range = _dbAquariumContext.TblSnapshot
+                .AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId).ApplyPaginationSliver<AquariumSnapshot>(pagination);
+            var list = range.ToList();
+            return list;
         }
         public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
         {

@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
     <PackageReference Include="MMALSharp" Version="0.5.1" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="4.12.0" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="4.12.0" /> 
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
 	  <PackageReference Include="System.Device.Gpio" Version="1.4.0" />
 	  <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />

@@ -73,17 +73,23 @@ namespace AquariumApi.DeviceApi
 
             _logger.LogInformation("Renewing authentication token...");
             var path = $"/v1/Auth/Renew";
+            var retries = 3;
             using (var client = new HttpClient())
             {
+                HttpResponseMessage result = null;
                 client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
                 client.Timeout = TimeSpan.FromMinutes(5);
 
-                var result = await client.GetAsync(path);
-                if (!result.IsSuccessStatusCode)
+                for(var i=0;i<retries;i++)
                 {
-                    throw new Exception("Could not renew authentication token");
+                    result = await client.GetAsync(path);
+                    if (result.IsSuccessStatusCode)
+                        break;
                 }
+                if(result == null || !result.IsSuccessStatusCode)
+                    throw new Exception($"Could not renew authentication token after {retries} connection attempts.");
+
 
                 _logger.LogInformation("Authentication Token Successfully Renewed");
 
@@ -96,20 +102,34 @@ namespace AquariumApi.DeviceApi
         }
         private void ScheduleRenewToken()
         {
+            _logger.LogInformation($"Scheduling auth token renew...");
             if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
                 RenewTokenTick.Cancel();
             var renewTime = Convert.ToInt32(_config["AuthTokenRenewTime"]);
+            var renewOnFailure = Convert.ToBoolean(_config["AuthTokenRenewOnFailure"]);
             var delay = TimeSpan.FromHours(renewTime);
             RenewTokenTick = new CancellationTokenSource();
             CancellationToken ct = RenewTokenTick.Token;
             _ = Task.Run(() =>
             {
-                string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
-                _logger.LogInformation($"Renewing auth token in {time}");
-                Thread.Sleep(delay);
-                if (ct.IsCancellationRequested)
-                    return;
-                RenewAuthenticationToken().Wait();
+                try
+                {
+                    string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
+                    _logger.LogInformation($"Renewing auth token in {time}");
+                    Thread.Sleep(delay);
+                    if (ct.IsCancellationRequested)
+                        return;
+                    RenewAuthenticationToken().Wait();
+                }
+                catch(Exception e)
+                {
+                    _logger.LogCritical("Renew Authentication Token: Error Occurred:");
+                    _logger.LogCritical(e.Message);
+                    _logger.LogCritical(e.StackTrace);
+                    if (renewOnFailure)
+                        ScheduleRenewToken();
+                }
+
             }).ConfigureAwait(false);//Fire and forget
         }
         /* Attempt to retrieve login token */
