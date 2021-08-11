@@ -16,7 +16,6 @@ namespace AquariumApi.Models
         public int AquariumId { get; set; }
         public PhotoContent Photo { get; set; }
         public int? PhotoId { get; set; }
-        public DateTime StartDate { get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Ammonia { get; set; }
         [Column(TypeName = "decimal(18,2)")]
