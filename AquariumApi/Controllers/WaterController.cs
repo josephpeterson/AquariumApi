@@ -47,9 +47,5 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet]
-        [Route("/v1/Snapshot/{aquariumId}/{snapshotId}")]
-        [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
- }
+    }
 }
