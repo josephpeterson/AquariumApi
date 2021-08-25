@@ -25,11 +25,10 @@ namespace AquariumApi.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Ph { get; set; }
         public int? Temperature { get; set; }
-
-        public float Salinity { get; set; }
-        public float Calcium { get; set; }
-        public float Alkalinity { get; set; }
-        public float Magnesium { get; set; }
+        public double? Salinity { get; set; }
+        public double? Calcium { get; set; }
+        public double? Alkalinity { get; set; }
+        public double? Magnesium { get; set; }
 
         public bool? ManualEntry { get; set; } = false;
 
