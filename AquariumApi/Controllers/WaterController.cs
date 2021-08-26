@@ -32,6 +32,27 @@ namespace AquariumApi.Controllers
             _logger = logger;
             _photoManager = photoManager;
         }
+        /* Load Water Parameter Store */
+        [HttpPost]
+        [Route("/v1/Water/{aquariumId}/ATOStatuses")]
+        [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        public IActionResult LoadATOStatuses(int aquariumId, [FromBody] PaginationSliver pagination = null)
+        {
+            try
+            {
+                _logger.LogInformation($"POST /v1/Water/{aquariumId}/ATOStatuses called");
+                var data = _aquariumService.GetWaterATOStatusesByAquarium(aquariumId, pagination);
+                return new OkObjectResult(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Water/{aquariumId}/ATOStatuses endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+
+        /* Get Just water parameters */
         [HttpPost]
         [Route("/v1/Water/{aquariumId}/Parameters")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]

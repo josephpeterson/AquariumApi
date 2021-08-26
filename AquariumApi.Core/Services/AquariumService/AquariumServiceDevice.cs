@@ -58,7 +58,6 @@ namespace AquariumApi.Core
         string GetDeviceLog(int deviceId);
         void ClearDeviceLog(int deviceId);
         DeviceInformation GetDeviceInformation(int deviceId);
-
     }
     public partial class AquariumService : IAquariumService
     {

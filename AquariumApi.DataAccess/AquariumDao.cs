@@ -150,6 +150,7 @@ namespace AquariumApi.DataAccess
         ATOStatus AddATOStatus(ATOStatus atoStatus);
         List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver sliver);
         ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId, PaginationSliver pagination);
+        List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination);
     }
 
     public class AquariumDao : IAquariumDao
@@ -1213,6 +1214,14 @@ namespace AquariumApi.DataAccess
             var waterChanges = _dbAquariumContext.TblWaterChange.Where(n => n.AquariumId == aquariumId).ToList();
             return waterChanges;
         }
+        public List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination)
+        {
+            var range = _dbAquariumContext.TblDeviceATOStatus
+                .AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId).ApplyPaginationSliver<ATOStatus>(pagination);
+            var list = range.ToList();
+            return list;
+        }
         public WaterChange AddWaterChange(WaterChange waterChange)
         {
             _dbAquariumContext.TblWaterChange.Add(waterChange);
@@ -1303,6 +1312,7 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return atoStatus;
         }
+        [System.Obsolete]
         public List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver pagination)
         {
             var range = _dbAquariumContext.TblDeviceATOStatus
