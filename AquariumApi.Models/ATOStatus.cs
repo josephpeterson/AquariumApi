@@ -6,6 +6,7 @@ namespace AquariumApi.Models
     public class ATOStatus : Indexable  //allow pagination of this object
     {
         public int? Id { get; set; }
+        public int AquariumId { get; set; }
         public int DeviceId { get; set; }
         public bool PumpRunning { get; set; }
         public double MlPerSec { get; set; }
