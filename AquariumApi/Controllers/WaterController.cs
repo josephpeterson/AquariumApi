@@ -37,7 +37,7 @@ namespace AquariumApi.Controllers
         [Route("/v1/Water/{aquariumId}/ATOStatuses")]
         [ProducesResponseType(typeof(List<AquariumSnapshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        public IActionResult LoadATOStatuses(int aquariumId, [FromBody] PaginationSliver pagination = null)
+        public IActionResult LoadATOStatuses(int aquariumId, [FromBody] PaginationSliver pagination)
         {
             try
             {
@@ -99,24 +99,24 @@ namespace AquariumApi.Controllers
             }
         }
         //Water change stuff
-        [HttpGet]
-        [Route("/v1/Aquarium/{aquariumId}/Water/Change")]
-        public IActionResult GetWaterChanges(int aquariumId)
+        [HttpPost]
+        [Route("/v1/Water/{aquariumId}/Change")]
+        public IActionResult GetWaterChanges(int aquariumId, [FromBody] PaginationSliver pagination)
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Aquarium/{aquariumId}/Water called");
+                _logger.LogInformation($"POST /v1/Aquarium/{aquariumId}/Water called");
                 var aq = _aquariumService.GetAquariumById(aquariumId);
                 var id = _accountService.GetCurrentUserId();
                 if (!_accountService.CanModify(id, aq))
                     return new UnauthorizedResult();
 
-                var waterChanges = _aquariumService.GetWaterChangesByAquarium(aquariumId);
+                var waterChanges = _aquariumService.GetWaterChangesByAquarium(aquariumId,pagination);
                 return new OkObjectResult(waterChanges);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquarium/{aquariumId}/Water endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Aquarium/{aquariumId}/Water endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -187,24 +187,24 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
-        [HttpGet]
-        [Route("/v1/Aquarium/{aquariumId}/Water/Dose")]
-        public IActionResult GetWaterDosing(int aquariumId)
+        [HttpPost]
+        [Route("/v1/Water/{aquariumId}/Dose")]
+        public IActionResult GetWaterDosing(int aquariumId,[FromBody] PaginationSliver pagination)
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Aquarium/{aquariumId}/Water called");
+                _logger.LogInformation($"POST /v1/Water/{aquariumId}/Dose called");
                 var aq = _aquariumService.GetAquariumById(aquariumId);
                 var id = _accountService.GetCurrentUserId();
                 if (!_accountService.CanModify(id, aq))
                     return new UnauthorizedResult();
 
-                var waterChanges = _aquariumService.GetWaterDosingsByAquarium(aquariumId);
+                var waterChanges = _aquariumService.GetWaterDosingsByAquarium(aquariumId,pagination);
                 return new OkObjectResult(waterChanges);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquarium/{aquariumId}/Water endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST /v1/Water/{aquariumId}/Dose endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }

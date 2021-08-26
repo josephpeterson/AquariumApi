@@ -131,11 +131,11 @@ namespace AquariumApi.DataAccess
         List<AquariumPhoto> GetAquariumPhotosByAccount(int accountId);
         void DeleteAquariumPhotos(List<int> photoIds);
         IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId);
-        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId);
+        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination);
         WaterChange AddWaterChange(WaterChange waterChange);
         WaterChange UpdateWaterChange(WaterChange waterChange);
         void DeleteWaterChanges(List<int> waterChangeIds);
-        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId);
+        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId,PaginationSliver pagination);
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
@@ -1209,10 +1209,13 @@ namespace AquariumApi.DataAccess
             var list = range.ToList();
             return list;
         }
-        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
+        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination)
         {
-            var waterChanges = _dbAquariumContext.TblWaterChange.Where(n => n.AquariumId == aquariumId).ToList();
-            return waterChanges;
+            var range = _dbAquariumContext.TblWaterChange
+                .AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId).ApplyPaginationSliver<WaterChange>(pagination);
+            var list = range.ToList();
+            return list;
         }
         public List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination)
         {
@@ -1240,9 +1243,13 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.RemoveRange(removedWaterChanges);
             _dbAquariumContext.SaveChanges();
         }
-        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId)
+        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId,PaginationSliver pagination)
         {
             var waterDosings = _dbAquariumContext.TblWaterDosing.Where(n => n.AquariumId == aquariumId).ToList();
+            var range = _dbAquariumContext.TblWaterDosing
+                .AsNoTracking()
+                .Where(n => n.AquariumId == aquariumId).ApplyPaginationSliver<WaterDosing>(pagination);
+            var list = range.ToList();
             return waterDosings;
         }
         public WaterDosing AddWaterDosing(WaterDosing waterDosing)

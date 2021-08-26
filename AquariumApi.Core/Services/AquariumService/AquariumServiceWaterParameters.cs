@@ -15,11 +15,11 @@ namespace AquariumApi.Core
 {
     public partial interface IAquariumService
     {
-        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId);
+        ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination = null);
         WaterChange AddWaterChange(WaterChange waterChange);
         WaterChange UpdateWaterChange(WaterChange waterChange);
         void DeleteWaterChanges(List<int> waterChangeIds);
-        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId);
+        ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId,PaginationSliver pagination = null);
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
@@ -39,9 +39,9 @@ namespace AquariumApi.Core
             snapshot.AquariumId = aquariumId;
             return _aquariumDao.AddSnapshot(snapshot);
         }
-        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId)
+        public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination)
         {
-            return _aquariumDao.GetWaterChangesByAquarium(aquariumId);
+            return _aquariumDao.GetWaterChangesByAquarium(aquariumId,pagination);
         }
         public WaterChange AddWaterChange(WaterChange waterChange)
         {
@@ -55,9 +55,9 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DeleteWaterChanges(waterChangeIds);
         }
-        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId)
+        public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId, PaginationSliver pagination)
         {
-            return _aquariumDao.GetWaterDosingsByAquarium(aquariumId);
+            return _aquariumDao.GetWaterDosingsByAquarium(aquariumId,pagination);
         }
         public ICollection<ATOStatus> GetWaterATOStatusesByAquarium(int aquariumId,PaginationSliver pagination)
         {

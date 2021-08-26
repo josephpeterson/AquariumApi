@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AquariumApi.Models
 {
-    public class WaterChange
+    public class WaterChange : Indexable
     {
         [Required]
         [Key]
@@ -13,7 +13,6 @@ namespace AquariumApi.Models
         public int AquariumId { get; set; }
         public int GallonsAdded { get; set; }
         public int GallonsRemoved { get; set; }
-        public DateTime Date { get; set; }
 
         public virtual Aquarium Aquarium { get; set; }
     }

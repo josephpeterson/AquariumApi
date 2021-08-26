@@ -16,6 +16,8 @@ namespace AquariumApi.Models
     {
         public static IEnumerable<T> ApplyPaginationSliver<T>(this IEnumerable<T> source,PaginationSliver pagination)
         {
+            if (pagination == null)
+                return source;
             if (pagination.Descending)
                 source = source.OrderByDescending(p => 
                     ((Indexable)(object)p).StartTime

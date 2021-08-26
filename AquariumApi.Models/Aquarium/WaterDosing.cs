@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AquariumApi.Models
 {
-    public class WaterDosing
+    public class WaterDosing : Indexable
     {
         [Required]
         [Key]
@@ -13,7 +13,6 @@ namespace AquariumApi.Models
         public string Brand { get; set; }
         public string Product { get; set; }
         public string Type { get; set; }
-        public DateTime Date { get; set; }
 
         public virtual Aquarium Aquarium { get; set; }
     }
