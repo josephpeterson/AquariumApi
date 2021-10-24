@@ -19,6 +19,8 @@ namespace AquariumApi.DeviceApi
         void BeginAutoTopOff(AutoTopOffRequest atoRequest);
         ATOStatus GetATOStatus();
         void StopAutoTopOff(AutoTopOffStopReason stopReason = AutoTopOffStopReason.ForceStop);
+        void BeginWaterChange(WaterChangeRequest atoRequest);
+        void StopWaterChange(AutoTopOffStopReason canceled);
     }
     public class ATOService : IATOService
     {
@@ -26,7 +28,7 @@ namespace AquariumApi.DeviceApi
         public ATOStatus Status = new ATOStatus();
         public AutoTopOffRequest Request { get; set; }
 
-        private CancellationTokenSource CancelToken;
+        private CancellationTokenSource CurrentTaskToken;
         private readonly IConfiguration _config;
         private readonly ILogger<ATOService> _logger;
         private readonly IAquariumAuthService _aquariumAuthService;
@@ -95,6 +97,17 @@ namespace AquariumApi.DeviceApi
             var sensors = _gpioService.GetAllSensors();
             return sensors.Where(p => p.Type == SensorTypes.ATOPumpRelay).FirstOrDefault();
         }
+        private DeviceSensor GetWaterChangeDrainPin()
+        {
+            var sensors = _gpioService.GetAllSensors();
+            return sensors.Where(p => p.Type == SensorTypes.Solenoid).FirstOrDefault();
+        }
+        private DeviceSensor GetWaterChangeReplentishPin()
+        {
+            var sensors = _gpioService.GetAllSensors();
+            return sensors.Where(p => p.Type == SensorTypes.WaterChangePumpRelay).FirstOrDefault();
+        }
+
         private async Task DispatchStatus()
         {
             try
@@ -117,10 +130,10 @@ namespace AquariumApi.DeviceApi
             {
                 throw new Exception($"ATO is currently running...");
             }
-            if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            if (CurrentTaskToken != null && !CurrentTaskToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Canceled by new ATO process"); //todo remove all these cancel logs when we solve the issue of random ato cancels
-                CancelToken.Cancel();
+                CurrentTaskToken.Cancel();
             }
             var pumpRelaySensor = GetPumpRelayPin();
             var floatSwitchSensor = GetFloatSensorPin();
@@ -174,8 +187,8 @@ namespace AquariumApi.DeviceApi
             DispatchStatus().Wait(); //.ConfigureAwait(false);
 
             //Apply a max drain time
-            CancelToken = new CancellationTokenSource();
-            CancellationToken ct = CancelToken.Token;
+            CurrentTaskToken = new CancellationTokenSource();
+            CancellationToken ct = CurrentTaskToken.Token;
 
 
             var statusId = Status.Id;
@@ -209,10 +222,10 @@ namespace AquariumApi.DeviceApi
         }
         public void StopAutoTopOff(AutoTopOffStopReason stopReason = AutoTopOffStopReason.ForceStop)
         {
-            if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            if (CurrentTaskToken != null && !CurrentTaskToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Canceled via StopAutoTopOff");
-                CancelToken.Cancel();
+                CurrentTaskToken.Cancel();
             }
 
 
@@ -264,10 +277,10 @@ namespace AquariumApi.DeviceApi
             var pumpRelay = GetPumpRelayPin();
             if (pumpRelay != null && Status.PumpRunning)
                 _gpioService.SetPinValue(pumpRelay, PinValue.Low);
-            if (CancelToken != null && !CancelToken.IsCancellationRequested)
+            if (CurrentTaskToken != null && !CurrentTaskToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Canceled via CleanUp");
-                CancelToken.Cancel();
+                CurrentTaskToken.Cancel();
             }
         }
         private void RegisterDeviceTasks()
@@ -281,6 +294,154 @@ namespace AquariumApi.DeviceApi
                     Runtime = scheduledRuntime //standard ATO time
                 });
             });
+            _logger.LogInformation($"Registering ScheduleTaskType StartWaterChange with scheduled runtime: {scheduledRuntime}");
+            _scheduleService.RegisterDeviceTask(ScheduleTaskTypes.StartWaterChange, (DeviceScheduleTask t) =>
+            {
+                BeginWaterChange(new WaterChangeRequest()
+                {
+                    DrainTime = scheduledRuntime, //standard ATO time
+                    ReplentishTime = scheduledRuntime
+                });
+            });
+        }
+
+        public void BeginWaterChange(WaterChangeRequest atoRequest)
+        {
+            if (Status.PumpRunning)
+            {
+                throw new Exception($"ATO is currently running...");
+            }
+            if (CurrentTaskToken != null && !CurrentTaskToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Canceled by new ATO process"); //todo remove all these cancel logs when we solve the issue of random ato cancels
+                CurrentTaskToken.Cancel();
+            }
+
+            var replentishPump = GetWaterChangeReplentishPin();
+            var drainPump = GetWaterChangeDrainPin();
+            var floatSwitchSensor = GetFloatSensorPin();
+            if (replentishPump == null || floatSwitchSensor == null || drainPump == null)
+                throw new Exception($"Invalid water change pins specified (Replentish Pump: {replentishPump}, Drain Pump: {drainPump}, Float Sensor: {floatSwitchSensor})");
+
+
+            //Check if they passed a number larger than the maximum ATO time allowed
+            var maxATOTime = Convert.ToInt32(_config["WaterChangeMaximumRuntime"]);
+            if (atoRequest.ReplentishTime > maxATOTime) //max run time
+                throw new Exception($"Water change replentish time is higher than maxium allowed (Runtime: {atoRequest.ReplentishTime} Maximum: {maxATOTime})");
+            if (atoRequest.DrainTime > maxATOTime) //max run time
+                throw new Exception($"Water change drain time is higher than maxium allowed (Runtime: {atoRequest.DrainTime} Maximum: {maxATOTime})");
+
+            var currentSensorValue = _gpioService.GetPinValue(floatSwitchSensor);
+            if (currentSensorValue == GpioPinValue.Low)
+                throw new Exception($"ATO sensor is currently reading maximum water level");
+
+
+            _logger.LogInformation("[ATOService] Beginning Water Change...");
+            var maxReplentishPumpRuntime = atoRequest.ReplentishTime * 1000 * 60;
+            var maxDrainPumpRuntime = atoRequest.DrainTime * 1000 * 60;
+
+
+
+            //Next run time
+            var device = _aquariumAuthService.GetAquarium().Device;
+            var task = device.ScheduleAssignments.Select(assignment =>
+            assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartWaterChange).FirstOrDefault()
+            ).FirstOrDefault();
+            DateTime? nextRunTime = null;
+            if (task != null)
+                nextRunTime = task.StartTime.ToUniversalTime();
+
+            var startTime = DateTime.Now.ToUniversalTime();
+            Status = new ATOStatus
+            {
+                StartTime = startTime,
+                EstimatedEndTime = startTime.AddMilliseconds(maxReplentishPumpRuntime),
+                UpdatedAt = startTime,
+                MaxRuntime = atoRequest.DrainTime,
+                RunIndefinitely = false,
+                PumpRunning = true,
+                Enabled = true,
+                PumpRelaySensor = replentishPump,
+                FloatSensor = floatSwitchSensor,
+                DeviceId = device.Id,
+                NextRunTime = nextRunTime,
+                FloatSensorValue = currentSensorValue,
+                MlPerSec = 1.25 //Calculated 150ml in 2min = 1.2mlps
+            };
+            DispatchStatus().Wait(); //.ConfigureAwait(false);
+
+            //Apply a max drain time
+            CurrentTaskToken = new CancellationTokenSource();
+            CancellationToken ct = CurrentTaskToken.Token;
+
+
+            var statusId = Status.Id;
+            Task.Run(() =>
+            {
+                _logger.LogWarning("[ATOService] Opening water change drain...");
+                _gpioService.SetPinValue(drainPump, PinValue.High);
+                Thread.Sleep(TimeSpan.FromMilliseconds(maxDrainPumpRuntime));
+
+                _logger.LogWarning("[ATOService] Closing water change drain...");
+                _gpioService.SetPinValue(drainPump, PinValue.Low);
+
+                _logger.LogWarning("[ATOService] Starting replenish pump...");
+                _gpioService.SetPinValue(replentishPump, PinValue.High);
+                Thread.Sleep(TimeSpan.FromMilliseconds(maxReplentishPumpRuntime));
+
+                _logger.LogWarning("[ATOService] Stopping replentish pump...");
+
+                if (ct.IsCancellationRequested)
+                {
+                    if (statusId != Status.Id)
+                    {
+                        _logger.LogError("Attempted to cancel water change. The Status IDs of the water changes do not match!");
+                        //so this definitely happens occasionally 
+                        return;
+                    }
+                    StopWaterChange(AutoTopOffStopReason.Canceled);
+                    //_gpioService.SetPinValue(pumpRelaySensor.Pin, PinValue.Low); //maybe enable this in case we run into pin issues
+                    return;
+                }
+
+                if (Status.PumpRunning)
+                {
+                    _logger.LogInformation($"[ATOService] Reached maximum run time of {Status.MaxRuntime} minutes.");
+                    StopWaterChange(AutoTopOffStopReason.MaximumRuntimeReached);
+                }
+
+            }).ConfigureAwait(false); //Fire and forget
+        }
+
+        public void StopWaterChange(AutoTopOffStopReason stopReason)
+        {
+            if (CurrentTaskToken != null && !CurrentTaskToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Canceled via StopWaterChange");
+                CurrentTaskToken.Cancel();
+            }
+
+            var replentishPump = GetWaterChangeReplentishPin();
+            var drainPump = GetWaterChangeDrainPin();
+            var floatSwitchSensor = GetFloatSensorPin();
+            if (replentishPump == null || floatSwitchSensor == null || drainPump == null)
+                throw new Exception($"Invalid water change pins specified (Replentish Pump: {replentishPump}, Drain Pump: {drainPump}, Float Sensor: {floatSwitchSensor})");
+            _gpioService.SetPinValue(replentishPump, PinValue.Low);
+            _gpioService.SetPinValue(drainPump, PinValue.Low);
+
+            if (!Status.PumpRunning)
+                return;
+
+
+            Status.PumpRunning = false;
+            Status.EndReason = stopReason.ToString();
+            Status.ActualEndTime = DateTime.Now.ToUniversalTime();
+            Status.UpdatedAt = Status.ActualEndTime;
+            Status.Completed = true;
+            Status.FloatSensorValue = _gpioService.GetPinValue(floatSwitchSensor);
+            DispatchStatus().Wait(); //.ConfigureAwait(false);
+
+            _logger.LogInformation($"[ATOService] ATO Stopped! ({stopReason})");
         }
     }
     public class AutoTopOffRequest
@@ -288,6 +449,12 @@ namespace AquariumApi.DeviceApi
         public DateTime StartTime { get; set; }
         public int Runtime { get; set; }
         public bool RunIndefinitely { get; set; }
+    }
+    public class WaterChangeRequest
+    {
+        public DateTime StartTime { get; set; }
+        public int ReplentishTime { get; set; }
+        public int DrainTime { get; set; }
     }
     public enum AutoTopOffStopReason
     {

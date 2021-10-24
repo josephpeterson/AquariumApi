@@ -7,5 +7,6 @@
   //"AquariumServiceUrl": "http://localhost:5000",
   "ScheduleAssignmentPath": "aquarium_schedules.json",
   "ATOMaximumRuntime": 600,
+  "WaterChangeMaximumRuntime": 30,
   "ATOScheduledRuntime": 90
 }
