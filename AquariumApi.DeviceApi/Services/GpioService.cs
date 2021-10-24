@@ -19,6 +19,7 @@ namespace AquariumApi.DeviceApi
         GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);
         void SetPinValue(DeviceSensor pin, PinValue pinValue);
+        void TestDeviceSensor(DeviceSensor deviceSensor);
     }
     public class GpioService : IGpioService
     {
@@ -138,6 +139,14 @@ namespace AquariumApi.DeviceApi
         {
             Controller.Write(pin.Pin, pinValue);
         }
-}
+        public void TestDeviceSensor(DeviceSensor deviceSensor)
+        {
+            _logger.LogWarning($"Testing sensor ({deviceSensor.Name} Pin Number: {deviceSensor.Pin} Polarity: {deviceSensor.Polarity})");
+            SetPinValue(deviceSensor, PinValue.High);
+            Thread.Sleep(TimeSpan.FromSeconds(3));
+            SetPinValue(deviceSensor, PinValue.High);
+            _logger.LogWarning($"Testing sensor completed ({deviceSensor.Name} Pin Number: {deviceSensor.Pin} Polarity: {deviceSensor.Polarity})");
+        }
+    }
     
 }

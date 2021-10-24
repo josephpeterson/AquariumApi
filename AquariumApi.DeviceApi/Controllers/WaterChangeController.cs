@@ -94,5 +94,22 @@ namespace AquariumApi.DeviceApi.Controllers
                 return NotFound();
             }
         }
+        [HttpPost]
+        [Route("/v1/WaterChange/TestDeviceSensor")]
+        public IActionResult TestDeviceSensor([FromBody] DeviceSensor deviceSensor)
+        {
+            try
+            {
+                _logger.LogInformation("GET /v1/WaterChange/TestDeviceSensor called");
+                _gpioService.TestDeviceSensor(deviceSensor);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/WaterChange/TestDeviceSensor endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return NotFound();
+            }
+        }
     }
 }

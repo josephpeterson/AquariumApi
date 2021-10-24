@@ -28,7 +28,7 @@ namespace AquariumApi.Models
         Other = 0,
         FloatSwitch = 100,
         ATOPumpRelay = 200,
-        WaterChangePumpRelay = 200,
+        WaterChangePumpRelay = 201,
         Solenoid = 300
     }
     public enum Polarity
