@@ -19,7 +19,7 @@ namespace AquariumApi.DeviceApi
         GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);
         void SetPinValue(DeviceSensor pin, PinValue pinValue);
-        void TestDeviceSensor(DeviceSensor deviceSensor);
+        DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest);
     }
     public class GpioService : IGpioService
     {
@@ -139,13 +139,27 @@ namespace AquariumApi.DeviceApi
         {
             Controller.Write(pin.Pin, pinValue);
         }
-        public void TestDeviceSensor(DeviceSensor deviceSensor)
+        public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)
         {
-            _logger.LogWarning($"Testing sensor ({deviceSensor.Name} Pin Number: {deviceSensor.Pin} Polarity: {deviceSensor.Polarity})");
-            SetPinValue(deviceSensor, PinValue.High);
-            Thread.Sleep(TimeSpan.FromSeconds(3));
-            SetPinValue(deviceSensor, PinValue.High);
-            _logger.LogWarning($"Testing sensor completed ({deviceSensor.Name} Pin Number: {deviceSensor.Pin} Polarity: {deviceSensor.Polarity})");
+            var sensors = GetAllSensors();
+            var sensor = sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
+            if (sensor == null) throw new DeviceException("Could not locate sensor on this device by that sensor id.");
+
+            var maxTestRuntime = Convert.ToInt32(_config["WaterChangeMaximumRuntime"]);
+            if (testRequest.Runtime > maxTestRuntime) throw new DeviceException($"Runtime exceeds maximum runtime allowed (Maximum allowed: {maxTestRuntime})");
+            maxTestRuntime = testRequest.Runtime;
+
+
+            _logger.LogWarning($"Testing sensor ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity})");
+            testRequest.StartTime = DateTime.UtcNow;
+            SetPinValue(sensor, PinValue.High);
+            Thread.Sleep(TimeSpan.FromSeconds(maxTestRuntime));
+            SetPinValue(sensor, PinValue.Low);
+            testRequest.EndTime = DateTime.UtcNow;
+
+            var value = GetPinValue(sensor);
+            _logger.LogWarning($"Testing sensor completed ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity} Value: {value})");
+            return testRequest;
         }
     }
     

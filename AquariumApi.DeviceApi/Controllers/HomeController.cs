@@ -83,7 +83,8 @@ namespace AquariumApi.DeviceApi.Controllers
                 {
                     Aquarium = _aquariumAuthService.GetAquarium(),
                     config = System.IO.File.ReadAllText("config.json"),
-                    Schedules = _scheduleService.GetAllSchedules()
+                    Schedules = _scheduleService.GetAllSchedules(),
+                    Sensors = _gpioService.GetAllSensors()
                 };
                 return new OkObjectResult(information);
             }

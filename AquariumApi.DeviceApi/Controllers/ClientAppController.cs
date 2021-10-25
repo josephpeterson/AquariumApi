@@ -71,8 +71,9 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 return new OkResult();
             }
-            catch
+            catch(Exception e)
             {
+                _logger.LogError($"Could not retrieve log file: {e}");
                 return new BadRequestResult();
             }
         }

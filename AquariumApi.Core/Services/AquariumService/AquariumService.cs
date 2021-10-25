@@ -67,6 +67,7 @@ namespace AquariumApi.Core
 
         /* Form Components */
         List<KeyValuePair<string,int>> GetSelectOptionsBySelectType(string selectType);
+        Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
     }
     public partial class AquariumService : IAquariumService
     {
@@ -352,6 +353,7 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DeleteAquariumPhotos(aquariumPhotoIds);
         }
+        //todo maybe dynamically generate this
         public List<KeyValuePair<string, int>> GetSelectOptionsBySelectType(string selectType)
         {
             List<KeyValuePair<string, int>> options;

@@ -252,11 +252,11 @@ namespace AquariumApi.DeviceApi
         }
         public void OnFloatSwitchTriggered(object sender,int value)
         {
+            //this method gets called a lot
             Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
-
-            _logger.LogInformation($"ATOService: Sensor triggered (Value: {Status.FloatSensorValue})");
             if (Status.PumpRunning && Status.FloatSensorValue == GpioPinValue.Low)
             {
+                _logger.LogInformation($"ATOService: Sensor triggered (Value: {Status.FloatSensorValue})");
                 _logger.LogInformation($"[ATOService] ATO Stopped!");
                 StopAutoTopOff(AutoTopOffStopReason.SensorTriggered);
             }

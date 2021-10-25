@@ -8,6 +8,9 @@ import { LoginInformationResponse } from '../models/LoginInformationResponse';
 import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
 import { Aquarium } from '../models/Aquarium';
 import { BaseException } from '../models/BaseException';
+import { DeviceSensor } from '../models/DeviceSensor';
+import { DetailedDeviceInformation } from '../models/DetailedDeviceInformation';
+import { DeviceSensorTestRequest } from '../models/requests/DeviceSensorTestRequest';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -40,7 +43,7 @@ export class ClientService {
         return this.http.delete(this._url + "/ClientApp/Logout").subscribe(reload, reload);
     }
     public getDetailedInformation() {
-        return this.http.get(this._url + "/ClientApp");
+        return this.http.get<DetailedDeviceInformation>(this._url + "/ClientApp");
     }
     public getDeviceScheduleInformation() {
         return this.http.get(this._url + "/v1/Schedule");
@@ -59,5 +62,11 @@ export class ClientService {
     }
     public getExceptions() {
         return this.http.get<BaseException[]>(this._url + "/v1/Exception");
+    }
+    public getDeviceInformation() {
+        return this.http.get(this._url + "/Information");
+    }
+    public testDeviceSensor(testRequest:DeviceSensorTestRequest) {
+        return this.http.post<DeviceSensorTestRequest>(this._url + `/v1/WaterChange/TestDeviceSensor`,testRequest);
     }
 }

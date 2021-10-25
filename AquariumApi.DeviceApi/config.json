@@ -8,5 +8,6 @@
   "ScheduleAssignmentPath": "aquarium_schedules.json",
   "ATOMaximumRuntime": 600,
   "WaterChangeMaximumRuntime": 30,
+  "DeviceSensorTestMaximumRuntime": 600,
   "ATOScheduledRuntime": 90
 }

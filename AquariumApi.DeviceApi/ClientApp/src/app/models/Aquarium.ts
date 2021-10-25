@@ -1,3 +1,4 @@
+import { AquariumDevice } from "./AquariumDevice"
 
 export class Aquarium
 {
@@ -15,6 +16,6 @@ export class Aquarium
   plan: any
   
   feedings: any[] | null
-  device?: any | null
+  device?: AquariumDevice | null
   snapshots: any[]
 }

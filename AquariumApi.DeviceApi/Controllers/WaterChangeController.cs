@@ -7,6 +7,7 @@ using AquariumApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace AquariumApi.DeviceApi.Controllers
 {
@@ -95,20 +96,28 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/WaterChange/TestDeviceSensor")]
-        public IActionResult TestDeviceSensor([FromBody] DeviceSensor deviceSensor)
+        [Route("/v1/WaterChange/TestDeviceSensor/")]
+        public IActionResult TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
         {
             try
             {
                 _logger.LogInformation("GET /v1/WaterChange/TestDeviceSensor called");
-                _gpioService.TestDeviceSensor(deviceSensor);
-                return new OkResult();
+                var finishedRequest = _gpioService.TestDeviceSensor(testRequest);
+                return new OkObjectResult(finishedRequest);
+            }
+            catch(DeviceException ex)
+            {
+                _logger.LogInformation($"GET /v1/WaterChange/TestDeviceSensor endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/WaterChange/TestDeviceSensor endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
     }

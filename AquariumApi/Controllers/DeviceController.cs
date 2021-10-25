@@ -267,6 +267,7 @@ namespace AquariumApi.Controllers
         }
 
 
+        #region Device Sensors
         //Create/remove device sensors
         [HttpGet]
         [Route("/v1/Device/{deviceId}/Sensors")]
@@ -333,10 +334,36 @@ namespace AquariumApi.Controllers
             }
         }
 
+        //Test Device Sensor (this has the correct excception handling mechanism)
+        [HttpPost]
+        [Route("/v1/Device/{deviceId}/Sensor/Test")]
+        public async Task<IActionResult> TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
+        {
+            try
+            {
+                _logger.LogInformation("GET /v1/WaterChange/TestDeviceSensor called");
+                var finishedRequest = await _aquariumService.TestDeviceSensor(testRequest);
+                return new OkObjectResult(finishedRequest);
+            }
+            //Friendly exceptions
+            catch(BaseException ex)
+            {
+                _logger.LogInformation($"Handled Exception: {ex.Message} {ex.Source}");
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/WaterChange/TestDeviceSensor endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new AquariumServiceException("Unknown error occured"));
+            }
+        }
+
+        #endregion
 
 
 
-
+        #region Device Schedules
         //Deploy/Remove Device Schedules
         [HttpPost]
         [Route("/v1/Device/{deviceId}/DeploySchedule/{scheduleId}")]
@@ -404,7 +431,7 @@ namespace AquariumApi.Controllers
             }
         }
 
-
+        #endregion
 
 
         private bool ValidateRequest(int deviceId)

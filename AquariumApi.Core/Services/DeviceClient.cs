@@ -38,6 +38,7 @@ namespace AquariumApi.Core
         ATOStatus PerformDeviceATO(int maxRuntime);
         ATOStatus StopDeviceATO();
         void Configure(AquariumDevice device);
+        Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
     }
     public class DeviceClient : IDeviceClient
     {
@@ -66,6 +67,9 @@ namespace AquariumApi.Core
         }
         private HttpClient GetHttpClient()
         {
+            if (Device == null)
+                throw new Exception("Aquarium Device not configured for DeviceClient");
+
             //var token = _aquariumAuthService.GetToken();
             //if (token == null)
             //    throw new Exception("No authentication token available");
@@ -288,5 +292,35 @@ namespace AquariumApi.Core
                 return atoStatus;
             }
         }
+
+        public async Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest)
+        {
+            var path = $"/v1/WaterChange/TestDeviceSensor/";
+
+            using (var client = GetHttpClient())
+            {
+                var content = JsonConvert.SerializeObject(testRequest);
+                var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
+                HttpResponseMessage result;
+                try
+                {
+                    result = await client.PostAsync(path, httpContent);
+                }
+                catch(Exception ex)
+                {
+                    throw new AquariumServiceException("The target device was unavailable.");
+                }
+
+                if (!result.IsSuccessStatusCode)
+                {
+                    var errContent = await result.Content.ReadAsStringAsync();
+                    var err = JsonConvert.DeserializeObject<DeviceException>(errContent);
+                    throw err;
+                }
+                var data = await result.Content.ReadAsStringAsync();
+                var createdTestRequest = JsonConvert.DeserializeObject<DeviceSensorTestRequest>(data);
+                return createdTestRequest;
+            }
         }
+    }
 }

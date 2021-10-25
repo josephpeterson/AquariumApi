@@ -339,6 +339,12 @@ namespace AquariumApi.Core
             }
             return;
         }
+        public Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(testRequest.DeviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.TestDeviceSensor(testRequest);
+        }
 
 
         public bool Ping(int deviceId)

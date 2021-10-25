@@ -24,6 +24,7 @@ import { NotifierModule } from "angular-notifier";
 import { DeviceNotifierConfig } from './config/DeviceNotifierConfig';
 import { HardwareInformationComponent } from './hardware-information/hardware-information.component';
 import { ExceptionListComponent } from './exception-list/exception-list.component';
+import { DeviceSensorsComponent } from './device-sensors/device-sensors.component';
 
 @NgModule({
   declarations: [
@@ -32,6 +33,7 @@ import { ExceptionListComponent } from './exception-list/exception-list.componen
     AquariumFormComponent,
     NavBarComponent,
     ScheduleInformationComponent,
+    DeviceSensorsComponent,
     LogPageComponent,
     DashboardContainerComponent,
     LoginContainerComponent,
