@@ -79,7 +79,7 @@ export class LoginContainerComponent implements OnInit {
       this.aquariumUser = account;
       this.currentStep = 4;
 
-      this.service.getDetailedInformation().subscribe((data:LoginInformationResponse) => {
+      this.service.getDeviceInformation().subscribe((data:LoginInformationResponse) => {
         this.service.loginInformation = data;
       },err);
     }, err);

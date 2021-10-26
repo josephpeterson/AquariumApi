@@ -124,10 +124,8 @@ namespace AquariumApi.Controllers
             {
 
                 _logger.LogInformation($"GET /v1/Device/{deviceId}/Ping called");
-                 if(_aquariumService.Ping(deviceId))
-                    return new OkResult();
-                else
-                    return new NotFoundResult();
+                var deviceInformation = _aquariumService.PingDevice(deviceId);
+                return new OkObjectResult(deviceInformation);
             }
             catch (Exception ex)
             {

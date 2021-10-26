@@ -90,6 +90,7 @@ namespace AquariumApi.DeviceApi
             _logger.LogInformation($"{sensors.Count()} sensors found...");
             sensors.ToList().ForEach(s =>
             {
+                _logger.LogInformation($"+- (ID: {s.Id}) {s.Name} Pin: {s.Pin} Polarity: {s.Polarity}");
                 RegisterDevicePin(s);
             });
         }
@@ -145,7 +146,7 @@ namespace AquariumApi.DeviceApi
             var sensor = sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
             if (sensor == null) throw new DeviceException("Could not locate sensor on this device by that sensor id.");
 
-            var maxTestRuntime = Convert.ToInt32(_config["WaterChangeMaximumRuntime"]);
+            var maxTestRuntime = Convert.ToInt32(_config["DeviceSensorTestMaximumRuntime"]);
             if (testRequest.Runtime > maxTestRuntime) throw new DeviceException($"Runtime exceeds maximum runtime allowed (Maximum allowed: {maxTestRuntime})");
             maxTestRuntime = testRequest.Runtime;
 

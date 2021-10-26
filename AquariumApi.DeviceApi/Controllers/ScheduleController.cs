@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -10,7 +11,6 @@ using Microsoft.Extensions.Logging;
 
 namespace AquariumApi.DeviceApi.Controllers
 {
-    [Route("v1/[controller]")]
     [ApiController]
     public class ScheduleController : ControllerBase
     {
@@ -18,7 +18,7 @@ namespace AquariumApi.DeviceApi.Controllers
         private ILogger<ScheduleController> _logger;
         private ScheduleService _scheduleService;
 
-        public ScheduleController(IConfiguration config, 
+        public ScheduleController(IConfiguration config,
             ILogger<ScheduleController> logger,
             ScheduleService scheduleManagerService)
         {
@@ -29,23 +29,31 @@ namespace AquariumApi.DeviceApi.Controllers
         }
         // GET schedule/ - Get schedule status
         [HttpGet]
+        [Route(DeviceEndpoints.SCHEDULE_STATUS)]
         public ActionResult<IEnumerable<string>> GetScheduleStatus()
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Schedule/Status called");
+                _logger.LogInformation($"GET {DeviceEndpoints.SCHEDULE_STATUS} called");
                 var scheduleStatus = _scheduleService.GetStatus();
                 return new OkObjectResult(scheduleStatus);
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.SCHEDULE_STATUS} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Schedule/Status endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.SCHEDULE_STATUS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
-
         }
-        [HttpGet("Start")]
+        [HttpGet(DeviceEndpoints.SCHEDULE_START)]
         public IActionResult Start()
         {
             try
@@ -55,30 +63,46 @@ namespace AquariumApi.DeviceApi.Controllers
                 _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
                 return new OkResult();
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.SCHEDULE_START} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Schedule/Start endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.SCHEDULE_START} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
-        [HttpGet("Stop")]
+        [HttpGet(DeviceEndpoints.SCHEDULE_STOP)]
         public ActionResult<IEnumerable<string>> Stop()
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Schedule/Stop called");
+                _logger.LogInformation($"GET {DeviceEndpoints.SCHEDULE_STOP} called");
                 _scheduleService.StopAsync(_scheduleService.token).Wait();
                 return new OkResult();
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.SCHEDULE_STOP} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Schedule/Stop caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.SCHEDULE_STOP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
-        [HttpPost("PerformTask")]
+        [HttpPost(DeviceEndpoints.SCHEDULE_TASK_PERFORM)]
         public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
         {
             try
@@ -86,13 +110,22 @@ namespace AquariumApi.DeviceApi.Controllers
                 _scheduleService.PerformTask(deviceScheduleTask);
                 return new OkResult();
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceEndpoints.SCHEDULE_TASK_PERFORM} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/PerformTask endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest(ex.Message);
+                _logger.LogError($"POST {DeviceEndpoints.SCHEDULE_TASK_PERFORM} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
-        [HttpGet("Scheduled")]
+        [HttpGet(DeviceEndpoints.SCHEDULE_REMAINING_TASKS)]
         public IActionResult GetRemainingTasks()
         {
             try
@@ -100,11 +133,19 @@ namespace AquariumApi.DeviceApi.Controllers
                 var tasks = _scheduleService.GetAllScheduledTasks();
                 return new OkObjectResult(tasks);
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.SCHEDULE_REMAINING_TASKS} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Remaining endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.SCHEDULE_REMAINING_TASKS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
 

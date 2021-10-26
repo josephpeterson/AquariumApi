@@ -11,6 +11,7 @@ import { BaseException } from '../models/BaseException';
 import { DeviceSensor } from '../models/DeviceSensor';
 import { DetailedDeviceInformation } from '../models/DetailedDeviceInformation';
 import { DeviceSensorTestRequest } from '../models/requests/DeviceSensorTestRequest';
+import { DeviceEndpoints } from '../models/constants/DeviceEndpoints';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -34,39 +35,33 @@ export class ClientService {
     }
 
     public attemptLogin(loginInformation: LoginInformationModel) {
-        return this.http.post(this._url + "/ClientApp/Login", loginInformation);
+        return this.http.post(this._url + DeviceEndpoints.AUTH_LOGIN, loginInformation);
     }
     public logout() {
         function reload() {
             window.location.reload();
         }
-        return this.http.delete(this._url + "/ClientApp/Logout").subscribe(reload, reload);
-    }
-    public getDetailedInformation() {
-        return this.http.get<DetailedDeviceInformation>(this._url + "/ClientApp");
+        return this.http.delete(this._url + DeviceEndpoints.AUTH_LOGOUT).subscribe(reload, reload);
     }
     public getDeviceScheduleInformation() {
-        return this.http.get(this._url + "/v1/Schedule");
+        return this.http.get(this._url + DeviceEndpoints.SCHEDULE_STATUS);
     }
     public getDeviceLog() {
-        return this.http.get(this._url + "/ClientApp/Log",{ responseType: "text" });
+        return this.http.get(this._url + DeviceEndpoints.LOG,{ responseType: "text" });
     }
     public performScheduleTask(task: DeviceScheduleTask) {
-        return this.http.post(this._url + "/v1/Schedule/PerformTask",task);
+        return this.http.post(this._url + DeviceEndpoints.SCHEDULE_TASK_PERFORM,task);
     }
     public renewAuthToken() {
-        return this.http.get(this._url + "/ClientApp/Auth/Renew");
-    }
-    public scanHardware() {
-        return this.http.get<Aquarium>(this._url + "/ClientApp/Hardware/Scan");
+        return this.http.get(this._url + DeviceEndpoints.AUTH_RENEW);
     }
     public getExceptions() {
         return this.http.get<BaseException[]>(this._url + "/v1/Exception");
     }
     public getDeviceInformation() {
-        return this.http.get(this._url + "/Information");
+        return this.http.get(this._url + DeviceEndpoints.PING);
     }
     public testDeviceSensor(testRequest:DeviceSensorTestRequest) {
-        return this.http.post<DeviceSensorTestRequest>(this._url + `/v1/WaterChange/TestDeviceSensor`,testRequest);
+        return this.http.post<DeviceSensorTestRequest>(this._url + DeviceEndpoints.DEVICE_SENSOR_TEST,testRequest);
     }
 }

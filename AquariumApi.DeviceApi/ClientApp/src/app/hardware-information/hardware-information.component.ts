@@ -26,14 +26,7 @@ export class HardwareInformationComponent implements OnInit {
   }
 
   public clickScanDeviceHardware() {
-    this.scanning = true;
-    this.service.scanHardware().subscribe(aquarium => {
-      this.scanning = false;
-      this.device = aquarium.device;
-    },err => {
-      this.scanning = false;
-      this.notifier.notify("error","Could not scan device hardware");
-    })
+    this.notifier.notify("warning","This is no longer implemented.")
   }
 
 }

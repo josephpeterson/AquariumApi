@@ -33,7 +33,7 @@ export class DeviceSensorsComponent implements OnInit {
   }
   clickGetDeviceScheduleStatus() {
     this.scanning = true;
-    this.service.getDetailedInformation().subscribe(
+    this.service.getDeviceInformation().subscribe(
       (deviceInfo: DetailedDeviceInformation) => {
         var device = deviceInfo.aquarium.device;
         this.device = device;

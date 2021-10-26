@@ -54,7 +54,7 @@ namespace AquariumApi.Core
 
 
 
-        bool Ping(int deviceId);
+        DeviceInformation PingDevice(int deviceId);
         string GetDeviceLog(int deviceId);
         void ClearDeviceLog(int deviceId);
         DeviceInformation GetDeviceInformation(int deviceId);
@@ -111,8 +111,10 @@ namespace AquariumApi.Core
             {
                 try
                 {
-
-                    _deviceClient.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
+                    var newDevice = _aquariumDao.GetAquariumDeviceById(device.Id);
+                    _deviceClient.Configure(newDevice);
+                    _deviceClient.ApplyUpdatedDevice(newDevice);
+                    //_deviceClient.ApplyScheduleAssignment(device.Id, _aquariumDao.GetAssignedDeviceSchedules(device.Id).Select(sa => sa.Schedule).ToList());
                 }
                 catch (Exception e)
                 {
@@ -196,7 +198,8 @@ namespace AquariumApi.Core
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
-            return _deviceClient.ScanHardware();
+            throw new NotImplementedException();
+            //return _deviceClient.ScanHardware();
         }
         public AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config)
         {
@@ -347,11 +350,11 @@ namespace AquariumApi.Core
         }
 
 
-        public bool Ping(int deviceId)
+        public DeviceInformation PingDevice(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
-            return _deviceClient.Ping();
+            return _deviceClient.PingDevice();
         }
         public string GetDeviceLog(int deviceId)
         {
@@ -369,7 +372,7 @@ namespace AquariumApi.Core
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
-            return _deviceClient.GetDeviceInformation();
+            return _deviceClient.PingDevice();
         }
         
 

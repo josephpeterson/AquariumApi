@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -42,12 +43,12 @@ namespace AquariumApi.DeviceApi.Controllers
         }
 
         [HttpPost]
-        [Route("/v1/WaterChange/ATO")]
+        [Route(DeviceEndpoints.WATER_CHANGE_BEGIN)]
         public IActionResult WaterChangeCompleteATO([FromBody] int maxRuntime)
         {
             try
             {
-                _logger.LogInformation("POST /v1/WaterChange/ATO called");
+                _logger.LogInformation($"POST {DeviceEndpoints.WATER_CHANGE_BEGIN} called");
                 _atoService.BeginAutoTopOff(new AutoTopOffRequest
                 {
                     RunIndefinitely = false,
@@ -55,64 +56,88 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
                 return new OkObjectResult(_atoService.GetATOStatus());
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceEndpoints.WATER_CHANGE_BEGIN} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/WaterChange/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceEndpoints.WATER_CHANGE_BEGIN} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return new BadRequestObjectResult(ex.Message);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
         [HttpPost]
-        [Route("/v1/WaterChange/ATO/Stop")]
+        [Route(DeviceEndpoints.WATER_CHANGE_STOP)]
         public IActionResult WaterChangeStopATO()
         {
             try
             {
-                _logger.LogInformation("GET /v1/WaterChange/ATO/Stop called");
+                _logger.LogInformation($"GET {DeviceEndpoints.WATER_CHANGE_STOP} endpoint called");
                 _atoService.StopAutoTopOff();
                 return new OkObjectResult(_atoService.GetATOStatus());
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.WATER_CHANGE_STOP} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/WaterChange/ATO/Stop endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.WATER_CHANGE_STOP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
         [HttpGet]
-        [Route("/v1/WaterChange/ATO/Status")]
+        [Route(DeviceEndpoints.WATER_CHANGE_STATUS)]
         public IActionResult WaterChangeATOStatus()
         {
             try
             {
-                _logger.LogInformation("GET /v1/WaterChange/ATO/Status called");
+                _logger.LogInformation($"GET {DeviceEndpoints.WATER_CHANGE_STATUS} called");
                 return new OkObjectResult(_atoService.GetATOStatus());
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.WATER_CHANGE_STATUS} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/WaterChange/ATO/Status endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.WATER_CHANGE_STATUS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
         [HttpPost]
-        [Route("/v1/WaterChange/TestDeviceSensor/")]
+        [Route(DeviceEndpoints.DEVICE_SENSOR_TEST)]
         public IActionResult TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
         {
             try
             {
-                _logger.LogInformation("GET /v1/WaterChange/TestDeviceSensor called");
+                _logger.LogInformation($"GET {DeviceEndpoints.DEVICE_SENSOR_TEST} called");
                 var finishedRequest = _gpioService.TestDeviceSensor(testRequest);
                 return new OkObjectResult(finishedRequest);
             }
             catch(DeviceException ex)
             {
-                _logger.LogInformation($"GET /v1/WaterChange/TestDeviceSensor endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceEndpoints.DEVICE_SENSOR_TEST} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/WaterChange/TestDeviceSensor endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.DEVICE_SENSOR_TEST} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {

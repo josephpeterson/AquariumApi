@@ -97,6 +97,7 @@ namespace AquariumApi.DeviceApi
                 var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
                 SaveTokenToCache(response);
                 ScheduleRenewToken();
+                RequestAquariumDeviceFromService();
             }
     
         }

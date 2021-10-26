@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -18,13 +20,17 @@ namespace AquariumApi.DeviceApi.Controllers
         private IGpioService _gpioService;
         private IHardwareService _hardwareService;
         private IAquariumAuthService _aquariumAuthService;
+        private IATOService _atoService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
+        private DeviceAPI _deviceAPI;
 
         public HomeController(IDeviceService deviceService,
+            DeviceAPI deviceAPI,
             ScheduleService scheduleService,
             IHardwareService hardwareService,
             IGpioService gpioService,
+            IATOService atoService,
             IAquariumAuthService aquariumAuthService,
             ILogger<HomeController> logger, IConfiguration config)
         {
@@ -33,85 +39,136 @@ namespace AquariumApi.DeviceApi.Controllers
             _gpioService = gpioService;
             _hardwareService = hardwareService;
             _aquariumAuthService = aquariumAuthService;
+            _atoService = atoService;
             _logger = logger;
             _config = config;
+            _deviceAPI = deviceAPI;
         }
-
-        [HttpGet]
-        [Route("/v1/Scan")]
-        public IActionResult ScanHardware()
+        [HttpGet(DeviceEndpoints.PING)]
+        public IActionResult PingDevice()
         {
             try
             {
-                _logger.LogInformation("GET /v1/Scan called");
-                var hardware = _hardwareService.ScanHardware();
-                return new OkObjectResult(hardware);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Scan endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-        }
-        [HttpGet]
-        [Route("/v1/Ping")]
-        public IActionResult Ping()
-        {
-            try
-            {
-                _logger.LogInformation("POST /v1/Ping called");
-                //_aquariumAuthService.SaveTokenToCache(loginResponse);
-                //_deviceService.ReloadAuthenticationToken();
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST /v1/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return NotFound();
-            }
-        }
-        [HttpGet]
-        [Route("/v1/Information")]
-        public IActionResult GetDeviceInformation()
-        {
-            try
-            {
-                _logger.LogInformation("POST /v1/Information called");
+                _logger.LogInformation($"GET {DeviceEndpoints.PING} called");
                 var information = new DeviceInformation()
                 {
                     Aquarium = _aquariumAuthService.GetAquarium(),
-                    config = System.IO.File.ReadAllText("config.json"),
+                    Config = System.IO.File.ReadAllText("config.json"),
                     Schedules = _scheduleService.GetAllSchedules(),
-                    Sensors = _gpioService.GetAllSensors()
+                    Sensors = _gpioService.GetAllSensors(),
+                    ATOStatus = null,
                 };
                 return new OkObjectResult(information);
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.PING} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Information endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceEndpoints.PING} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
-        [HttpPost]
-        [Route("/v1/Device")]
+        
+        [HttpPost(DeviceEndpoints.UPDATE)]
         public IActionResult UpdateDeviceInformation([FromBody] AquariumDevice aquariumDevice)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Device called");
+                _logger.LogInformation($"POST {DeviceEndpoints.UPDATE} called");
                 _aquariumAuthService.ApplyAquariumDeviceFromService(aquariumDevice);
                 return Ok();
             }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceEndpoints.UPDATE} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceEndpoints.UPDATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return NotFound();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
-
+        [HttpGet(DeviceEndpoints.LOG)]
+        public IActionResult GetDeviceLog()
+        {
+            string txt;
+            try
+            {
+                txt = System.IO.File.ReadAllText("AquariumDeviceApi.log");
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceEndpoints.LOG} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceEndpoints.LOG} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+            return new OkObjectResult(txt);
+        }
+        [HttpPost(DeviceEndpoints.LOG_CLEAR)]
+        public IActionResult ClearDeviceLog()
+        {
+            try
+            {
+                System.IO.File.Delete("AquariumDeviceApi.log");
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceEndpoints.LOG_CLEAR} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceEndpoints.LOG_CLEAR} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+            return new OkResult();
+        }
+        [HttpPost(DeviceEndpoints.REBOOT)]
+        public IActionResult AttemptReboot()
+        {
+            try
+            {
+                _deviceAPI.Process();
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceEndpoints.REBOOT} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceEndpoints.REBOOT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+            return new OkResult();
+        }
     }
 }

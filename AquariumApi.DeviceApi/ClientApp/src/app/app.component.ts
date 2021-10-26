@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
   }
   public loadInformation() {
     this.loading = true;
-    this.service.getDetailedInformation().subscribe((data: LoginInformationResponse) => {
+    this.service.getDeviceInformation().subscribe((data: LoginInformationResponse) => {
       this.loading = false;
       this.service.loginInformation = data;
     }, () => {

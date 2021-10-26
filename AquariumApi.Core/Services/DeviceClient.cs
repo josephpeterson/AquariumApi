@@ -1,5 +1,6 @@
 ﻿using AquariumApi.DataAccess;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -18,17 +19,14 @@ namespace AquariumApi.Core
 {
     public interface IDeviceClient
     {
-        AquariumDevice ScanHardware();
-        bool Ping();
         string GetDeviceLog();
         void ClearDeviceLog();
-        DeviceInformation GetDeviceInformation();
+        DeviceInformation PingDevice();
 
 
         AquariumSnapshot TakeSnapshot(int deviceId);
         byte[] TakePhoto(int deviceId);
 
-        void ApplyScheduleAssignment(int deviceId,List<DeviceSchedule> deviceSchedules);
         ScheduleState GetDeviceScheduleStatus();
         void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
@@ -89,34 +87,30 @@ namespace AquariumApi.Core
             //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             return client;
         }
-
-
-
-        public AquariumDevice ScanHardware()
+        private void ValidateResponse(HttpResponseMessage response)
         {
-            var path = $"/v1/Scan";
-            using (var client = GetHttpClient())
+            if (!response.IsSuccessStatusCode)
             {
-                HttpResponseMessage response = client.GetAsync(path).Result;
-                if (response.IsSuccessStatusCode)
-                    return response.Content.ReadAsAsync<AquariumDevice>().Result;
-                throw new KeyNotFoundException();
+                var errContent =  response.Content.ReadAsStringAsync().Result;
+                DeviceException err = null;
+                try
+                {
+                    err = JsonConvert.DeserializeObject<DeviceException>(errContent);
+                }
+                finally
+                {
+                    if (err == null)
+                        throw new AquariumServiceException("Unknown error response received from device");
+                    throw err;
+                }
+                
             }
         }
-        public bool Ping()
-        {
-            var path = $"/v1/Ping";
-            using (var client = GetHttpClient())
-            {
-                    HttpResponseMessage response = client.GetAsync(path).Result;
-                if (response.IsSuccessStatusCode)
-                    return true;
-                return false;
-            }
-        }
+
+
         public string GetDeviceLog()
         {
-            var path = $"/v1/Log";
+            var path = DeviceEndpoints.LOG;
             using (var client = GetHttpClient())
             {
                 HttpResponseMessage response = client.GetAsync(path).Result;
@@ -128,23 +122,23 @@ namespace AquariumApi.Core
         }
         public void ClearDeviceLog()
         {
-            var path = "/v1/Log/Clear";
+            var path = DeviceEndpoints.LOG_CLEAR;
             using (var client = GetHttpClient())
             {
                 var httpContent = new StringContent("", Encoding.UTF8, "application/json");
                 HttpResponseMessage response = client.PostAsync(path, httpContent).Result;
-                if (!response.IsSuccessStatusCode)
-                    throw new KeyNotFoundException();
+                ValidateResponse(response);
             }
         }
 
-        public DeviceInformation GetDeviceInformation()
+        public DeviceInformation PingDevice()
         {
-            var path = "/v1/Information";
+            var path = DeviceEndpoints.PING;
             using (var client = GetHttpClient())
             {
-                var data = client.GetStringAsync(path).Result;
-                var d = JsonConvert.DeserializeObject<DeviceInformation>(data);
+                var response = client.GetAsync(path).Result;
+                ValidateResponse(response);
+                var d = JsonConvert.DeserializeObject<DeviceInformation>(response.Content.ReadAsStringAsync().Result);
                 return d;
             }
         }
@@ -180,29 +174,9 @@ namespace AquariumApi.Core
         }
         
         
-
-        public void ApplyScheduleAssignment(int deviceId, List<DeviceSchedule> deviceSchedules)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/Schedule";
-
-            using (var client2 = new HttpClient())
-            {
-                JsonSerializerSettings jss = new JsonSerializerSettings();
-                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                var config = device.CameraConfiguration;
-                //config.Device = null;
-
-                var httpContent = new StringContent(JsonConvert.SerializeObject(deviceSchedules, jss), Encoding.UTF8, "application/json");
-                var result = client2.PostAsync(path, httpContent).Result;
-                if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not apply schedule assignment to device");
-            }
-        }
         public void ApplyUpdatedDevice(AquariumDevice aquariumDevice)
         {
-            var path = $"/v1/Device";
-
+            var path = DeviceEndpoints.UPDATE;
             using (var client2 = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
@@ -210,30 +184,26 @@ namespace AquariumApi.Core
 
                 var httpContent = new StringContent(JsonConvert.SerializeObject(aquariumDevice, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
-                if (!result.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"{result.StatusCode}: {result.ReasonPhrase}");
-                    _logger.LogError($"Path: {path}");
-                    throw new Exception("Could not send updated device information to device");
-                }
+                ValidateResponse(result);
             }
             _logger.LogInformation("Device information updated on device");
         }
 
         public ScheduleState GetDeviceScheduleStatus()
         {
-            var path = "/v1/Schedule";
+            var path = DeviceEndpoints.SCHEDULE_STATUS;
             using (var client = GetHttpClient())
             {
-                var data = client.GetStringAsync(path).Result;
-                var state = JsonConvert.DeserializeObject<ScheduleState>(data);
+                var result = client.GetAsync(path).Result;
+                ValidateResponse(result);
+                var state = JsonConvert.DeserializeObject<ScheduleState>(result.Content.ReadAsStringAsync().Result);
                 return state;
             }
         }
 
         public void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
         {
-            var path = "/v1/Schedule/PerformTask";
+            var path = DeviceEndpoints.SCHEDULE_TASK_PERFORM;
             using (var client = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
@@ -243,35 +213,32 @@ namespace AquariumApi.Core
 
                 var httpContent = new StringContent(JsonConvert.SerializeObject(deviceScheduleTask, jss), Encoding.UTF8, "application/json");
                 var result = client.PostAsync(path, httpContent).Result;
-                if (!result.IsSuccessStatusCode)
-                {
-                    var error = result.Content.ReadAsStringAsync().Result;
-                    throw new Exception(error);
-                }
+                ValidateResponse(result);
             }
         }
 
 
         /* Get device ATO status */
+        #region Device ATO
         public ATOStatus GetDeviceATOStatus()
         {
-            var path = "/v1/WaterChange/ATO/Status";
+            var path = DeviceEndpoints.WATER_CHANGE_STATUS;
             var client = GetHttpClient();
-            var data = client.GetStringAsync(path).Result;
-            var state = JsonConvert.DeserializeObject<ATOStatus>(data);
+            var result = client.GetAsync(path).Result;
+            ValidateResponse(result);
+            var state = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
             state.DeviceId = Device.Id; //the device could send bad data
             return state;
         }
         
         public ATOStatus PerformDeviceATO(int maxRuntime)
         {
-            var path = "/v1/WaterChange/ATO";
+            var path = DeviceEndpoints.WATER_CHANGE_BEGIN;
             using (var client = GetHttpClient())
             {
                 var httpContent = new StringContent(maxRuntime.ToString(), Encoding.UTF8, "application/json");
                 var result = client.PostAsync(path, httpContent).Result;
-                if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not perform ATO on device");
+                ValidateResponse(result);
 
                 var atoStatus = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
                 atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
@@ -280,23 +247,23 @@ namespace AquariumApi.Core
         }
         public ATOStatus StopDeviceATO()
         {
-            var path = $"/v1/WaterChange/ATO/Stop";
+            var path = DeviceEndpoints.WATER_CHANGE_STOP;
             using (var client = GetHttpClient())
             {
                 var result = client.PostAsync(path, null).Result;
-                if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not stop ATO on device");
+                ValidateResponse(result);
 
                 var atoStatus = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
                 atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
                 return atoStatus;
             }
         }
+        #endregion
 
+        #region Device Sensors
         public async Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest)
         {
-            var path = $"/v1/WaterChange/TestDeviceSensor/";
-
+            var path = DeviceEndpoints.DEVICE_SENSOR_TEST;
             using (var client = GetHttpClient())
             {
                 var content = JsonConvert.SerializeObject(testRequest);
@@ -310,17 +277,15 @@ namespace AquariumApi.Core
                 {
                     throw new AquariumServiceException("The target device was unavailable.");
                 }
+                ValidateResponse(result);
 
-                if (!result.IsSuccessStatusCode)
-                {
-                    var errContent = await result.Content.ReadAsStringAsync();
-                    var err = JsonConvert.DeserializeObject<DeviceException>(errContent);
-                    throw err;
-                }
                 var data = await result.Content.ReadAsStringAsync();
                 var createdTestRequest = JsonConvert.DeserializeObject<DeviceSensorTestRequest>(data);
                 return createdTestRequest;
             }
         }
+        #endregion
+
+        
     }
 }
