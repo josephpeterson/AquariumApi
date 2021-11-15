@@ -3,7 +3,7 @@
 <div class="container" *ngIf="(!loading)">
   <notifier-container></notifier-container>
 
-  <ng-container *ngIf="!service.loginInformation else route">
+  <ng-container *ngIf="!isLoggedIn() else route">
     <login-container></login-container>
   </ng-container>
   <ng-template #route>

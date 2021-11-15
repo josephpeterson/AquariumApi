@@ -21,6 +21,9 @@ export class NavBarComponent implements OnInit {
   public clickLogout() {
     this.service.logout();
   }
+  public isLoggedIn() {
+    return this.loginInformation && this.loginInformation.aquarium != null; //todo change this
+  }
   public clickRenew() {
     this.renewingToken = true;
     this.service.renewAuthToken().subscribe(data => {

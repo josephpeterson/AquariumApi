@@ -306,7 +306,8 @@ namespace AquariumApi.Core
         }
         public ICollection<DeviceSensor> GetDeviceSensors(int deviceId)
         {
-            var deviceSensors = _aquariumDao.GetDeviceSensors(deviceId);
+            var deviceSensors = _aquariumDao.GetDeviceSensors(deviceId)
+                .OrderBy(s => s.Name).ToList();
             return deviceSensors;
         }
         public DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor)

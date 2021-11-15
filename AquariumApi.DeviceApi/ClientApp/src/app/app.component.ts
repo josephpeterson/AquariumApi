@@ -22,11 +22,15 @@ export class AppComponent implements OnInit {
   public loadInformation() {
     this.loading = true;
     this.service.getDeviceInformation().subscribe((data: LoginInformationResponse) => {
+      console.log(data);
       this.loading = false;
       this.service.loginInformation = data;
     }, () => {
       this.loading = false;
     });
+  }
+  public isLoggedIn() {
+    return this.service.loginInformation.aquarium != null; //todo change this
   }
 }
 

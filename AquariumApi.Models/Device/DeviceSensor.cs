@@ -11,6 +11,7 @@ namespace AquariumApi.Models
         public SensorTypes Type { get; set; }
         public GpioPinValue? Value { get; set; }
         public int Pin { get; set; }
+        public bool AlwaysOn { get; set; }
         public Polarity Polarity {get; set; }
 
         public delegate void SensorTriggered(object sender,int value);

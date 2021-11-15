@@ -30,7 +30,7 @@
         <a class="nav-link disabled" href="#">Disabled</a>
       </li>
     </ul>
-    <form class="form-inline my-2 my-lg-0" *ngIf="loginInformation">
+    <form class="form-inline my-2 my-lg-0" *ngIf="isLoggedIn()">
       <a class="nav-link disabled" href="#">{{loginInformation.aquarium.name}}</a>
       <button class="btn btn-danger my-2 my-sm-0" (click)="clickLogout()">Logout</button>
       <button class="btn btn-secondary my-2 my-sm-0 ml-2" (click)="clickRenew()" [disabled]="renewingToken">Renew Auth Token</button>
