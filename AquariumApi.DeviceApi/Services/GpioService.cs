@@ -56,6 +56,12 @@ namespace AquariumApi.DeviceApi
                             p.OnSensorTriggered(sender, 0);
                         });
 
+                    //default always on
+                    if(p.AlwaysOn)
+                    {
+                        Controller.Write(p.Pin, PinValue.High);
+                    }
+
                 }
                 //else
                 //   _logger.LogInformation("GpioService: PreparePins: Pin is already open (" + p.Name + ")");
@@ -138,6 +144,8 @@ namespace AquariumApi.DeviceApi
         }
         public void SetPinValue(DeviceSensor pin, PinValue pinValue)
         {
+            if(pin.AlwaysOn) //invert the value we are setting
+                pinValue = pinValue == PinValue.Low ? PinValue.High : PinValue.Low;
             Controller.Write(pin.Pin, pinValue);
         }
         public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)

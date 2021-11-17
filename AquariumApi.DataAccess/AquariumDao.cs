@@ -333,11 +333,13 @@ namespace AquariumApi.DataAccess
                 .Include(aq => aq.Fish).ThenInclude(d => d.Species)
                 .Include(aq => aq.Fish).ThenInclude(d => d.Thumbnail)
                 .Include(aq => aq.Feedings)
-                .Include(aq => aq.Device).ThenInclude(d => d.CameraConfiguration)
-                .Include(aq => aq.Device).ThenInclude(d => d.ScheduleAssignments)
-                    .ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
+                .Include(aq => aq.Device)
                 .FirstOrDefault();
             if (aquarium == null) return aquarium;
+
+
+            if(aquarium.Device != null)
+                aquarium.Device = GetAquariumDeviceById(aquarium.Device.Id);
 
             if (aquarium.Device != null && aquarium.Device.CameraConfiguration == null)
                 aquarium.Device.CameraConfiguration = new CameraConfiguration();
