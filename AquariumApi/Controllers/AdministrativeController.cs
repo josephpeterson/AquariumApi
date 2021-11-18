@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AquariumApi.Core;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,6 @@ using Microsoft.Extensions.Logging;
 namespace AquariumApi.Controllers
 {
     [Authorize(Roles = "Administrator")]
-    [Route("/v1/admin")]
     public class AdministrativeController : Controller
     {
         private readonly IConfiguration _config;
@@ -41,7 +41,7 @@ namespace AquariumApi.Controllers
             _notificationService = notificationService;
         }
         [HttpGet]
-        [Route("ApplicationLog")]
+        [Route("/v1/admin/ApplicationLog")]
         public IActionResult GetApplicationLog()
         {
             try
@@ -59,7 +59,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpDelete]
-        [Route("ApplicationLog")]
+        [Route("/v1/admin/ApplicationLog")]
         public IActionResult DeleteApplicationLog()
         {
             try
@@ -79,7 +79,7 @@ namespace AquariumApi.Controllers
 
 
         [HttpGet]
-        [Route("Users")]
+        [Route(AquariumApiEndpoints.ADMIN_RETRIEVE_ACCOUNTS)]
         public IActionResult GetAquariumUsers()
         {
             try
@@ -93,7 +93,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpGet]
-        [Route("Bugs")]
+        [Route(AquariumApiEndpoints.ADMIN_RETRIEVE_BUGS)]
         public IActionResult GetBugList()
         {
             try
@@ -110,7 +110,7 @@ namespace AquariumApi.Controllers
 
 
         [HttpGet]
-        [Route("Test")]
+        [Route("/v1/admin/Test")]
         public IActionResult TestMethod()
         {
             try
@@ -128,7 +128,7 @@ namespace AquariumApi.Controllers
 
 
         [HttpGet]
-        [Route("Notifications")]
+        [Route(AquariumApiEndpoints.ADMIN_RETRIEVE_NOTIFICATIONS)]
         public IActionResult GetNotifications()
         {
             try
@@ -142,7 +142,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("Notification/Delete")]
+        [Route(AquariumApiEndpoints.ADMIN_NOTIFICATION_DELETE_ALL)]
         public IActionResult DeleteNotification([FromBody] List<int> notificationIds)
         {
             try
@@ -156,7 +156,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("Notification")]
+        [Route(AquariumApiEndpoints.ADMIN_NOTIFICATION_DISPATCH)]
         public IActionResult EmitNotification([FromBody] NotificationDispatchRequest req)
         {
             try
@@ -186,7 +186,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("Notification/Dismiss")]
+        [Route(AquariumApiEndpoints.ADMIN_NOTIFICATION_DISMISS)]
         public IActionResult DismissNotifications([FromBody] List<int> notificationIds)
         {
             try

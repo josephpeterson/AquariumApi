@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Core.Services;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ namespace AquariumApi.Controllers
             _logger = logger;
         }
         [HttpGet]
-        [Route("/v1/Device/{deviceId}")]
+        [Route(AquariumApiEndpoints.DEVICE_RETRIEVE)]
         public IActionResult GetDeviceById(int deviceId)
         {
             try
@@ -42,7 +43,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Delete")]
+        [Route(AquariumApiEndpoints.DEVICE_DELETE)]
         public IActionResult DeleteAquariumDevice(int deviceId)
         {
             try
@@ -58,7 +59,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/Update")]
+        [Route(AquariumApiEndpoints.DEVICE_UPDATE)]
         public IActionResult UpdateAquariumDevice([FromBody] AquariumDevice device)
         {
 
@@ -80,7 +81,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/Add")]
+        [Route(AquariumApiEndpoints.DEVICE_CREATE)]
         public IActionResult AddAquariumDevice([FromBody] AquariumDevice device)
         {
             try
@@ -96,7 +97,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpGet]
-        [Route("/v1/Device/{deviceId}/Scan")]
+        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_SCAN)]
         public IActionResult ScanAquariumDeviceHardware(int deviceId)
         {
             try
@@ -114,7 +115,7 @@ namespace AquariumApi.Controllers
         }
 
         [HttpGet]
-        [Route("/v1/Device/{deviceId}/Ping")]
+        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_PING)]
         public IActionResult PingAquariumDevice(int deviceId)
         {
             if (!ValidateRequest(deviceId))
@@ -135,7 +136,7 @@ namespace AquariumApi.Controllers
         }
 
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/CameraConfiguration")]
+        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_SNAPSHOT_CONFIGURATION)]
         public IActionResult UpdateCameraConfiguration(int deviceId,[FromBody] CameraConfiguration config)
         {
             try
@@ -151,52 +152,9 @@ namespace AquariumApi.Controllers
             }
         }
 
-
-        //Ping recieved
-        [HttpPost]
-        [Route("/v1/Device/Ping")]
-        public IActionResult GetPingFromDevice([FromBody] AquariumDevice deviceRequest)
-        {
-            try
-            {
-                _logger.LogInformation($"GET /v1/Device/Ping called");
-
-                var host = HttpContext.Connection.RemoteIpAddress.ToString();
-
-                _logger.LogInformation($"\n\nHost: ({host}) \n '{deviceRequest.PrivateKey}'");
-
-                var device = _aquariumService.GetAquariumDeviceByIpAndKey(host, deviceRequest.PrivateKey);
-                _aquariumService.ApplyAquariumDeviceHardware(device.Id, deviceRequest);
-                return new OkObjectResult(device);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Device/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-        [HttpGet]
-        [Route("/v1/Device/Ping")]
-        public IActionResult sdasdas()
-        {
-            try
-            {
-                _logger.LogInformation($"GET /v1/Device/Ping called");
-
-                var host = HttpContext.Connection.RemoteIpAddress;
-                return new OkObjectResult(host.ToString());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET /v1/Device/Ping endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
-
-
        //Retrieve AquariumDeviceApi.log
         [HttpPost, DisableRequestSizeLimit]
-        [Route("/v1/Device/{deviceId}/Log")]
+        [Route(AquariumApiEndpoints.DEVICE_LOG)]
         public IActionResult ClearDeviceLog(int deviceId)
         {
             try
@@ -212,7 +170,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost, DisableRequestSizeLimit]
-        [Route("/v1/Device/{deviceId}/Log/Clear")]
+        [Route(AquariumApiEndpoints.DEVICE_LOG_CLEAR)]
         public IActionResult GetDeviceLog(int deviceId)
         {
             try
@@ -229,7 +187,7 @@ namespace AquariumApi.Controllers
         }
         //Retrieve Assigned aquarium/schedule information
         [HttpPost, DisableRequestSizeLimit]
-        [Route("/v1/Device/{deviceId}/Information")]
+        [Route(AquariumApiEndpoints.DEVICE_RETRIEVE_DETAILED)]
         public IActionResult GetDeviceInformation(int deviceId)
         {
             try
@@ -248,7 +206,7 @@ namespace AquariumApi.Controllers
 
         //Retrieve Assigned aquarium/schedule information
         [HttpGet]
-        [Route("/v1/Device/{deviceId}/UpdateConfigurationFile")]
+        [Route(AquariumApiEndpoints.DEVICE_UPDATE_CONFIGURATION)]
         public IActionResult UpdateConfigurationFile(int deviceId)
         {
             try
@@ -268,7 +226,7 @@ namespace AquariumApi.Controllers
         #region Device Sensors
         //Create/remove device sensors
         [HttpGet]
-        [Route("/v1/Device/{deviceId}/Sensors")]
+        [Route(AquariumApiEndpoints.DEVICE_SENSORS)]
         public IActionResult GetDeviceSensors(int deviceId)
         {
             try
@@ -284,7 +242,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Sensor/Create")]
+        [Route(AquariumApiEndpoints.DEVICE_SENSOR_CREATE)]
         public IActionResult CreateDeviceSensor(int deviceId, [FromBody] DeviceSensor sensor)
         {
             try
@@ -300,7 +258,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Sensor/Remove")]
+        [Route(AquariumApiEndpoints.DEVICE_SENSOR_DELETE)]
         public IActionResult RemoveDeviceSensor(int deviceId,[FromBody] DeviceSensor sensor)
         {
             try
@@ -316,7 +274,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPut]
-        [Route("/v1/Device/{deviceId}/Sensor/Update")]
+        [Route(AquariumApiEndpoints.DEVICE_SENSOR_UPDATE)]
         public IActionResult UpdateDeviceSensor(int deviceId, [FromBody] DeviceSensor sensor)
         {
             try
@@ -334,7 +292,7 @@ namespace AquariumApi.Controllers
 
         //Test Device Sensor (this has the correct excception handling mechanism)
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Sensor/Test")]
+        [Route(AquariumApiEndpoints.DEVICE_SENSOR_TEST)]
         public async Task<IActionResult> TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
         {
             try
@@ -364,7 +322,7 @@ namespace AquariumApi.Controllers
         #region Device Schedules
         //Deploy/Remove Device Schedules
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/DeploySchedule/{scheduleId}")]
+        [Route(AquariumApiEndpoints.DEVICE_SCHEDULE_DEPLOY)]
         public IActionResult DeploySchedule(int deviceId,int scheduleId)
         {
             try
@@ -380,7 +338,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/RemoveSchedule/{scheduleId}")]
+        [Route(AquariumApiEndpoints.DEVICE_SCHEDULE_REMOVE)]
         public IActionResult RemoveSchedule(int deviceId, int scheduleId)
         {
             try
@@ -396,7 +354,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Schedule/Status")]
+        [Route(AquariumApiEndpoints.DEVICE_SCHEDULE_STATUS)]
         public IActionResult GetScheduleStatus(int deviceId)
         {
             try
@@ -413,7 +371,7 @@ namespace AquariumApi.Controllers
         }
 
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/Schedule/PerformTask")]
+        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_TASK)]
         public IActionResult PerformScheduleTask(int deviceId,[FromBody] DeviceScheduleTask deviceScheduleTask)
         {
             try

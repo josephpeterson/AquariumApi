@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -40,7 +41,7 @@ namespace AquariumApi.Controllers
             _photoManager = photoManager;
         }
         [HttpGet]
-        [Route("/v1/Account/{id}")]
+        [Route(AquariumApiEndpoints.ACCOUNT_GET_DETAILED)]
         [ProducesResponseType(typeof(AquariumUser), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetDetailedAccount(int id)
@@ -55,11 +56,11 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Account/{id} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return Unauthorized();
             }
         }
         [HttpGet]
-        [Route("/v1/Account/Claims")]
+        [Route(AquariumApiEndpoints.ACCOUNT_GET_CLAIMS)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetOurDetails()
         {
@@ -81,7 +82,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpGet]
-        [Route("/v1/Account/Current")]
+        [Route(AquariumApiEndpoints.ACCOUNT_GET_CURRENT)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetCurrentUser()
         {
@@ -95,11 +96,11 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Account/Current endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return Unauthorized();
             }
         }
         [HttpGet]
-        [Route("/v1/Account/Notifications")]
+        [Route(AquariumApiEndpoints.ACCOUNT_RETRIEVE_NOTIFICATIONS)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetNotifications()
         {
@@ -112,11 +113,11 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Account/Notifications endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Account/Notifications/Dismiss")]
+        [Route(AquariumApiEndpoints.ACCOUNT_NOTIFICATION_DISMISS)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult DismissNotifications([FromBody] List<int> notificationIds)
         {
@@ -133,13 +134,11 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Account/Notifications endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
-
-
         [HttpPut]
-        [Route("/v1/Account/Update")]
+        [Route(AquariumApiEndpoints.ACCOUNT_UPDATE)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult UpdateAccount([FromBody] AquariumUser account)
         {
@@ -153,7 +152,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Account/Current endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
 
