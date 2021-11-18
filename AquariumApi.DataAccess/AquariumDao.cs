@@ -151,6 +151,8 @@ namespace AquariumApi.DataAccess
         List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver sliver);
         ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId, PaginationSliver pagination);
         List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination);
+        List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination);
+        ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob);
     }
 
     public class AquariumDao : IAquariumDao
@@ -626,6 +628,23 @@ namespace AquariumApi.DataAccess
                 .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .ToList();
             return schedules;
+        }
+        public List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination)
+        {
+            var schedules = _dbAquariumContext.TblDeviceScheduledJob
+                .AsNoTracking()
+                .Where(sa => sa.DeviceId == deviceId)
+                .ToList();
+            return schedules;
+        }
+        public ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob)
+        {
+            if (scheduledJob.Id.HasValue)
+                _dbAquariumContext.TblDeviceScheduledJob.Update(scheduledJob);
+            else
+                _dbAquariumContext.TblDeviceScheduledJob.Add(scheduledJob);
+            _dbAquariumContext.SaveChanges();
+            return scheduledJob;
         }
 
         /* Aquarium Photos */

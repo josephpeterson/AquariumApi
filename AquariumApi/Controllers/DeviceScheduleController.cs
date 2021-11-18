@@ -72,6 +72,32 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        /// <summary>
+        /// This endpoint returns scheduled jobs from the database (tasks that have been queued or sent for a run)
+        /// </summary>
+        /// <returns>
+        /// List of ScheduledJobs that fit within the provided pagination sliver
+        /// </returns>
+        [HttpGet]
+        [Route("/v1/Device/{deviceId}/Schedule/Jobs")]
+        public IActionResult GetScheduledJobs(int deviceId, [FromBody] PaginationSliver pagination = null)
+        {
+            if (pagination == null)
+                pagination = new PaginationSliver();
+            try
+            {
+                _logger.LogInformation($"GET /v1/Device/{deviceId}/Schedule/Jobs called");
+                List<ScheduledJob> scheduledJobs = _aquariumService.GetDeviceScheduledJobs(deviceId, pagination);
+                return new OkObjectResult(scheduledJobs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET /v1/Device/{deviceId}/Schedule/Jobs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        
+
         [HttpDelete]
         [Route("/v1/Schedule/{scheduleId}/Delete")]
         public IActionResult DeviceDeviceSchedule(int scheduleId)

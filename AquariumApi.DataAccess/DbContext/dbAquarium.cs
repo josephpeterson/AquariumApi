@@ -46,6 +46,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<PhotoContent> TblPhotoContent { get; set; }
         public virtual DbSet<DeviceSchedule> TblDeviceSchedule { get; set; }
         public virtual DbSet<DeviceScheduleAssignment> TblDeviceScheduleAssignment { get; set; }
+        public virtual DbSet<ScheduledJob> TblDeviceScheduledJob { get; set; }
         public virtual DbSet<DeviceScheduleTask> TblDeviceScheduleTask { get; set; }
         public virtual DbSet<DispatchedNotification> TblDispatchedNotifications { get; set; }
         public virtual DbSet<Notification> TblNotification { get; set; }
@@ -153,6 +154,10 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(e => e.Author);
             });
             modelBuilder.Entity<DeviceScheduleTask>(entity =>
+            {
+
+            });
+            modelBuilder.Entity<ScheduledJob>(entity =>
             {
 
             });

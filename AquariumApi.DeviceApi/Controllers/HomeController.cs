@@ -44,12 +44,12 @@ namespace AquariumApi.DeviceApi.Controllers
             _config = config;
             _deviceAPI = deviceAPI;
         }
-        [HttpGet(DeviceEndpoints.PING)]
+        [HttpGet(DeviceOutboundEndpoints.PING)]
         public IActionResult PingDevice()
         {
             try
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.PING} called");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.PING} called");
                 var information = new DeviceInformation()
                 {
                     Aquarium = _aquariumAuthService.GetAquarium(),
@@ -62,12 +62,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.PING} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.PING} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceEndpoints.PING} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceOutboundEndpoints.PING} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -76,23 +76,23 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
         
-        [HttpPost(DeviceEndpoints.UPDATE)]
+        [HttpPost(DeviceOutboundEndpoints.UPDATE)]
         public IActionResult UpdateDeviceInformation([FromBody] AquariumDevice aquariumDevice)
         {
             try
             {
-                _logger.LogInformation($"POST {DeviceEndpoints.UPDATE} called");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.UPDATE} called");
                 _aquariumAuthService.ApplyAquariumDeviceFromService(aquariumDevice);
                 return Ok();
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceEndpoints.UPDATE} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.UPDATE} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceEndpoints.UPDATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.UPDATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -100,7 +100,7 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
             }
         }
-        [HttpGet(DeviceEndpoints.LOG)]
+        [HttpGet(DeviceOutboundEndpoints.LOG)]
         public IActionResult GetDeviceLog()
         {
             string txt;
@@ -110,12 +110,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.LOG} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.LOG} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceEndpoints.LOG} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceOutboundEndpoints.LOG} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -124,7 +124,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             return new OkObjectResult(txt);
         }
-        [HttpPost(DeviceEndpoints.LOG_CLEAR)]
+        [HttpPost(DeviceOutboundEndpoints.LOG_CLEAR)]
         public IActionResult ClearDeviceLog()
         {
             try
@@ -133,12 +133,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceEndpoints.LOG_CLEAR} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.LOG_CLEAR} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceEndpoints.LOG_CLEAR} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.LOG_CLEAR} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -147,7 +147,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             return new OkResult();
         }
-        [HttpPost(DeviceEndpoints.REBOOT)]
+        [HttpPost(DeviceOutboundEndpoints.REBOOT)]
         public IActionResult AttemptReboot()
         {
             try
@@ -156,12 +156,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceEndpoints.REBOOT} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.REBOOT} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceEndpoints.REBOOT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.REBOOT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {

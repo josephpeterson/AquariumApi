@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Core.Services;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,25 +36,19 @@ namespace AquariumApi.Controllers
         }
 
 
+        //todo review this
         [HttpPost]
+        [Route(DeviceInboundEndpoints.CONNECT_DEVICE)]
         public IActionResult ApplyDeviceHardware([FromBody] AquariumDevice aquariumDevice)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/DeviceInteraction called");
+                _logger.LogInformation($"POST {DeviceInboundEndpoints.CONNECT_DEVICE} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
+
+                var aquarium = GetCurrentAquarium();
                 var userId = _accountService.GetCurrentUserId();
-                var id = _accountService.GetCurrentAquariumId();
-                var aquarium = _aquariumService.GetAquariumById(id);
-                if (aquarium.Device == null)
-                {
-                    return BadRequest("This aquarium does not have a device");
-                }
-                if (!_accountService.CanModify(userId, aquarium))
-                    return BadRequest("You do not own this aquarium");
-
-
-
-
                 _logger.LogInformation("Attempting to determine local ip addresses");
                 var localIp = Request.HttpContext.Connection.LocalIpAddress;
                 var localPort = Request.HttpContext.Connection.LocalPort;
@@ -86,7 +81,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/DeviceInteraction endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceInboundEndpoints.CONNECT_DEVICE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
@@ -95,86 +90,75 @@ namespace AquariumApi.Controllers
          * Hardware information will be sent
          */
         [HttpGet]
+        [Route(DeviceInboundEndpoints.RECEIVE_PING)]
         public IActionResult RecievePing()
         {
             try
             {
-                _logger.LogInformation($"GET /v1/DeviceInteraction called");
-                var userId = _accountService.GetCurrentUserId();
-                var id = _accountService.GetCurrentAquariumId();
-                var aquarium = _aquariumService.GetAquariumById(id);
-                if (aquarium.Device == null)
-                {
-                    return BadRequest("This aquarium does not have a device");
-                }
-                if (!_accountService.CanModify(userId, aquarium))
-                    return BadRequest("You do not own this aquarium");
+                _logger.LogInformation($"GET {DeviceInboundEndpoints.RECEIVE_PING} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
 
+                var aquarium = GetCurrentAquarium();
                 aquarium.Device = _aquariumService.GetAquariumDeviceById(aquarium.Device.Id); //get detailed device
                 return new OkObjectResult(aquarium.Device);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/DeviceInteraction endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceInboundEndpoints.RECEIVE_PING} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
 
         //Recieve snapshot from device
         [HttpPost, DisableRequestSizeLimit]
-        [Route("Snapshot")]
+        [Route(DeviceInboundEndpoints.DISPATCH_SNAPSHOT)]
         public IActionResult RecieveSnapshot(RequestModel data)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/DeviceInteraction/Snapshot called");
+                _logger.LogInformation($"POST {DeviceInboundEndpoints.DISPATCH_SNAPSHOT} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
+
+                var aquarium = GetCurrentAquarium();
                 var snapshotImage = data.SnapshotImage;
                 var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data.Snapshot);
-                var userId = _accountService.GetCurrentUserId();
-                var id = _accountService.GetCurrentAquariumId();
-                var aquarium = _aquariumService.GetAquariumById(id);
-                if (!_accountService.CanModify(userId, aquarium))
-                    return BadRequest("You do not own this aquarium");
-                AquariumSnapshot s = _aquariumService.AddSnapshot(id, snapshot, snapshotImage);
+                AquariumSnapshot s = _aquariumService.AddSnapshot(aquarium.Id, snapshot, snapshotImage);
                 return new OkObjectResult(s);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/DeviceInteraction/Snapshot: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceInboundEndpoints.DISPATCH_SNAPSHOT}: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
 
         //Device is sending us ATO dispatch
         [HttpPost]
-        [Route("ATO")]
+        [Route(DeviceInboundEndpoints.DISPATCH_ATO)]
         public IActionResult RecieveATOStatus([FromBody] ATOStatus atoStatus)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/DeviceInteraction/ATO called");
-                var userId = _accountService.GetCurrentUserId();
-                var id = _accountService.GetCurrentAquariumId();
-                var aquarium = _aquariumService.GetAquariumById(id);
-                if (aquarium.Device == null)
-                {
-                    return BadRequest("This aquarium does not have a device");
-                }
-                if (!_accountService.CanModify(userId, aquarium))
-                    return BadRequest("You do not own this aquarium");
+                _logger.LogInformation($"POST {DeviceInboundEndpoints.DISPATCH_ATO} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
+
+                var aquarium = GetCurrentAquarium();
                 atoStatus.DeviceId = aquarium.Device.Id;
                 atoStatus.AquariumId = aquarium.Id;
 
                 var s = _aquariumService.UpdateDeviceATOStatus(atoStatus);
 
                 if(s.Completed)
-                    _logger.LogInformation($"ATO was completed for aquarium id: {id}");
+                    _logger.LogInformation($"ATO was completed for aquarium id: {aquarium.Id}");
 
                 return new OkObjectResult(s);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/DeviceInteraction/ATO: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceInboundEndpoints.DISPATCH_ATO}: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(ex.Message);
             }
@@ -183,32 +167,64 @@ namespace AquariumApi.Controllers
 
         //Device is asking for detailed device information
         [HttpGet]
-        [Route("Device")]
+        [Route(DeviceInboundEndpoints.RETRIEVE_DEVICE)]
         public IActionResult GetDeviceInformation()
         {
             try
             {
-                _logger.LogInformation($"GET /v1/DeviceInteraction/Device called");
-                var userId = _accountService.GetCurrentUserId();
-                var id = _accountService.GetCurrentAquariumId();
-                var aquarium = _aquariumService.GetAquariumById(id);
-                if (aquarium.Device == null)
-                {
-                    return BadRequest("This aquarium does not have a device");
-                }
-                if (!_accountService.CanModify(userId, aquarium))
-                    return BadRequest("You do not own this aquarium");
+                _logger.LogInformation($"GET {DeviceInboundEndpoints.RETRIEVE_DEVICE} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
 
+                var aquarium = GetCurrentAquarium();
                 return new OkObjectResult(_aquariumService.GetAquariumDeviceById(aquarium.Device.Id));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/DeviceInteraction/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceInboundEndpoints.RETRIEVE_DEVICE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return NotFound();
             }
         }
 
+        //Device is sending us a dispatch on a scheduled job
+        [HttpPut]
+        [Route(DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB)]
+        public IActionResult UpsertScheduledJob([FromBody] ScheduledJob scheduledJob)
+        {
+            try
+            {
+                if (!ValidateRequest())
+                    return Unauthorized();
 
+                var aquarium = GetCurrentAquarium();
+                scheduledJob.DeviceId = aquarium.Device.Id;
+                _logger.LogInformation($"PUT {DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB} called");
+                ScheduledJob updatedScheduledJob = _aquariumService.UpsertDeviceScheduledJob(scheduledJob);
+                return new OkObjectResult(updatedScheduledJob);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        private bool ValidateRequest()
+        {
+            var userId = _accountService.GetCurrentUserId();
+            var id = _accountService.GetCurrentAquariumId();
+            var aquarium = _aquariumService.GetAquariumById(id);
+            if (aquarium.Device == null)
+                return false;
+            if (!_accountService.CanModify(userId, aquarium))
+                return false;
+            return true;
+        }
+        private Aquarium GetCurrentAquarium()
+        {
+            var id = _accountService.GetCurrentAquariumId();
+            var aquarium = _aquariumService.GetAquariumById(id);
+            return aquarium;
+        }
     }
     public class RequestModel
     {

@@ -1,4 +1,5 @@
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,6 +18,7 @@ namespace AquariumApi.DeviceApi.Clients
         Task<AquariumDevice> PingAquariumService();
         Task<ATOStatus> DispatchATOStatus(ATOStatus status);
         Task DispatchExceptions(List<BaseException> exceptions);
+        Task<ScheduledJob> DispatchScheduledJob(ScheduledJob scheduledJob);
     }
     public class AquariumClient : IAquariumClient
     {
@@ -45,7 +47,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo)
         {
-            var path = $"/v1/DeviceInteraction/Snapshot";
+            var path = DeviceInboundEndpoints.DISPATCH_SNAPSHOT;
             _logger.LogInformation("Sending snapshot: " + path);
 
 
@@ -67,7 +69,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public async Task<AquariumDevice> PingAquariumService()
         {
-            var path = $"/v1/DeviceInteraction";
+            var path = DeviceInboundEndpoints.RECEIVE_PING;
             HttpClient client = GetHttpClient();
             var result = await client.GetAsync(path);
             if (!result.IsSuccessStatusCode)
@@ -79,7 +81,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public async Task<ATOStatus> DispatchATOStatus(ATOStatus status)
         {
-            var path = $"/v1/DeviceInteraction/ATO";
+            var path = DeviceInboundEndpoints.DISPATCH_ATO;
             _logger.LogInformation("Dispatching ATO status...");
             _logger.LogInformation($" - Pump running: {status.PumpRunning}");
             _logger.LogInformation($" - Max Run Time: {status.MaxRuntime}");
@@ -99,7 +101,7 @@ namespace AquariumApi.DeviceApi.Clients
         }
         public async Task DispatchExceptions(List<BaseException> exceptions)
         {
-            var path = $"/v1/DeviceInteraction/Exception";
+            var path = DeviceInboundEndpoints.DISPATCH_EXCEPTION;
             _logger.LogInformation($"Dispatching {exceptions.Count} exceptions to aquarium service...");
 
             using (HttpClient client = GetHttpClient())
@@ -111,6 +113,23 @@ namespace AquariumApi.DeviceApi.Clients
                     throw new Exception("Could not dispatch exceptions to service");
                 }
                 _logger.LogInformation($"Exceptions successfully dispatched to service.");
+            }
+        }
+        public async Task<ScheduledJob> DispatchScheduledJob(ScheduledJob scheduledJob)
+        {
+            var path = DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB;
+            _logger.LogInformation($"Dispatching scheduled job to aquarium service...");
+
+            using (HttpClient client = GetHttpClient())
+            {
+                var httpContent = new StringContent(JsonConvert.SerializeObject(scheduledJob), Encoding.UTF8, "application/json");
+                var result = await client.PostAsync(path, httpContent);
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not dispatch scheduled job to service");
+                _logger.LogInformation($"Scheduled job successfully dispatched to service.");
+                var res = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<ScheduledJob>(res);
+                return response;
             }
         }
 

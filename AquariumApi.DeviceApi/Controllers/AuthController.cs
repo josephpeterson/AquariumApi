@@ -34,12 +34,12 @@ namespace AquariumApi.DeviceApi.Controllers
             _logger = logger;
             _config = config;
         }
-        [HttpGet(DeviceEndpoints.AUTH_CURRENT)]
+        [HttpGet(DeviceOutboundEndpoints.AUTH_CURRENT)]
         public IActionResult GetDetailedInformation()
         {
             try
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.AUTH_CURRENT} called");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.AUTH_CURRENT} called");
                 var account = _aquariumAuthService.GetAccount();
                 var aquarium = _aquariumAuthService.GetAquarium();
 
@@ -53,12 +53,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.AUTH_CURRENT} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.AUTH_CURRENT} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceEndpoints.AUTH_CURRENT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceOutboundEndpoints.AUTH_CURRENT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -66,23 +66,23 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
             }
         }
-        [HttpPost(DeviceEndpoints.AUTH_LOGIN)]
+        [HttpPost(DeviceOutboundEndpoints.AUTH_LOGIN)]
         public IActionResult AttemptLogin([FromBody] DeviceLoginRequest loginRequest)
         {
             try
             {
-                _logger.LogInformation($"POST {DeviceEndpoints.AUTH_LOGIN} called");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.AUTH_LOGIN} called");
                 var data = _aquariumAuthService.AttemptLogin(loginRequest).Result;
                 return new OkObjectResult(data.Account);
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceEndpoints.AUTH_LOGIN} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.AUTH_LOGIN} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceEndpoints.AUTH_LOGIN} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.AUTH_LOGIN} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -91,24 +91,24 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
 
-        [HttpDelete(DeviceEndpoints.AUTH_LOGOUT)]
+        [HttpDelete(DeviceOutboundEndpoints.AUTH_LOGOUT)]
         public IActionResult Logout()
         {
             try
             {
-                _logger.LogInformation($"DELETE {DeviceEndpoints.AUTH_LOGOUT} called");
+                _logger.LogInformation($"DELETE {DeviceOutboundEndpoints.AUTH_LOGOUT} called");
                 _aquariumAuthService.Logout();
                 _scheduleService.StopAsync(_scheduleService.token).Wait();  //todo refactor this
                 return new OkResult();
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"DELETE {DeviceEndpoints.AUTH_LOGOUT} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"DELETE {DeviceOutboundEndpoints.AUTH_LOGOUT} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"DELETE {DeviceEndpoints.AUTH_LOGOUT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"DELETE {DeviceOutboundEndpoints.AUTH_LOGOUT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -116,23 +116,23 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
             }
         }
-        [HttpGet(DeviceEndpoints.AUTH_RENEW)]
+        [HttpGet(DeviceOutboundEndpoints.AUTH_RENEW)]
         public IActionResult RenewAuthenticationToken()
         {
             try
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.AUTH_RENEW} called");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.AUTH_RENEW} called");
                 _aquariumAuthService.RenewAuthenticationToken().Wait();
                 return Ok();
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceEndpoints.AUTH_RENEW} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.AUTH_RENEW} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceEndpoints.AUTH_RENEW} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceOutboundEndpoints.AUTH_RENEW} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {

@@ -85,8 +85,8 @@ namespace AquariumApi.DeviceApi
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
-                if (env.IsDevelopment())
-                    spa.UseAngularCliServer(npmScript: "start");
+                //if (env.IsDevelopment())
+                //  spa.UseAngularCliServer(npmScript: "start");
             });
 
             app.UseStaticFiles();

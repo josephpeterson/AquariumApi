@@ -42,7 +42,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Device/{deviceId}/ATO/Status endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
         [HttpPost]
@@ -63,7 +63,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET /v1/Device/{deviceId}/ATO/History endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
         [HttpPost]
@@ -82,7 +82,7 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Device/{deviceId}/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
         [HttpPost]
@@ -101,11 +101,9 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST /v1/Device/{deviceId}/ATO/Stop endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                return BadRequest();
             }
         }
-    
-    
         private bool ValidateRequest(int deviceId)
         {
             var id = _accountService.GetCurrentUserId();

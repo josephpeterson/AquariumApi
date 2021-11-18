@@ -110,7 +110,7 @@ namespace AquariumApi.Core
 
         public string GetDeviceLog()
         {
-            var path = DeviceEndpoints.LOG;
+            var path = DeviceOutboundEndpoints.LOG;
             using (var client = GetHttpClient())
             {
                 HttpResponseMessage response = client.GetAsync(path).Result;
@@ -122,7 +122,7 @@ namespace AquariumApi.Core
         }
         public void ClearDeviceLog()
         {
-            var path = DeviceEndpoints.LOG_CLEAR;
+            var path = DeviceOutboundEndpoints.LOG_CLEAR;
             using (var client = GetHttpClient())
             {
                 var httpContent = new StringContent("", Encoding.UTF8, "application/json");
@@ -133,7 +133,7 @@ namespace AquariumApi.Core
 
         public DeviceInformation PingDevice()
         {
-            var path = DeviceEndpoints.PING;
+            var path = DeviceOutboundEndpoints.PING;
             using (var client = GetHttpClient())
             {
                 var response = client.GetAsync(path).Result;
@@ -176,7 +176,7 @@ namespace AquariumApi.Core
         
         public void ApplyUpdatedDevice(AquariumDevice aquariumDevice)
         {
-            var path = DeviceEndpoints.UPDATE;
+            var path = DeviceOutboundEndpoints.UPDATE;
             using (var client2 = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
@@ -191,7 +191,7 @@ namespace AquariumApi.Core
 
         public ScheduleState GetDeviceScheduleStatus()
         {
-            var path = DeviceEndpoints.SCHEDULE_STATUS;
+            var path = DeviceOutboundEndpoints.SCHEDULE_STATUS;
             using (var client = GetHttpClient())
             {
                 var result = client.GetAsync(path).Result;
@@ -203,7 +203,7 @@ namespace AquariumApi.Core
 
         public void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
         {
-            var path = DeviceEndpoints.SCHEDULE_TASK_PERFORM;
+            var path = DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM;
             using (var client = GetHttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
@@ -222,7 +222,7 @@ namespace AquariumApi.Core
         #region Device ATO
         public ATOStatus GetDeviceATOStatus()
         {
-            var path = DeviceEndpoints.WATER_CHANGE_STATUS;
+            var path = DeviceOutboundEndpoints.WATER_CHANGE_STATUS;
             var client = GetHttpClient();
             var result = client.GetAsync(path).Result;
             ValidateResponse(result);
@@ -233,7 +233,7 @@ namespace AquariumApi.Core
         
         public ATOStatus PerformDeviceATO(int maxRuntime)
         {
-            var path = DeviceEndpoints.WATER_CHANGE_BEGIN;
+            var path = DeviceOutboundEndpoints.WATER_CHANGE_BEGIN;
             using (var client = GetHttpClient())
             {
                 var httpContent = new StringContent(maxRuntime.ToString(), Encoding.UTF8, "application/json");
@@ -247,7 +247,7 @@ namespace AquariumApi.Core
         }
         public ATOStatus StopDeviceATO()
         {
-            var path = DeviceEndpoints.WATER_CHANGE_STOP;
+            var path = DeviceOutboundEndpoints.WATER_CHANGE_STOP;
             using (var client = GetHttpClient())
             {
                 var result = client.PostAsync(path, null).Result;
@@ -263,7 +263,7 @@ namespace AquariumApi.Core
         #region Device Sensors
         public async Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest)
         {
-            var path = DeviceEndpoints.DEVICE_SENSOR_TEST;
+            var path = DeviceOutboundEndpoints.DEVICE_SENSOR_TEST;
             using (var client = GetHttpClient())
             {
                 var content = JsonConvert.SerializeObject(testRequest);

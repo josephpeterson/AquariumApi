@@ -15,14 +15,23 @@ namespace AquariumApi.Core
 {
     public partial interface IAquariumService
     {
+        #region Device CRUD Operations
         /* Aquarium Device */
         AquariumDevice AddAquariumDevice(AquariumDevice device);
         AquariumDevice GetAquariumDeviceById(int deviceId);
         AquariumDevice GetAquariumDeviceByIpAndKey(string ipAddress, string deviceKey);
         AquariumDevice DeleteAquariumDevice(int deviceId);
         AquariumDevice UpdateAquariumDevice(int userId, AquariumDevice aquariumDevice);
+        #endregion
 
-        /* Device Schedules */
+        #region Device Common
+        DeviceInformation PingDevice(int deviceId);
+        string GetDeviceLog(int deviceId);
+        void ClearDeviceLog(int deviceId);
+        DeviceInformation GetDeviceInformation(int deviceId);
+        #endregion
+
+        #region Device Schedules
         List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id);
         void DeleteDeviceSchedule(int scheduleId);
         DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
@@ -31,36 +40,37 @@ namespace AquariumApi.Core
         DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
         void PerformScheduleTask(int deviceId,DeviceScheduleTask deviceScheduleTask);
         ScheduleState GetDeviceScheduleStatus(int deviceId);
+        ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob);
+        List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination);
+        #endregion
 
-
-
+        #region Device Hardware
         [System.Obsolete]
         AquariumDevice ScanHardware(int deviceId);
         AquariumDevice ApplyAquariumDeviceHardware(int deviceId, AquariumDevice updatedDevice);
         AquariumDevice UpdateDeviceCameraConfiguration(CameraConfiguration config);
+        #endregion
 
+        #region Auto Top Off
         /* ATO */
         ATOStatus GetDeviceATOStatus(int deviceId);
         ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
         List<ATOStatus> GetDeviceATOHistory(int deviceId, PaginationSliver paginationSliver);
         ATOStatus PerformDeviceATO(int deviceId,int maxRuntime);
         ATOStatus StopDeviceATO(int deviceId);
+        #endregion
 
+        #region Device Sensors
         /* Device Sensors */
         DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
         void DeleteDeviceSensor(int deviceId, int deviceSensorId);
         ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
         DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor);
-
-
-
-        DeviceInformation PingDevice(int deviceId);
-        string GetDeviceLog(int deviceId);
-        void ClearDeviceLog(int deviceId);
-        DeviceInformation GetDeviceInformation(int deviceId);
+        #endregion
     }
     public partial class AquariumService : IAquariumService
     {
+        #region Device CRUD Operations
         public AquariumDevice AddAquariumDevice(AquariumDevice device)
         {
             var newDevice = _aquariumDao.AddAquariumDevice(device);
@@ -97,7 +107,34 @@ namespace AquariumApi.Core
             }
             return updatedDevice;
         }
-
+        #endregion
+        #region Device Common
+        public DeviceInformation PingDevice(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.PingDevice();
+        }
+        public string GetDeviceLog(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.GetDeviceLog();
+        }
+        public void ClearDeviceLog(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.ClearDeviceLog();
+        }
+        public DeviceInformation GetDeviceInformation(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            return _deviceClient.PingDevice();
+        }
+        #endregion
+        #region Device Schedules
         /* Device Schedule */
         public List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id)
         {
@@ -192,7 +229,18 @@ namespace AquariumApi.Core
             _deviceClient.Configure(device);
             return _deviceClient.GetDeviceScheduleStatus();
         }
+        
+        public List<ScheduledJob> GetDeviceScheduledJobs(int deviceId,PaginationSliver pagination)
+        {
+            return _aquariumDao.GetDeviceScheduledJobs(deviceId, pagination);
+        }
+        public ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob)
+        {
+            return _aquariumDao.UpsertDeviceScheduledJob(scheduledJob);
+        }
 
+        #endregion
+        #region Device Hardware
         /* Device Camera configuration */
         public AquariumDevice ScanHardware(int deviceId)
         {
@@ -222,7 +270,8 @@ namespace AquariumApi.Core
         {
             return _aquariumDao.ApplyAquariumDeviceHardware(deviceId, updatedDevice);
         }
-
+        #endregion
+        #region Device Auto Top Off
         /* ATO */
         public ATOStatus GetDeviceATOStatus(int deviceId)
         {
@@ -287,6 +336,8 @@ namespace AquariumApi.Core
             _deviceClient.Configure(device);
             return _deviceClient.StopDeviceATO();
         }
+        #endregion
+        #region Device Sensors
         /* Device Sensors */
         public DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor)
         {
@@ -349,35 +400,8 @@ namespace AquariumApi.Core
             _deviceClient.Configure(device);
             return _deviceClient.TestDeviceSensor(testRequest);
         }
-
-
-        public DeviceInformation PingDevice(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.PingDevice();
-        }
-        public string GetDeviceLog(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.GetDeviceLog();
-        }
-        public void ClearDeviceLog(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            _deviceClient.ClearDeviceLog();
-        }
-        public DeviceInformation GetDeviceInformation(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.PingDevice();
-        }
-        
-
-        public void ApplyUpdatedDevice(int deviceId)
+        #endregion
+        private void ApplyUpdatedDevice(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);

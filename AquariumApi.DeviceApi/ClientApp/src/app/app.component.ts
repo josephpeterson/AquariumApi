@@ -30,6 +30,8 @@ export class AppComponent implements OnInit {
     });
   }
   public isLoggedIn() {
+    if(!this.service.loginInformation)
+      return false;
     return this.service.loginInformation.aquarium != null; //todo change this
   }
 }

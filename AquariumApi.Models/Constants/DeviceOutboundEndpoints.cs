@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AquariumApi.Models.Constants
 {
-    public class DeviceEndpoints
+    public class DeviceOutboundEndpoints
     {
         public const string PING =          "/v1/Device/Ping";
         public const string UPDATE =        "/v1/Device/Update";
