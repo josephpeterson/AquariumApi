@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Core.Services;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,7 @@ namespace AquariumApi.Controllers
         }
 
         [HttpGet]
-        [Route("/v1/Device/{deviceId}/ATO")]
+        [Route(AquariumApiEndpoints.DEVICE_ATO_STATUS)]
         public IActionResult GetDeviceATOStatus(int deviceId)
         {
             if (!ValidateRequest(deviceId))
@@ -35,18 +36,18 @@ namespace AquariumApi.Controllers
 
             try
             {
-                _logger.LogInformation($"GET /v1/Device/{deviceId}/ATO/Status called");
+                _logger.LogInformation($"GET {AquariumApiEndpoints.DEVICE_ATO_STATUS.AggregateParams($"{deviceId}")} called");
                 var atoStatus = _aquariumService.GetDeviceATOStatus(deviceId);
                 return new OkObjectResult(atoStatus);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Device/{deviceId}/ATO/Status endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {AquariumApiEndpoints.DEVICE_ATO_STATUS.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/ATO/History")]
+        [Route(AquariumApiEndpoints.DEVICE_ATO_HISTORY)]
         public IActionResult GetDeviceATOHistory(int deviceId,[FromBody] PaginationSliver pagination = null)
         {
             if (!ValidateRequest(deviceId))
@@ -56,18 +57,18 @@ namespace AquariumApi.Controllers
                 pagination = new PaginationSliver();
             try
             {
-                _logger.LogInformation($"GET /v1/Device/{deviceId}/ATO/History called");
+                _logger.LogInformation($"GET {AquariumApiEndpoints.DEVICE_ATO_HISTORY.AggregateParams($"{deviceId}")} called");
                 List<ATOStatus> atoHistory = _aquariumService.GetDeviceATOHistory(deviceId, pagination);
                 return new OkObjectResult(atoHistory);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Device/{deviceId}/ATO/History endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {AquariumApiEndpoints.DEVICE_ATO_HISTORY.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/ATO")]
+        [Route(AquariumApiEndpoints.DEVICE_ATO_RUN)]
         public IActionResult RunDeviceATO(int deviceId,[FromBody] int maxRuntime)
         {
             if (!ValidateRequest(deviceId))
@@ -75,18 +76,18 @@ namespace AquariumApi.Controllers
 
             try
             {
-                _logger.LogInformation($"POST /v1/Device/{deviceId}/ATO called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_ATO_RUN.AggregateParams($"{deviceId}")} called");
                 var atoStatus = _aquariumService.PerformDeviceATO(deviceId, maxRuntime);
                 return new OkObjectResult(atoStatus);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Device/{deviceId}/ATO endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_ATO_RUN.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Device/{deviceId}/ATO/Stop")]
+        [Route(AquariumApiEndpoints.DEVICE_ATO_STOP)]
         public IActionResult StopDeviceATO(int deviceId)
         {
             if (!ValidateRequest(deviceId))
@@ -94,13 +95,13 @@ namespace AquariumApi.Controllers
 
             try
             {
-                _logger.LogInformation($"POST /v1/Device/{deviceId}/ATO/Stop called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_ATO_STOP.AggregateParams($"{deviceId}")} called");
                 var atoStatus = _aquariumService.StopDeviceATO(deviceId);
                 return new OkObjectResult(atoStatus);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Device/{deviceId}/ATO/Stop endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_ATO_STOP.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace AquariumApi.Controllers
             _deviceService = deviceService;
             _logger = logger;
         }
-        [HttpPost,Route("/v1/Bug/Submit")]
+        [HttpPost,Route(AquariumApiEndpoints.BUG_SUBMIT)]
         public IActionResult SubmitBugReport([FromBody] BugReport report)
         {
             //Static information
@@ -40,14 +41,14 @@ namespace AquariumApi.Controllers
 
             try
             {
-                _logger.LogInformation($"POST /v1/Bug/Submit called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.BUG_SUBMIT} called");
                 var r = _aquariumService.SubmitBugReport(report);
                 return new OkObjectResult(r);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Bug/Submit endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"POST {AquariumApiEndpoints.BUG_SUBMIT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
     }

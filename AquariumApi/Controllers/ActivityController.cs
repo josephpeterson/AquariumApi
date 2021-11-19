@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -30,9 +31,9 @@ namespace AquariumApi.Controllers
             _photoManager = photoManager;
         }
         [HttpGet]
-        [Route("/v1/Activity/{activityId}")]
+        [Route(AquariumApiEndpoints.ACCOUNT_RETRIEVE_ACTIVITY)]
         [ProducesResponseType(typeof(AquariumUser), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
         public IActionResult GetAccountActivity(int activityId)
         {
             try
@@ -44,8 +45,8 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Account/{activityId} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"GET {AquariumApiEndpoints.ACCOUNT_RETRIEVE_ACTIVITY.AggregateParams($"{activityId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
     }

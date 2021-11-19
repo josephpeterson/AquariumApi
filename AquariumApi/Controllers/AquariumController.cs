@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,33 +27,33 @@ namespace AquariumApi.Controllers
         }
         [HttpGet]
         [ProducesResponseType(typeof(List<Aquarium>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
-        [Route("/v1/Aquarium/All")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status400BadRequest)]
+        [Route(AquariumApiEndpoints.AQUARIUM_RETRIEVE_ALL)]
         public IActionResult All()
         {
             try
             {
-                _logger.LogInformation("GET /v1/Aquarium/All called");
+                _logger.LogInformation($"GET {AquariumApiEndpoints.AQUARIUM_RETRIEVE_ALL} called");
                 var id = _accountService.GetCurrentUserId();
                 var aquariums = _aquariumService.GetAquariumsByAccountId(id);
                 return new OkObjectResult(aquariums);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquarium/All endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"GET {AquariumApiEndpoints.AQUARIUM_RETRIEVE_ALL} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
 
         [HttpGet]
-        [Route("/v1/Aquarium/{id}")]
+        [Route(AquariumApiEndpoints.AQUARIUM_RETRIEVE_DETAILED)]
         [ProducesResponseType(typeof(Aquarium), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status404NotFound)]
         public IActionResult GetAquariumById(int id)
         {
             try
             {
-                _logger.LogInformation($"GET /v1/Aquarium/{id} called");
+                _logger.LogInformation($"GET {AquariumApiEndpoints.AQUARIUM_RETRIEVE_DETAILED.AggregateParams($"{id}")} called");
                 var aquarium = _aquariumService.GetAquariumById(id);
                 if (aquarium == null)
                     return NotFound();
@@ -60,20 +61,20 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Aquarium/{id} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"GET {AquariumApiEndpoints.AQUARIUM_RETRIEVE_DETAILED.AggregateParams($"{id}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
 
         [HttpPost]
-        [Route("/v1/Aquarium/Add")]
+        [Route(AquariumApiEndpoints.AQUARIUM_CREATE)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult AddAquarium([FromBody]Aquarium aquarium)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquarium/Add called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AQUARIUM_CREATE} called");
 
                 if (aquarium == null)
                     throw new Exception("No aquarium information sent");
@@ -86,17 +87,17 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Aquarium/Add caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AQUARIUM_CREATE} caught exception: { ex.Message } Details: { ex.ToString() }");
                 return new BadRequestObjectResult(ex.Message);
             }
         }
         [HttpPost]
-        [Route("/v1/Aquarium/Update")]
+        [Route(AquariumApiEndpoints.AQUARIUM_UPDATE)]
         public IActionResult UpdateAquarium([FromBody] Aquarium updatedAquarium)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquarium/Update called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AQUARIUM_UPDATE} called");
                 var id = _accountService.GetCurrentUserId();
                 var aq = _aquariumService.GetAquariumById(updatedAquarium.Id);
                 if (aq.OwnerId != id) return new UnauthorizedResult();
@@ -105,17 +106,17 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Aquarium/Update endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"POST {AquariumApiEndpoints.AQUARIUM_UPDATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Aquarium/Delete")]
+        [Route(AquariumApiEndpoints.AQUARIUM_DELETE)]
         public IActionResult DeleteAquarium([FromBody] int removeAquariumId)
         {
             try
             {
-                _logger.LogInformation("POST /v1/Aquarium/Delete called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AQUARIUM_DELETE} called");
                 var id = _accountService.GetCurrentUserId();
                 var aq = _aquariumService.GetAquariumById(removeAquariumId);
                 if (aq.OwnerId != id) return new UnauthorizedResult();
@@ -124,12 +125,12 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Aquarium/Delete endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"POST {AquariumApiEndpoints.AQUARIUM_DELETE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
         [HttpGet]
-        [Route("/v1/Aquarium/TemperatureHistogram")]
+        [Route(AquariumApiEndpoints.AQUARIUM_RETRIEVE_TEMPERATURE)]
         public IActionResult GetTemperatureHistogram(int aquariumId)
         {
             var id = _accountService.GetCurrentUserId();
@@ -141,7 +142,7 @@ namespace AquariumApi.Controllers
             return new OkObjectResult(temps);
         }
         [HttpGet]
-        [Route("/v1/Aquarium/TemperatureHistogram/All")]
+        [Route(AquariumApiEndpoints.AQUARIUM_RETRIEVE_TEMPERATURE_ALL)]
         public IActionResult GetTemperatureHistogramAll()
         {
             var id = _accountService.GetCurrentUserId();
@@ -157,7 +158,7 @@ namespace AquariumApi.Controllers
         }
 
         [HttpPost]
-        [Route("/v1/Aquarium/{aquariumId}/Snapshots")]
+        [Route(AquariumApiEndpoints.AQUARIUM_RETRIEVE_SNAPSHOTS)]
         public IActionResult GetAquariumSnapshots(int aquariumId, [FromBody] SnapshotSelection selection)
         {
             var id = _accountService.GetCurrentUserId();
@@ -171,12 +172,12 @@ namespace AquariumApi.Controllers
             return new OkObjectResult(snapshots);
         }
         [HttpDelete]
-        [Route("/v1/Aquarium/{aquariumId}/Snapshots")]
+        [Route(AquariumApiEndpoints.AQUARIUM_DELETE_SNAPSHOTS)]
         public IActionResult DeleteAllAquariumSnapshsots(int aquariumId)
         {
             try
             {
-                _logger.LogInformation($"DELETE /v1/Aquarium/{aquariumId}/Snapshots called");
+                _logger.LogInformation($"DELETE {AquariumApiEndpoints.AQUARIUM_DELETE_SNAPSHOTS.AggregateParams($"{aquariumId}")} called");
                 var id = _accountService.GetCurrentUserId();
                 var aq = _aquariumService.GetAquariumById(aquariumId);
                 if (aq.OwnerId != id) return new UnauthorizedResult();
@@ -185,8 +186,8 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"DELETE /v1/Aquarium/{aquariumId}/Snapshots endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                _logger.LogError($"DELETE {AquariumApiEndpoints.AQUARIUM_DELETE_SNAPSHOTS.AggregateParams($"{aquariumId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
     }

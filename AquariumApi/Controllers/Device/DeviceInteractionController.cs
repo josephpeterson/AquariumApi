@@ -15,7 +15,6 @@ using Newtonsoft.Json;
 namespace AquariumApi.Controllers
 {
     [Authorize(Roles = "Device")]
-    [Route("/v1/DeviceInteraction")]
     public class DeviceInteractionController : Controller
     {
         public readonly IAquariumService _aquariumService;

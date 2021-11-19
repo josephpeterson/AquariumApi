@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AquariumApi.Core;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -39,12 +40,12 @@ namespace AquariumApi.Controllers
         }
         [Authorize]
         [HttpGet]
-        [Route("/v1/Auth/Renew")]
+        [Route(AquariumApiEndpoints.AUTH_RENEW)]
         public IActionResult Renew()
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/Renew called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_RENEW} called");
                 var userId = _accountService.GetCurrentUserId();
                 var loginType = _accountService.GetCurrentUserType();
 
@@ -78,18 +79,18 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/Renew endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_RENEW} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return Unauthorized();
             }
         }
 
         [HttpPost]
-        [Route("/v1/Auth/Login")]
+        [Route(AquariumApiEndpoints.AUTH_LOGIN)]
         public IActionResult Login([FromBody]LoginRequest loginRequest)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/Login called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_LOGIN} called");
                 var user = _accountService.AttemptUserCredentials(loginRequest.Email, loginRequest.Password);
                 var token = _accountService.IssueUserLoginToken(user);
 
@@ -101,17 +102,17 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/Login endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_LOGIN} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return Unauthorized();
             }
         }
         [HttpPost]
-        [Route("/v1/Auth/Login/Device")]
+        [Route(AquariumApiEndpoints.AUTH_LOGIN_DEVICE)]
         public IActionResult DeviceLogin([FromBody]DeviceLoginRequest deviceLogin)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/Login/Device called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_LOGIN_DEVICE} called");
                 var user = _accountService.AttemptUserCredentials(deviceLogin.Email, deviceLogin.Password);
                 var token = _accountService.IssueDeviceLoginToken(user, deviceLogin.AquariumId);
 
@@ -172,18 +173,18 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/Login/Device endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_LOGIN_DEVICE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return Unauthorized();
             }
         }
 
         [HttpPost]
-        [Route("/v1/Auth/Signup")]
+        [Route(AquariumApiEndpoints.AUTH_SIGNUP)]
         public IActionResult Signup([FromBody]SignupRequest signupRequest)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/Signup called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_SIGNUP} called");
                 var user = _accountService.AddUser(signupRequest);
                 _activityService.RegisterActivity(new CreateAccountActivity() { AccountId = user.Id });
                 return Login(new LoginRequest
@@ -194,33 +195,33 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/Signup endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_SIGNUP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Auth/PasswordReset/Attempt")]
+        [Route(AquariumApiEndpoints.AUTH_PASSWORD_RESET)]
         public IActionResult SendPasswordResetEmail([FromBody]TokenRequest token)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/PasswordReset/Attempt called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_PASSWORD_RESET} called");
                 _accountService.SendResetPasswordEmail(token.Token);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/PasswordReset/Attempt endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_PASSWORD_RESET} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Auth/PasswordReset/Upgrade")]
+        [Route(AquariumApiEndpoints.AUTH_PASSWORD_RESET_UPGRADE)]
         public IActionResult ResetPasswordHandshake([FromBody]TokenRequest token)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/PasswordReset/Upgrade called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_PASSWORD_RESET_UPGRADE} called");
                 var requestToken = _accountService.UpgradePasswordResetToken(token.Token);
                 return new OkObjectResult(new TokenRequest
                 {
@@ -229,23 +230,23 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/PasswordReset/Upgrade endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_PASSWORD_RESET_UPGRADE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
         [HttpPost]
-        [Route("/v1/Auth/PasswordReset/Submit")]
+        [Route(AquariumApiEndpoints.AUTH_PASSWORD_RESET_SUBMIT)]
         public IActionResult SubmitPasswordResetRequest([FromBody]PasswordResetRequest request)
         {
             try
             {
-                _logger.LogInformation($"POST /v1/Auth/PasswordReset/Submit called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.AUTH_PASSWORD_RESET_SUBMIT} called");
                 var user = _accountService.AttemptPasswordReset(request.Token, request.Password);
                 return new OkObjectResult(user);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/Auth/PasswordReset/Submit endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.AUTH_PASSWORD_RESET_SUBMIT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

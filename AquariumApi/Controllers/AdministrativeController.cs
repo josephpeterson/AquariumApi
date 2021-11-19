@@ -55,7 +55,7 @@ namespace AquariumApi.Controllers
             }
             catch
             {
-                return new BadRequestResult();
+                return BadRequest();
             }
         }
         [HttpDelete]
@@ -73,7 +73,7 @@ namespace AquariumApi.Controllers
             }
             catch
             {
-                return new BadRequestResult();
+                return BadRequest();
             }
         }
 
@@ -87,9 +87,10 @@ namespace AquariumApi.Controllers
                 var accounts = _administrativeService.GetAquariumUsers();
                 return new OkObjectResult(accounts);
             }
-            catch
+            catch(Exception ex)
             {
-                return new BadRequestResult();
+                _logger.LogError($"GET {AquariumApiEndpoints.ADMIN_RETRIEVE_ACCOUNTS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
         [HttpGet]
@@ -103,7 +104,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Admin/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {AquariumApiEndpoints.ADMIN_RETRIEVE_BUGS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
@@ -121,7 +122,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET /v1/Admin/Bugs endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET /v1/admin/Test endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
@@ -136,9 +137,10 @@ namespace AquariumApi.Controllers
                 var notifications = _notificationService.GetAllDispatchedNotifications();
                 return new OkObjectResult(notifications);
             }
-            catch
+            catch(Exception ex)
             {
-                return new BadRequestResult();
+                _logger.LogError($"GET {AquariumApiEndpoints.ADMIN_RETRIEVE_NOTIFICATIONS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
         [HttpPost]
@@ -150,9 +152,10 @@ namespace AquariumApi.Controllers
                 _notificationService.DeleteDispatchedNotifications(notificationIds);
                 return new OkResult();
             }
-            catch
+            catch(Exception ex)
             {
-                return new BadRequestResult();
+                _logger.LogError($"POST {AquariumApiEndpoints.ADMIN_NOTIFICATION_DELETE_ALL} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
             }
         }
         [HttpPost]
@@ -161,7 +164,7 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"POST /v1/admin/Notification endpoint called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.ADMIN_NOTIFICATION_DISPATCH} endpoint called");
                 var notification = req.Notification;
                 var id = _accountService.GetCurrentUserId();
                 notification.DispatcherId = id;
@@ -180,9 +183,9 @@ namespace AquariumApi.Controllers
             }
             catch(Exception ex)
             {
-                _logger.LogError($"POST /v1/admin/Notification endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.ADMIN_NOTIFICATION_DISPATCH} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
 
-                return new BadRequestResult();
+                return BadRequest();
             }
         }
         [HttpPost]
@@ -191,15 +194,15 @@ namespace AquariumApi.Controllers
         {
             try
             {
-                _logger.LogInformation($"POST /v1/admin/Notification/Dismiss endpoint called");
+                _logger.LogInformation($"POST {AquariumApiEndpoints.ADMIN_NOTIFICATION_DISMISS} endpoint called");
                 _notificationService.DismissDispatchedNotifications(notificationIds);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST /v1/admin/Notification/Dismiss endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {AquariumApiEndpoints.ADMIN_NOTIFICATION_DISMISS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
 
-                return new BadRequestResult();
+                return BadRequest();
             }
         }
     }

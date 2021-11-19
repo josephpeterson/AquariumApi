@@ -1,5 +1,6 @@
 using AquariumApi.DeviceApi.Clients;
 using AquariumApi.Models;
+using AquariumApi.Models.Constants;
 using Bifrost.IO.Ports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -72,7 +73,7 @@ namespace AquariumApi.DeviceApi
                 throw new Exception("No authentication token available");
 
             _logger.LogInformation("Renewing authentication token...");
-            var path = $"/v1/Auth/Renew";
+            var path = AquariumApiEndpoints.AUTH_RENEW;
             var retries = 3;
             using (var client = new HttpClient())
             {
@@ -138,7 +139,7 @@ namespace AquariumApi.DeviceApi
         /* Second attempt will select an aquarium */
         public async Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest)
         {
-            var path = $"/v1/Auth/Login/Device";
+            var path = AquariumApiEndpoints.AUTH_LOGIN_DEVICE;
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
@@ -188,7 +189,7 @@ namespace AquariumApi.DeviceApi
         }
         public void RequestAquariumDeviceFromService()
         {
-            var path = $"/v1/DeviceInteraction";
+            var path = DeviceInboundEndpoints.RECEIVE_PING;
 
             using (var client = new HttpClient())
             {

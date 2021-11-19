@@ -29,6 +29,9 @@ namespace AquariumApi
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
-                .UseNLog();
+                .UseNLog()
+                .ConfigureLogging((context, logging) => {
+                    logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                });
     }
 }
