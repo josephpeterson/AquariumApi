@@ -11,67 +11,73 @@ namespace AquariumApi.Models
     public class DeviceSchedule
     {
         [Required]
-        public int Id { get; set; }
-        public int AuthorId { get; set; }
+        public int? Id { get; set; }
+        public int DeviceId { get; set; }
         public string Name { get; set; }
         public string Host { get; set; }
+        public bool Deployed { get; set; }
 
-        [ForeignKey("AuthorId")]
-        public AquariumUser Author { get; set; }
+        [ForeignKey("DeviceId")]
+        public AquariumDevice Device { get; set; }
 
-        [ForeignKey("ScheduleId")]
-        public ICollection<DeviceScheduleTask> Tasks { get; set; }
 
-        [ForeignKey("ScheduleId")]
-        public ICollection<DeviceScheduleAssignment> ScheduleAssignments { get; set; }
+        public ICollection<DeviceScheduleTaskAssignment> TaskAssignments { get; set; }
 
         [NotMapped]
         public bool Running { get; set; }
 
 
-        public List<DeviceScheduleTask> ExpandTasks(DateTime startDate)
+        public List<ScheduledJob> ExpandTasks(DateTime startDate)
         {
-            if (Tasks == null) return new List<DeviceScheduleTask>();
+            var allScheduledJobs = new List<ScheduledJob>();
 
-            var allScheduledTasks = new List<DeviceScheduleTask>();
-            var indvidualTasks = Tasks.ToList();
+            //get all task assignments that start by the time trigger
+            var taskAssignment = TaskAssignments
+                .Where(ta => ta.TriggerTypeId == TriggerTypes.Time)
+                .ToList();
 
 
-            indvidualTasks.ForEach(t =>
+
+            taskAssignment.ForEach(ta =>
             {
-                var tod = t.StartTime.TimeOfDay;
+                var tod = ta.StartTime.TimeOfDay;
                 var startTime = startDate.Date + tod;
                 if (startTime < startDate)
                     startTime = startTime.AddDays(1);
-                //t.EndTime = t.EndTime?.ToLocalTime();
 
-                var newTask = new DeviceScheduleTask()
+
+                var task = ta.Task;
+
+                var scheduledJob = new ScheduledJob()
                 {
-                    TaskId = t.TaskId,
+                    TaskId = task.Id.Value,
+                    Task = task,
                     StartTime = startTime,
-                    ScheduleId = Id
+                    //ScheduleId = Id
                 };
-                allScheduledTasks.Add(newTask);
-                if (t.Interval != null)
+                allScheduledJobs.Add(scheduledJob);
+
+                //Check if this task assignment repeats
+                if (ta.Repeat)
                 {
                     var lengthInMinutes = TimeSpan.FromDays(1).TotalMinutes;
+                    
+                    lengthInMinutes = ta.RepeatEndTime.TimeOfDay.Subtract(ta.StartTime.TimeOfDay).TotalMinutes;
 
-                    if (t.EndTime.HasValue)
-                        lengthInMinutes = t.EndTime.Value.TimeOfDay.Subtract(t.StartTime.TimeOfDay).TotalMinutes;
-
-                    var mod = lengthInMinutes % t.Interval;
-                    for (var i = 1; i <= ((lengthInMinutes - mod) / t.Interval); i++)
+                    var mod = lengthInMinutes % ta.RepeatInterval;
+                    for (var i = 1; i <= ((lengthInMinutes - mod) / ta.RepeatInterval); i++)
                     {
-                        allScheduledTasks.Add(new DeviceScheduleTask()
+                        allScheduledJobs.Add(new ScheduledJob()
                         {
-                            TaskId = newTask.TaskId,
-                            StartTime = newTask.StartTime.AddMinutes(i * t.Interval.Value),
-                            ScheduleId = Id
+                            TaskId = scheduledJob.TaskId,
+                            Task = scheduledJob.Task,
+                            StartTime = scheduledJob.StartTime.AddMinutes(i * ta.RepeatInterval.Value),
+                            //ScheduleId = Id
                         });
                     }
                 }
             });
-            return allScheduledTasks.OrderBy(t => t.StartTime).ToList();
+            return allScheduledJobs.OrderBy(t => t.StartTime).ToList();
         }
     }
 }

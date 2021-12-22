@@ -20,6 +20,7 @@ namespace AquariumApi.Models
         [JsonIgnore]
         public SensorTriggered OnSensorTriggered { get; set; }
 
+        [ForeignKey("DeviceId")]
         public virtual AquariumDevice Device { get; set; }
 
 

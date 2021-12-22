@@ -120,11 +120,7 @@ namespace AquariumApi.DataAccess
         DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
         void DeleteDeviceSchedule(int scheduleId);
         List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId);
-        DeviceScheduleAssignment AssignDeviceSchedule(int scheduleId, int deviceId);
-        void UnassignDeviceSchedule(int scheduleId, int deviceId);
         DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule);
-        List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId);
-        List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId);
         void DeleteAllSnapshots(int aquariumId);
         void DeleteSnapshots(List<int> snapshotIds);
         AquariumPhoto GetAquariumPhotoById(int photoId);
@@ -153,6 +149,11 @@ namespace AquariumApi.DataAccess
         List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination);
         List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination);
         ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob);
+        #region Device Tasks
+        DeviceScheduleTask AddDeviceTask(DeviceScheduleTask deviceTask);
+        DeviceScheduleTask UpdateDeviceTask(DeviceScheduleTask deviceTask);
+        void DeleteDeviceTask(DeviceScheduleTask deviceTask);
+        #endregion
     }
 
     public class AquariumDao : IAquariumDao
@@ -462,7 +463,8 @@ namespace AquariumApi.DataAccess
                 .Where(s => s.Id == deviceId)
                 .Include(e => e.CameraConfiguration)
                 .Include(e => e.Sensors)
-                .Include(d => d.ScheduleAssignments).ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
+                .Include(e => e.Tasks)
+                .Include(e => e.Schedules).ThenInclude(s => s.TaskAssignments)
                 .First();
             if (device.CameraConfiguration == null)
                 device.CameraConfiguration = new CameraConfiguration();
@@ -481,8 +483,6 @@ namespace AquariumApi.DataAccess
         {
             var device = _dbAquariumContext.TblDevice
                 .Include(e => e.CameraConfiguration)
-                .Include(e => e.ScheduleAssignments)
-                .ThenInclude(sa => sa.Schedule).ThenInclude(s => s.Tasks)
                 .Include(e => e.Sensors)
                 .SingleOrDefault(d => d.Id == deviceId);
             if (device == null)
@@ -532,15 +532,6 @@ namespace AquariumApi.DataAccess
             d.EnabledNitrate = updatedDevice.EnabledNitrate;
             return UpdateAquariumDevice(d);
         }
-        public List<AquariumDevice> GetDevicesInUseBySchedule(int scheduleId)
-        {
-            var devices = _dbAquariumContext.TblDeviceScheduleAssignment
-                .Where(sa => sa.ScheduleId == scheduleId)
-                .Include(sa => sa.Device)
-                .Select(sa => sa.Device)
-                .ToList();
-            return devices;
-        }
 
         /* Aquarium Device Schedule */
         public DeviceSchedule AddDeviceSchedule(DeviceSchedule deviceSchedule)
@@ -549,47 +540,21 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
             return deviceSchedule;
         }
-        public void UnassignDeviceSchedule(int scheduleId, int deviceId)
-        {
-            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
-            if (res.Any())
-            {
-                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
-                _dbAquariumContext.SaveChanges();
-            }
-        }
-        public DeviceScheduleAssignment AssignDeviceSchedule(int scheduleId, int deviceId)
-        {
-            var res = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.DeviceId == deviceId && sa.ScheduleId == scheduleId);
-            if (res.Any())
-            {
-                _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(res);
-            }
-            var assignment = new DeviceScheduleAssignment()
-            {
-                DeviceId = deviceId,
-                ScheduleId = scheduleId
-            };
-            _dbAquariumContext.TblDeviceScheduleAssignment.Add(assignment);
-            _dbAquariumContext.SaveChanges();
-            return assignment;
-        }
         public List<DeviceSchedule> GetDeviceSchedulesByAccount(int accountId)
         {
+            throw new NotImplementedException();
+            /*
             var deviceSchedules = _dbAquariumContext.TblDeviceSchedule
                 .AsNoTracking()
-                .Include(s => s.Tasks)
+                .Include(s => s.TaskAssignments)
                 .Where(s => s.AuthorId == accountId);
             return deviceSchedules.ToList();
+            */
         }
         public void DeleteDeviceSchedule(int scheduleId)
         {
-            var scheduleAssignments = _dbAquariumContext.TblDeviceScheduleAssignment.Where(sa => sa.ScheduleId == scheduleId);
-            _dbAquariumContext.TblDeviceScheduleAssignment.RemoveRange(scheduleAssignments);
-
-            var scheduleTasks = _dbAquariumContext.TblDeviceScheduleTask.Where(st => st.ScheduleId == scheduleId);
-            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleTasks);
-
+            var taskAssignments = _dbAquariumContext.TblDeviceScheduleTaskAssignment.Where(sa => sa.ScheduleId == scheduleId);
+            _dbAquariumContext.TblDeviceScheduleTaskAssignment.RemoveRange(taskAssignments);
 
             var schedule = _dbAquariumContext.TblDeviceSchedule.Where(s => s.Id == scheduleId).First();
             _dbAquariumContext.TblDeviceSchedule.Remove(schedule);
@@ -600,34 +565,19 @@ namespace AquariumApi.DataAccess
         {
 
             var scheduleToUpdate = _dbAquariumContext.TblDeviceSchedule
-                .Include(d => d.Tasks)
+                .AsNoTracking()
+                .Include(d => d.TaskAssignments)
                 .First(s => s.Id == deviceSchedule.Id);
-
-            //Truncate schedule tasks
-            _dbAquariumContext.TblDeviceScheduleTask.RemoveRange(scheduleToUpdate.Tasks);
 
             _mapper.Map(deviceSchedule, scheduleToUpdate);
 
+            _dbAquariumContext.Update(scheduleToUpdate);
             _dbAquariumContext.SaveChanges();
             return deviceSchedule;
         }
-        public List<DeviceScheduleAssignment> GetAssignedDeviceSchedules(int deviceId)
-        {
-            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
-                .AsNoTracking()
-                .Where(sa => sa.DeviceId == deviceId)
-                .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
-                .ToList();
-            return schedules;
-        }
         public List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId)
         {
-            var schedules = _dbAquariumContext.TblDeviceScheduleAssignment
-                .AsNoTracking()
-                .Where(sa => sa.ScheduleId == scheduleId)
-                .Include(sa => sa.Schedule).ThenInclude(s => s.Tasks)
-                .ToList();
-            return schedules;
+            throw new NotSupportedException();
         }
         public List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination)
         {
@@ -1326,6 +1276,33 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
 
+        #region Device Tasks
+        public DeviceScheduleTask AddDeviceTask(DeviceScheduleTask deviceTask)
+        {
+            deviceTask.Device = null;
+            deviceTask.TargetSensor = null;
+            deviceTask.TriggerSensor = null;
+            _dbAquariumContext.TblDeviceScheduleTask.Add(deviceTask);
+            _dbAquariumContext.SaveChanges();
+            return deviceTask;
+        }
+        public DeviceScheduleTask UpdateDeviceTask(DeviceScheduleTask deviceTask)
+        {
+            deviceTask.Device = null;
+            deviceTask.TargetSensor = null;
+            deviceTask.TriggerSensor = null;
+            _dbAquariumContext.TblDeviceScheduleTask.Update(deviceTask);
+            _dbAquariumContext.SaveChanges();
+            return deviceTask;
+        }
+        public void DeleteDeviceTask(DeviceScheduleTask deviceTask)
+        {
+            var assignments = _dbAquariumContext.TblDeviceScheduleTaskAssignment.Where(ta => ta.TaskId == deviceTask.Id || ta.TriggerTaskId == deviceTask.Id);
+            _dbAquariumContext.TblDeviceScheduleTaskAssignment.RemoveRange(assignments);
+            _dbAquariumContext.TblDeviceScheduleTask.Remove(deviceTask);
+            _dbAquariumContext.SaveChanges();
+        }
+        #endregion
 
 
         public ATOStatus AddATOStatus(ATOStatus atoStatus)

@@ -7,23 +7,24 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
-    [Table("tblDeviceScheduleTask")]
+    [Table("tblDeviceTask")]
     public class DeviceScheduleTask
     {
-        [Required]
-        public int Id { get; set; }
-        public ScheduleTaskTypes TaskId { get; set; }
-        public int ScheduleId { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-        public int? Interval { get; set; }
+        public int? Id { get; set; } = null;
+        public string Name { get; set; }
+        public int DeviceId { get; set; }
+        public ScheduleTaskTypes TaskTypeId { get; set; }
+        public int TargetSensorId { get; set; }
+        public GpioPinValue TargetSensorValue { get; set; }
+        public int? TriggerSensorId { get; set; }
+        public GpioPinValue TriggerSensorValue { get; set; }
+        public int? MaximumRuntime { get; set; }
 
-        [ForeignKey("ScheduleId")]
-        public DeviceSchedule Schedule { get; set; }
-
-        public TimeSpan GetTaskETA()
-        {
-            return (StartTime - DateTime.UtcNow);
-        }
+        [ForeignKey("DeviceId")]
+        public virtual AquariumDevice Device { get; set; }
+        [ForeignKey("TargetSensorId")]
+        public virtual DeviceSensor TargetSensor { get; set; }
+        [ForeignKey("TriggerSensorId")]
+        public virtual DeviceSensor TriggerSensor { get; set; }
     }   
 }

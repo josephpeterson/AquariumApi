@@ -32,8 +32,10 @@ namespace AquariumApi.Models
         public CameraConfiguration CameraConfiguration { get; set; }
 
         [ForeignKey("DeviceId")]
-        public ICollection<DeviceScheduleAssignment> ScheduleAssignments { get; set; }
-        [ForeignKey("DeviceId")]
         public ICollection<DeviceSensor> Sensors { get; set; }
+        [ForeignKey("DeviceId")]
+        public virtual ICollection<DeviceScheduleTask> Tasks { get; set; }
+        [ForeignKey("DeviceId")]
+        public virtual ICollection<DeviceSchedule> Schedules { get; set; }
     }
 }

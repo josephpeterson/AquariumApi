@@ -68,8 +68,8 @@ namespace AquariumApi.DeviceApi
                 throw new Exception($"Invalid ATO sensors (Pump: {pumpRelaySensor} Sensor: {floatSwitchSensor})");
             floatSwitchSensor.OnSensorTriggered = OnFloatSwitchTriggered;
 
-            var task = device.ScheduleAssignments.Select(assignment => 
-            assignment.Schedule.Tasks.Where(t => t.TaskId == ScheduleTaskTypes.StartATO).FirstOrDefault()
+            var task = device.Schedules.Select(s => 
+            s.TaskAssignments.Where(t => t.Task.TaskTypeId == ScheduleTaskTypes.StartATO).FirstOrDefault()
             ).FirstOrDefault();
 
             DateTime? nextRunTime = null;
@@ -160,8 +160,8 @@ namespace AquariumApi.DeviceApi
 
             //Next run time
             var device = _aquariumAuthService.GetAquarium().Device;
-            var task = device.ScheduleAssignments.Select(assignment =>
-            assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault()
+            var task = device.Schedules.Select(s =>
+                s.TaskAssignments.Where(t => t.Task.TaskTypeId == Models.ScheduleTaskTypes.StartATO).FirstOrDefault()
             ).FirstOrDefault();
             DateTime? nextRunTime = null;
             if (task != null)
@@ -266,7 +266,7 @@ namespace AquariumApi.DeviceApi
             Status.UpdatedAt = DateTime.Now.ToUniversalTime();
             Status.FloatSensorValue = _gpioService.GetPinValue(Status.FloatSensor);
 
-            var nextRun = _scheduleService.GetAllScheduledTasks().Where(t => t.TaskId == ScheduleTaskTypes.StartATO).FirstOrDefault();
+            var nextRun = _scheduleService.GetAllScheduledTasks().Where(t => t.Task.TaskTypeId == ScheduleTaskTypes.StartATO).FirstOrDefault();
             if (nextRun != null)
                 Status.NextRunTime = nextRun.StartTime;
             return Status;
@@ -344,8 +344,8 @@ namespace AquariumApi.DeviceApi
 
             //Next run time
             var device = _aquariumAuthService.GetAquarium().Device;
-            var task = device.ScheduleAssignments.Select(assignment =>
-            assignment.Schedule.Tasks.Where(t => t.TaskId == Models.ScheduleTaskTypes.StartWaterChange).FirstOrDefault()
+            var task = device.Schedules.Select(s =>
+                s.TaskAssignments.Where(t => t.Task.TaskTypeId == Models.ScheduleTaskTypes.StartWaterChange).FirstOrDefault()
             ).FirstOrDefault();
             DateTime? nextRunTime = null;
             if (task != null)

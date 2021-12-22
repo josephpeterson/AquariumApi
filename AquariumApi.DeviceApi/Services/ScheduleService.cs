@@ -33,34 +33,50 @@ namespace AquariumApi.DeviceApi
             //stoppingToken.Register(() => Cleanup());
 
             //_schedules = LoadSchedulesFromCache();
-            DeviceScheduleTask task;
+            ScheduledJob scheduledJob = null;
             try
             {
                 Running = true;
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    task = GetNextTask();
-                    if (task != null)
+                    scheduledJob = GetNextTask();
+                    if (scheduledJob != null)
                     {
-                        var eta = task.GetTaskETA();
+                        var task = scheduledJob.Task;
+                        var eta = (scheduledJob.StartTime - DateTime.UtcNow);
 
                         //readable time
                         string time = string.Format("{0:D2}h:{1:D2}m",eta.Hours,eta.Minutes);
-                        var schedule = GetAllSchedules().Where(s => s.Id == task.ScheduleId).FirstOrDefault();
-                        var scheduleName = schedule == null ? "Unknown" : schedule.Name;
-                        _logger.LogInformation($"Next task scheduled in {time} (Schedule: {scheduleName} Task: {task.TaskId})");
+                        //var schedule = GetAllSchedules().Where(s => s.Id == task.ScheduleId).FirstOrDefault();
+                        //var scheduleName = schedule == null ? "Unknown" : schedule.Name;
+                        //_logger.LogInformation($"Next task scheduled in {time} (Schedule: {scheduleName} Task: {task.TaskId})");
+                        _logger.LogInformation($"Next task/job scheduled in {time} Maximum Runtime: {scheduledJob.MaximumEndTime} Task Type: {scheduledJob.Task.TaskTypeId}");
+
+                        scheduledJob.Status = JobStatus.Pending;
+                        scheduledJob.UpdatedAt = DateTime.UtcNow;
+                        //todo dispatch
                         await Task.Delay(eta, stoppingToken);
                         try
                         {
-                            _logger.LogInformation($"\n\n ** Performing task (TaskId: {task.TaskId} Schedule: {scheduleName}) **");
+                            scheduledJob.Status = JobStatus.Running;
+                            scheduledJob.UpdatedAt = DateTime.UtcNow;
+
+                            _logger.LogInformation($"\n\n ** Performing scheduled job (Maximum Runtime: {scheduledJob.MaximumEndTime} TaskId: {task.Id} Task Type: {task.TaskTypeId}) **");
                             PerformTask(task);
+
+                            scheduledJob.Status = JobStatus.Completed;
+                            scheduledJob.UpdatedAt = DateTime.UtcNow;
+                            _logger.LogInformation($"\n\n ** Scheduled job completed successfully (TaskId: {task.Id} Task Type: {task.TaskTypeId}) **");
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError($"Could not perform task [taskId:{task.TaskId} Schedule: {scheduleName}]: Error: {e.Message}");
+                            scheduledJob.Status = JobStatus.Errored;
+                            scheduledJob.UpdatedAt = DateTime.UtcNow;
+                            scheduledJob.EndReason = JobEndReason.Error;
+
+                            _logger.LogError($"Could not scheduled job [TaskId: {task.Id} Task Type: {task.TaskTypeId}]: Error: {e.Message}");
                             _logger.LogError(e.StackTrace);
                         }
-                        _logger.LogInformation($"\n\n ** Task completed successfully (TaskId: {task.TaskId} Schedule: {scheduleName}) **");
                     }
                     else
                     {
@@ -72,6 +88,11 @@ namespace AquariumApi.DeviceApi
             catch (TaskCanceledException)
             {
                 //do nothing, it was canceled
+                if(scheduledJob != null)
+                {
+                    scheduledJob.Status = JobStatus.Canceled;
+                    scheduledJob.UpdatedAt = DateTime.UtcNow;
+                }
             }
             catch (Exception e)
             {
@@ -109,10 +130,10 @@ namespace AquariumApi.DeviceApi
             var aq = _aquariumAuthService.GetAquarium();
             if(aq == null || aq.Device == null)
                 return new List<DeviceSchedule>();
-            var sa = aq.Device.ScheduleAssignments;
+            var sa = aq.Device.Schedules;
             if (sa == null)
                 return new List<DeviceSchedule>();
-            return sa.Select(s => s.Schedule).ToList();
+            return sa.ToList();
         }
         public ScheduleState GetStatus()
         {
@@ -126,13 +147,13 @@ namespace AquariumApi.DeviceApi
                 ScheduledTasks = GetAllScheduledTasks()
             };
         }
-        public DeviceScheduleTask GetNextTask(DateTime? currentTime = null)
+        public ScheduledJob GetNextTask(DateTime? currentTime = null)
         {
             return GetAllScheduledTasks().FirstOrDefault();
         }
 
 
-        public List<DeviceScheduleTask> GetAllScheduledTasks()
+        public List<ScheduledJob> GetAllScheduledTasks()
         {
             var now = DateTime.UtcNow;
             var schedules = GetAllSchedules();
@@ -159,8 +180,8 @@ namespace AquariumApi.DeviceApi
 
         public void PerformTask(DeviceScheduleTask task)
         {
-            if (_deviceTaskCallbacks.ContainsKey(task.TaskId))
-                _deviceTaskCallbacks[task.TaskId](task);
+            if (_deviceTaskCallbacks.ContainsKey(task.TaskTypeId))
+                _deviceTaskCallbacks[task.TaskTypeId](task);
             else
                 throw new Exception($"Invalid task type id (taskId: {task.Id})");
         }

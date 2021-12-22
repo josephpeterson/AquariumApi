@@ -45,7 +45,7 @@ namespace AquariumApi.DataAccess
 
         public virtual DbSet<PhotoContent> TblPhotoContent { get; set; }
         public virtual DbSet<DeviceSchedule> TblDeviceSchedule { get; set; }
-        public virtual DbSet<DeviceScheduleAssignment> TblDeviceScheduleAssignment { get; set; }
+        public virtual DbSet<DeviceScheduleTaskAssignment> TblDeviceScheduleTaskAssignment { get; set; }
         public virtual DbSet<ScheduledJob> TblDeviceScheduledJob { get; set; }
         public virtual DbSet<DeviceScheduleTask> TblDeviceScheduleTask { get; set; }
         public virtual DbSet<DispatchedNotification> TblDispatchedNotifications { get; set; }
@@ -131,7 +131,6 @@ namespace AquariumApi.DataAccess
                 entity.ToTable("tblDevice");
                 entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
                 entity.HasOne(e => e.CameraConfiguration);
-                entity.HasMany(e => e.ScheduleAssignments);
 
             });
             modelBuilder.Entity<CameraConfiguration>(entity =>
@@ -150,8 +149,8 @@ namespace AquariumApi.DataAccess
             /* Schedule */
             modelBuilder.Entity<DeviceSchedule>(entity =>
             {
-                entity.HasMany(e => e.Tasks).WithOne(e => e.Schedule);
-                entity.HasOne(e => e.Author);
+                entity.HasMany(e => e.TaskAssignments).WithOne(e => e.Schedule);
+                entity.HasOne(e => e.Device);
             });
             modelBuilder.Entity<DeviceScheduleTask>(entity =>
             {
@@ -161,10 +160,8 @@ namespace AquariumApi.DataAccess
             {
 
             });
-            modelBuilder.Entity<DeviceScheduleAssignment>(entity =>
+            modelBuilder.Entity<DeviceScheduleTaskAssignment>(entity =>
             {
-                entity.HasOne(e => e.Schedule).WithMany(e => e.ScheduleAssignments);
-                entity.HasOne(e => e.Device);
             });
 
 

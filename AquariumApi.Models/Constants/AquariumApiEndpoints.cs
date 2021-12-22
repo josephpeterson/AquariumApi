@@ -35,9 +35,11 @@
         public const string DEVICE_SENSOR_UPDATE = "/v1/Device/{deviceId}/Sensor/Update";
         public const string DEVICE_SENSOR_TEST = "/v1/Device/{deviceId}/Sensor/Test";
         public const string DEVICE_SCHEDULE_DEPLOY = "/v1/Device/{deviceId}/DeploySchedule/{scheduleId}";
-        public const string DEVICE_SCHEDULE_REMOVE = "/v1/Device/{deviceId}/RemoveSchedule/{scheduleId}";
         public const string DEVICE_SCHEDULE_STATUS = "/v1/Device/{deviceId}/Schedule/Status";
         public const string DEVICE_DISPATCH_TASK = "/v1/Device/{deviceId}/Schedule/PerformTask";
+        public const string DEVICE_TASK_CREATE = "/v1/Device/{deviceId}/Task/Create";
+        public const string DEVICE_TASK_DELETE = "/v1/Device/{deviceId}/Task/{taskId}/Delete";
+
 
         public const string AQUARIUM_RETRIEVE_ALL = "/v1/Aquarium/All";
         public const string AQUARIUM_RETRIEVE_DETAILED = "/v1/Aquarium/{id}";
@@ -64,11 +66,11 @@
         public const string DEVICE_ATO_RUN = "/v1/Device/{deviceId}/ATO";
         public const string DEVICE_ATO_STOP = "/v1/Device/{deviceId}/ATO/Stop";
 
-        public const string SCHEDULE_CREATE = "/v1/Schedule/Add";
+        public const string SCHEDULE_CREATE = "/v1/Device/{deviceId}/Schedule/Create";
         public const string SCHEDULE_RETRIEVE = "/v1/Schedule";
         public const string SCHEDULE_RETRIEVE_TASKTYPES = "/v1/Schedule/Tasks";
         public const string SCHEDULE_RETRIEVE_SCHEDULED_JOBS = "/v1/Device/{deviceId}/Schedule/Jobs";
-        public const string SCHEDULE_DELETE = "/v1/Schedule/{scheduleId}/Delete";
+        public const string SCHEDULE_DELETE = "/v1/Device/{deviceId}/Schedule/{scheduleId}/Delete";
         public const string SCHEDULE_UPDATE = "/v1/Schedule/Update";
 
     }

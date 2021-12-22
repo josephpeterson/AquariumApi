@@ -30,20 +30,20 @@ namespace AquariumApi.Controllers
         }
         [HttpPost]
         [Route(AquariumApiEndpoints.SCHEDULE_CREATE)]
-        public IActionResult AddDeviceSchedule([FromBody] DeviceSchedule deviceSchedule)
+        public IActionResult CreateDeviceSchedule(int deviceId, [FromBody] DeviceSchedule deviceSchedule)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
             try
             {
-                deviceSchedule.AuthorId = _accountService.GetCurrentUserId();
-
-                _logger.LogInformation($"POST {AquariumApiEndpoints.SCHEDULE_CREATE} called");
-                var newDeviceSchedule = _aquariumService.AddDeviceSchedule(deviceSchedule);
-                return CreatedAtAction(nameof(UpdateDeviceSchedule), new { id = newDeviceSchedule.Id }, newDeviceSchedule);
+                _logger.LogInformation($"POST {AquariumApiEndpoints.SCHEDULE_CREATE.AggregateParams($"{deviceId}")} called");
+                deviceSchedule = _aquariumService.CreateDeviceSchedule(deviceId, deviceSchedule);
+                return new OkObjectResult(deviceSchedule);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {AquariumApiEndpoints.SCHEDULE_CREATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
+                _logger.LogError($"POST {AquariumApiEndpoints.SCHEDULE_CREATE.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
             }
         }
 
@@ -109,7 +109,7 @@ namespace AquariumApi.Controllers
                 pagination = new PaginationSliver();
             try
             {
-                _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS.AggregateParams($"{deviceId}")} called");
+                _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_CREATE.AggregateParams($"{deviceId}")} called");
                 List <ScheduledJob> scheduledJobs = _aquariumService.GetDeviceScheduledJobs(deviceId, pagination);
                 return new OkObjectResult(scheduledJobs);
             }
@@ -122,34 +122,20 @@ namespace AquariumApi.Controllers
 
         [HttpDelete]
         [Route(AquariumApiEndpoints.SCHEDULE_DELETE)]
-        public IActionResult DeviceDeviceSchedule(int scheduleId)
+        public IActionResult DeviceDeviceSchedule(int deviceId,int scheduleId)
         {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
             try
             {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.SCHEDULE_DELETE.AggregateParams($"{scheduleId}")} called");
-                _aquariumService.DeleteDeviceSchedule(scheduleId);
+                _logger.LogInformation($"DELETE {AquariumApiEndpoints.SCHEDULE_DELETE.AggregateParams($"{deviceId}",$"{scheduleId}")} called");
+                _aquariumService.DeleteDeviceSchedule(deviceId,scheduleId);
                 return new OkResult();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {AquariumApiEndpoints.SCHEDULE_DELETE.AggregateParams($"{scheduleId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"DELETE {AquariumApiEndpoints.SCHEDULE_DELETE.AggregateParams($"{deviceId}", $"{scheduleId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
-            }
-        }
-        [HttpPost]
-        [Route(AquariumApiEndpoints.SCHEDULE_UPDATE)]
-        public IActionResult UpdateDeviceSchedule([FromBody] DeviceSchedule deviceSchedule)
-        {
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.SCHEDULE_UPDATE} called");
-                var updatedDeviceSchedule = _aquariumService.UpdateDeviceSchedule(deviceSchedule);
-                return new OkObjectResult(updatedDeviceSchedule);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.SCHEDULE_UPDATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
             }
         }
         private bool ValidateRequest(int deviceId)

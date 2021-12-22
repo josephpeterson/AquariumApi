@@ -393,6 +393,30 @@ namespace AquariumApi.Core
                         new KeyValuePair<string, int>("Other",(int)SensorTypes.Other),
                     };
                     break;
+                case "DeviceSensorValues":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Low",(int)GpioPinValue.Low),
+                        new KeyValuePair<string, int>("High",(int)GpioPinValue.High),
+                    };
+                    break;
+                case "DeviceTaskTypes":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Take Snapshot",(int)ScheduleTaskTypes.Snapshot),
+                        new KeyValuePair<string, int>("Start ATO",(int)ScheduleTaskTypes.StartATO),
+                        new KeyValuePair<string, int>("Start Water Change",(int)ScheduleTaskTypes.StartWaterChange),
+                        new KeyValuePair<string, int>("Unknown",(int)ScheduleTaskTypes.Unknown),
+                    };
+                    break;
+                case "TriggerTypes":
+                    options = new List<KeyValuePair<string, int>>()
+                    {
+                        new KeyValuePair<string, int>("Start at Time",(int)TriggerTypes.Time),
+                        new KeyValuePair<string, int>("Sensor Condition",(int)TriggerTypes.SensorDependent),
+                        new KeyValuePair<string, int>("Task Condition",(int)TriggerTypes.TaskDependent),
+                    };
+                    break;
                 default:
                     options = new List<KeyValuePair<string, int>>();
                     break;
