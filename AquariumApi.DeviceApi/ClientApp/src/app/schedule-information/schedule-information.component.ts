@@ -3,8 +3,9 @@ import { LoginInformationResponse } from '../models/LoginInformationResponse';
 import { DeviceScheduleState } from '../models/DeviceScheduleState';
 import { ClientService } from '../services/client.service';
 import * as moment from 'moment';
-import { DeviceScheduleTask, DeviceScheduleTaskTypes } from '../models/DeviceScheduleTask';
+import { DeviceScheduleTask } from '../models/DeviceScheduleTask';
 import { NotifierService } from 'angular-notifier';
+import { DeviceScheduleTaskTypes } from '../models/types/DeviceScheduleTaskTypes';
 
 @Component({
   selector: 'schedule-information',
@@ -51,9 +52,12 @@ export class ScheduleInformationComponent implements OnInit {
       })
   }
   public readableDuration(task: DeviceScheduleTask) {
+    return "------";
+    /*
     var d = moment(task.startTime).diff(moment());
     console.log(d);
     return moment.duration(d).humanize();
+    */
   }
   public readableDate(date: string) {
     return moment(date).local().calendar();

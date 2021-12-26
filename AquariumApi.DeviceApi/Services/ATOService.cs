@@ -156,7 +156,7 @@ namespace AquariumApi.DeviceApi
 
             _logger.LogInformation("[ATOService] Beginning ATO...");
             var maxPumpRuntime = atoRequest.Runtime * 1000 * 60;
-            _gpioService.SetPinValue(pumpRelaySensor, PinValue.High);
+            _gpioService.SetPinValue(pumpRelaySensor, GpioPinValue.High);
 
             //Next run time
             var device = _aquariumAuthService.GetAquarium().Device;
@@ -233,7 +233,7 @@ namespace AquariumApi.DeviceApi
             var floatSwitchSensor = Status.FloatSensor;
             if (pumpRelaySensor == null || floatSwitchSensor == null)
                 throw new Exception($"Invalid ATO pins specified (Pump: {pumpRelaySensor} Sensor: {floatSwitchSensor})");
-            _gpioService.SetPinValue(pumpRelaySensor, PinValue.Low);
+            _gpioService.SetPinValue(pumpRelaySensor, GpioPinValue.Low);
 
             if (!Status.PumpRunning)
                 return;
@@ -276,7 +276,7 @@ namespace AquariumApi.DeviceApi
         {
             var pumpRelay = GetPumpRelayPin();
             if (pumpRelay != null && Status.PumpRunning)
-                _gpioService.SetPinValue(pumpRelay, PinValue.Low);
+                _gpioService.SetPinValue(pumpRelay, GpioPinValue.Low);
             if (CurrentTaskToken != null && !CurrentTaskToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Canceled via CleanUp");
@@ -379,14 +379,14 @@ namespace AquariumApi.DeviceApi
             Task.Run(() =>
             {
                 _logger.LogWarning("[ATOService] Opening water change drain...");
-                _gpioService.SetPinValue(drainPump, PinValue.High);
+                _gpioService.SetPinValue(drainPump, GpioPinValue.High);
                 Thread.Sleep(TimeSpan.FromMilliseconds(maxDrainPumpRuntime));
 
                 _logger.LogWarning("[ATOService] Closing water change drain...");
-                _gpioService.SetPinValue(drainPump, PinValue.Low);
+                _gpioService.SetPinValue(drainPump, GpioPinValue.Low);
 
                 _logger.LogWarning("[ATOService] Starting replenish pump...");
-                _gpioService.SetPinValue(replentishPump, PinValue.High);
+                _gpioService.SetPinValue(replentishPump, GpioPinValue.High);
                 Thread.Sleep(TimeSpan.FromMilliseconds(maxReplentishPumpRuntime));
 
                 _logger.LogWarning("[ATOService] Stopping replentish pump...");
@@ -426,8 +426,8 @@ namespace AquariumApi.DeviceApi
             var floatSwitchSensor = GetFloatSensorPin();
             if (replentishPump == null || floatSwitchSensor == null || drainPump == null)
                 throw new Exception($"Invalid water change pins specified (Replentish Pump: {replentishPump}, Drain Pump: {drainPump}, Float Sensor: {floatSwitchSensor})");
-            _gpioService.SetPinValue(replentishPump, PinValue.Low);
-            _gpioService.SetPinValue(drainPump, PinValue.Low);
+            _gpioService.SetPinValue(replentishPump, GpioPinValue.Low);
+            _gpioService.SetPinValue(drainPump, GpioPinValue.Low);
 
             if (!Status.PumpRunning)
                 return;

@@ -18,7 +18,7 @@ namespace AquariumApi.DeviceApi
         List<DeviceSensor> GetAllSensors();
         GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);
-        void SetPinValue(DeviceSensor pin, PinValue pinValue);
+        void SetPinValue(DeviceSensor pin, GpioPinValue pinValue);
         DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest);
     }
     public class GpioService : IGpioService
@@ -28,7 +28,7 @@ namespace AquariumApi.DeviceApi
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IAquariumAuthService _aquariumAuthService;
-        private List<DeviceSensor> Pins = new List<DeviceSensor>();
+        private readonly List<DeviceSensor> Pins = new List<DeviceSensor>();
         private IGpioControllerWrapper Controller;
         public bool ATOSystemRunning { get; private set; }
 
@@ -48,18 +48,23 @@ namespace AquariumApi.DeviceApi
                 if (!Controller.IsPinOpen(p.Pin))
                 {
                     Controller.OpenPin(p.Pin, p.Polarity == 0 ? PinMode.InputPullUp : PinMode.Output);
-
+                    p.Value = GpioPinValue.Low;
 
                     if (p.Polarity == 0) // Input only
+                    {
                         Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
                         {
+                            p.Value = Controller.Read(p.Pin);
                             p.OnSensorTriggered(sender, 0);
                         });
+                        p.Value = Controller.Read(p.Pin);
+                    }
 
                     //default always on
-                    if(p.AlwaysOn)
+                    if (p.AlwaysOn)
                     {
-                        Controller.Write(p.Pin, PinValue.High);
+                        p.Value = GpioPinValue.High;
+                        Controller.Write(p.Pin, GpioPinValue.High);
                     }
 
                 }
@@ -121,11 +126,12 @@ namespace AquariumApi.DeviceApi
             return inputPins;
             */
         }
-        public GpioPinValue GetPinValue(DeviceSensor pin)
+        public GpioPinValue GetPinValue(DeviceSensor sensor)
         {
-            var val = Controller.Read(pin.Pin);
-            pin.Value = val;
-            return val;
+            var pin = Pins.First(p => p.Id == sensor.Id);
+            //var val = Controller.Read(pin.Pin);
+            //pin.Value = val;
+            return pin.Value.Value;
         }
         public void RegisterDevicePin(DeviceSensor deviceSensor)
         {
@@ -142,10 +148,12 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError(e.Message);
             }
         }
-        public void SetPinValue(DeviceSensor pin, PinValue pinValue)
+        public void SetPinValue(DeviceSensor sensor, GpioPinValue pinValue)
         {
+            var pin = Pins.First(p => p.Id == sensor.Id);
             if(pin.AlwaysOn) //invert the value we are setting
-                pinValue = pinValue == PinValue.Low ? PinValue.High : PinValue.Low;
+                pinValue = pinValue == GpioPinValue.Low ? GpioPinValue.High : GpioPinValue.Low;
+            pin.Value = pinValue;
             Controller.Write(pin.Pin, pinValue);
         }
         public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)
@@ -161,9 +169,9 @@ namespace AquariumApi.DeviceApi
 
             _logger.LogWarning($"Testing sensor ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity})");
             testRequest.StartTime = DateTime.UtcNow;
-            SetPinValue(sensor, PinValue.High);
+            SetPinValue(sensor, GpioPinValue.High);
             Thread.Sleep(TimeSpan.FromSeconds(maxTestRuntime));
-            SetPinValue(sensor, PinValue.Low);
+            SetPinValue(sensor, GpioPinValue.Low);
             testRequest.EndTime = DateTime.UtcNow;
 
             var value = GetPinValue(sensor);

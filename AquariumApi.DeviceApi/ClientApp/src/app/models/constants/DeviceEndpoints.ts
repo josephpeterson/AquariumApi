@@ -21,4 +21,6 @@ export class DeviceEndpoints {
     static SCHEDULE_STATUS: string =           "/v1/Schedule/Status/";
     static SCHEDULE_TASK_PERFORM: string =     "/v1/Schedule/Tasks/Perform";
     static SCHEDULE_REMAINING_TASKS: string =  "/v1/Schedule/Tasks/Remaining";
+
+    static SCHEDULE_SCHEDULEDJOB_STOP: string =  "/v1/Schedule/Tasks/Stop";
 }

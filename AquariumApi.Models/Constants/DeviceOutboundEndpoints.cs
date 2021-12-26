@@ -4,6 +4,9 @@ using System.Text;
 
 namespace AquariumApi.Models.Constants
 {
+    /// <summary>
+    /// These are the endpoints that the AquariumApi will send to the DeviceApi
+    /// </summary>
     public class DeviceOutboundEndpoints
     {
         public const string PING =          "/v1/Device/Ping";
@@ -28,5 +31,8 @@ namespace AquariumApi.Models.Constants
         public const string SCHEDULE_STATUS =           "/v1/Schedule/Status/";
         public const string SCHEDULE_TASK_PERFORM =     "/v1/Schedule/Tasks/Perform";
         public const string SCHEDULE_REMAINING_TASKS =  "/v1/Schedule/Tasks/Remaining";
+
+        public const string SCHEDULE_SCHEDULEDJOB_STOP = "/v1/Schedule/Tasks/Stop";
+
     }
 }

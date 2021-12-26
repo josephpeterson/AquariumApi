@@ -23,8 +23,7 @@
       <ng-container *ngIf="scheduleState.nextTask as nextTask">
         <h6>Next Task ETA: {{readableDuration(nextTask)}}</h6>
         <!-- <h6>Completed Tasks: {{nextTask.index-1}}</h6> -->
-        <h6>Task: {{getTaskNameFromId(nextTask.taskId)}}</h6>
-        <h6>Schedule: {{getScheduleFromId(nextTask.scheduleId).name}}</h6>
+        <h6>Task: {{nextTask.task.name}}</h6>
         <button class="btn btn-secondary" (click)="clickPerformTask(nextTask)" [disabled]="performingTask">Perform Task</button>
       </ng-container>
       <h5>Schedules on Device</h5>

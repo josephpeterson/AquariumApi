@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
@@ -20,6 +22,7 @@ namespace AquariumApi.Models
         Canceled,
         ForceStop,
     }
+    [Table("tblDeviceScheduleJobs")]
     public class ScheduledJob : Indexable  //allow pagination of this object
     {
         public int? Id { get; set; }

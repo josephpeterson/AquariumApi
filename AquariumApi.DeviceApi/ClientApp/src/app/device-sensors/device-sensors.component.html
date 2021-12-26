@@ -7,8 +7,8 @@
     <p class="text-muted">
       All of the currently equipped device sensors
     </p>
-    <div *ngIf="device.sensors">
-      <div *ngFor="let sensor of device.sensors">
+    <div *ngIf="loginInformation">
+      <div *ngFor="let sensor of loginInformation.sensors">
         <div class='mb-1'>
           <div class="row">
             <div class="col-sm">

@@ -1,0 +1,28 @@
+<div class="card m-2" *ngIf="deviceInformation">
+  <div class="card-body">
+    <p class="text-muted">
+      All jobs currently on this device
+    </p>
+    <div class="row">
+      <h6>Currently Running</h6>
+    </div>
+    <ul class="list-group">
+      <li class="list-group-item" *ngFor="let job of deviceInformation.runningJobs">
+        <device-job-list-item [job]="job" [deviceInformation]="deviceInformation"></device-job-list-item>
+      </li>
+    </ul>
+    <div class="row">
+      <h6>All Scheduled</h6>
+    </div>
+    <ul class="list-group">
+      <li class="list-group-item" *ngFor="let job of deviceInformation.scheduledJobs">
+        <device-job-list-item [job]="job" [deviceInformation]="deviceInformation"></device-job-list-item>
+      </li>
+    </ul>
+    <div *ngFor="let job of deviceInformation.runningJobs">
+      <div class='mb-1'>
+
+      </div>
+    </div>
+  </div>
+</div>

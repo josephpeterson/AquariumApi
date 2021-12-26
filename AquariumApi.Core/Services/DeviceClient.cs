@@ -28,7 +28,7 @@ namespace AquariumApi.Core
         byte[] TakePhoto(int deviceId);
 
         ScheduleState GetDeviceScheduleStatus();
-        void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask);
+        ScheduledJob PerformScheduleTask(DeviceScheduleTask deviceScheduleTask);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
 
 
@@ -37,6 +37,9 @@ namespace AquariumApi.Core
         ATOStatus StopDeviceATO();
         void Configure(AquariumDevice device);
         Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
+        ScheduledJob StopScheduledJob(ScheduledJob scheduledJob);
+        List<ScheduledJob> GetAllScheduledJobs();
+        void RenewDevice();
     }
     public class DeviceClient : IDeviceClient
     {
@@ -130,7 +133,10 @@ namespace AquariumApi.Core
                 ValidateResponse(response);
             }
         }
-
+        /// <summary>
+        /// This is the most basic request to the Device
+        /// </summary>
+        /// <returns></returns>
         public DeviceInformation PingDevice()
         {
             var path = DeviceOutboundEndpoints.PING;
@@ -140,6 +146,19 @@ namespace AquariumApi.Core
                 ValidateResponse(response);
                 var d = JsonConvert.DeserializeObject<DeviceInformation>(response.Content.ReadAsStringAsync().Result);
                 return d;
+            }
+        }
+        /// <summary>
+        /// Tell the device to renew it's authentication token with us
+        /// </summary>
+        /// <returns></returns>
+        public void RenewDevice()
+        {
+            var path = DeviceOutboundEndpoints.AUTH_RENEW;
+            using (var client = GetHttpClient())
+            {
+                var response = client.GetAsync(path).Result;
+                ValidateResponse(response);
             }
         }
 
@@ -173,7 +192,10 @@ namespace AquariumApi.Core
             }
         }
         
-        
+        /// <summary>
+        /// Send the device the latest information we have. This will ultimately resort in the device rebooting services
+        /// </summary>
+        /// <param name="aquariumDevice"></param>
         public void ApplyUpdatedDevice(AquariumDevice aquariumDevice)
         {
             var path = DeviceOutboundEndpoints.UPDATE;
@@ -201,7 +223,7 @@ namespace AquariumApi.Core
             }
         }
 
-        public void PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
+        public ScheduledJob PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
         {
             var path = DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM;
             using (var client = GetHttpClient())
@@ -214,6 +236,35 @@ namespace AquariumApi.Core
                 var httpContent = new StringContent(JsonConvert.SerializeObject(deviceScheduleTask, jss), Encoding.UTF8, "application/json");
                 var result = client.PostAsync(path, httpContent).Result;
                 ValidateResponse(result);
+                var runningJob = JsonConvert.DeserializeObject<ScheduledJob>(result.Content.ReadAsStringAsync().Result);
+                return runningJob;
+            }
+        }
+        public ScheduledJob StopScheduledJob(ScheduledJob scheduledJob)
+        {
+            var path = DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP;
+            using (var client = GetHttpClient())
+            {
+                JsonSerializerSettings jss = new JsonSerializerSettings();
+                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                var httpContent = new StringContent(JsonConvert.SerializeObject(scheduledJob, jss), Encoding.UTF8, "application/json");
+                var result = client.PostAsync(path, httpContent).Result;
+                ValidateResponse(result);
+                var stoppedJob = JsonConvert.DeserializeObject<ScheduledJob>(result.Content.ReadAsStringAsync().Result);
+                return stoppedJob;
+            }
+        }
+        public List<ScheduledJob> GetAllScheduledJobs()
+        {
+            var path = DeviceOutboundEndpoints.SCHEDULE_REMAINING_TASKS;
+            using (var client = GetHttpClient())
+            {
+                JsonSerializerSettings jss = new JsonSerializerSettings();
+                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                var result = client.GetAsync(path).Result;
+                ValidateResponse(result);
+                var scheduledJobs = JsonConvert.DeserializeObject<List<ScheduledJob>>(result.Content.ReadAsStringAsync().Result);
+                return scheduledJobs;
             }
         }
 

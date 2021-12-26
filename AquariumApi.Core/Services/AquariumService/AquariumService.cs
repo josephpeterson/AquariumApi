@@ -67,7 +67,7 @@ namespace AquariumApi.Core
 
         /* Form Components */
         List<KeyValuePair<string,int>> GetSelectOptionsBySelectType(string selectType);
-        Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
+        
     }
     public partial class AquariumService : IAquariumService
     {

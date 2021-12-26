@@ -142,7 +142,25 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        [HttpGet]
+        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_AUTH_RENEW)]
+        public IActionResult AttemptAuthRenew(int deviceId)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
 
+            try
+            {
+
+                _logger.LogInformation($"GET {AquariumApiEndpoints.DEVICE_DISPATCH_AUTH_RENEW.AggregateParams($"{deviceId}")} called");
+                _aquariumService.AttemptAuthRenewDevice(deviceId);
+                return new OkObjectResult(true);
+            }
+            catch
+            {
+                return new OkObjectResult(false);
+            }
+        }
         [HttpPost]
         [Route(AquariumApiEndpoints.DEVICE_DISPATCH_SNAPSHOT_CONFIGURATION)]
         public IActionResult UpdateCameraConfiguration(int deviceId,[FromBody] CameraConfiguration config)
@@ -378,8 +396,8 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_DISPATCH_TASK.AggregateParams($"{deviceId}")} called");
-                _aquariumService.PerformScheduleTask(deviceId,deviceScheduleTask);
-                return new OkResult();
+                var runningJob = _aquariumService.PerformScheduleTask(deviceId,deviceScheduleTask);
+                return new OkObjectResult(runningJob);
             }
             catch (Exception ex)
             {

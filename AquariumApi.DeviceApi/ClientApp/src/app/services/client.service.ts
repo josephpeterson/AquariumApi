@@ -12,6 +12,7 @@ import { DeviceSensor } from '../models/DeviceSensor';
 import { DetailedDeviceInformation } from '../models/DetailedDeviceInformation';
 import { DeviceSensorTestRequest } from '../models/requests/DeviceSensorTestRequest';
 import { DeviceEndpoints } from '../models/constants/DeviceEndpoints';
+import { DeviceScheduledJob } from '../models/DeviceScheduledJob';
 
 const httpOptions = {
     headers: new HttpHeaders({
@@ -60,6 +61,9 @@ export class ClientService {
     }
     public getDeviceInformation() {
         return this.http.get(this._url + DeviceEndpoints.PING);
+    }
+    public stopScheduledJob(scheduledJob:DeviceScheduledJob) {
+        return this.http.post(this._url + DeviceEndpoints.SCHEDULE_SCHEDULEDJOB_STOP,scheduledJob);
     }
     public testDeviceSensor(testRequest:DeviceSensorTestRequest) {
         return this.http.post<DeviceSensorTestRequest>(this._url + DeviceEndpoints.DEVICE_SENSOR_TEST,testRequest);

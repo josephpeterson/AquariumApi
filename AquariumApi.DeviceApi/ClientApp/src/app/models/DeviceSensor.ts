@@ -7,5 +7,6 @@ export class DeviceSensor
   type: string
   polarity: number = 0
   pin: GpioPinTypes
+  alwaysOn: boolean
   value: any
 }

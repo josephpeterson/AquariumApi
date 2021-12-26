@@ -1,4 +1,5 @@
 import { DeviceScheduleTask } from './DeviceScheduleTask'
+import { DeviceScheduleTaskAssignment } from './DeviceScheduleTaskAssignment'
 
 export class DeviceSchedule
 {
@@ -7,5 +8,5 @@ export class DeviceSchedule
   deviceId: number
   deployed: boolean
 
-  tasks: DeviceScheduleTask[] = []
+  taskAssignments: DeviceScheduleTaskAssignment[] = []
 }

@@ -123,7 +123,7 @@ namespace AquariumApi.DeviceApi.Clients
             using (HttpClient client = GetHttpClient())
             {
                 var httpContent = new StringContent(JsonConvert.SerializeObject(scheduledJob), Encoding.UTF8, "application/json");
-                var result = await client.PostAsync(path, httpContent);
+                var result = await client.PutAsync(path, httpContent);
                 if (!result.IsSuccessStatusCode)
                     throw new Exception("Could not dispatch scheduled job to service");
                 _logger.LogInformation($"Scheduled job successfully dispatched to service.");

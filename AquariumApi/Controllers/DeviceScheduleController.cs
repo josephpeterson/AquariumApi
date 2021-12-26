@@ -99,23 +99,21 @@ namespace AquariumApi.Controllers
         /// List of ScheduledJobs that fit within the provided pagination sliver
         /// </returns>
         [HttpGet]
-        [Route(AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS)]
-        public IActionResult GetScheduledJobs(int deviceId, [FromBody] PaginationSliver pagination = null)
+        [Route(AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE)]
+        public IActionResult GetScheduledJobsOnDevice(int deviceId)
         {
             if (!ValidateRequest(deviceId))
                 return Unauthorized();
 
-            if (pagination == null)
-                pagination = new PaginationSliver();
             try
             {
-                _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_CREATE.AggregateParams($"{deviceId}")} called");
-                List <ScheduledJob> scheduledJobs = _aquariumService.GetDeviceScheduledJobs(deviceId, pagination);
+                _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE.AggregateParams($"{deviceId}")} called");
+                List <ScheduledJob> scheduledJobs = _aquariumService.GetScheduledJobsOnDevice(deviceId);
                 return new OkObjectResult(scheduledJobs);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
@@ -135,6 +133,25 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"DELETE {AquariumApiEndpoints.SCHEDULE_DELETE.AggregateParams($"{deviceId}", $"{scheduleId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        [Route(AquariumApiEndpoints.SCHEDULE_SCHEDULED_JOB_STOP)]
+        public IActionResult StopScheduledJob(int deviceId,[FromBody] ScheduledJob scheduledJob)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
+            try
+            {
+                _logger.LogInformation($"POST {AquariumApiEndpoints.SCHEDULE_SCHEDULED_JOB_STOP.AggregateParams($"{deviceId}")} called");
+                var stoppedJob = _aquariumService.StopScheduledJob(deviceId, scheduledJob);
+                return new OkObjectResult(stoppedJob);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {AquariumApiEndpoints.SCHEDULE_SCHEDULED_JOB_STOP.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

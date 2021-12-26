@@ -25,6 +25,8 @@ import { DeviceNotifierConfig } from './config/DeviceNotifierConfig';
 import { HardwareInformationComponent } from './hardware-information/hardware-information.component';
 import { ExceptionListComponent } from './exception-list/exception-list.component';
 import { DeviceSensorsComponent } from './device-sensors/device-sensors.component';
+import { DeviceScheduledJobsComponent } from './device-scheduled-jobs/device-scheduled-jobs.component';
+import { DeviceJobListItemComponent } from './device-job-list-item/device-job-list-item.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +36,8 @@ import { DeviceSensorsComponent } from './device-sensors/device-sensors.componen
     NavBarComponent,
     ScheduleInformationComponent,
     DeviceSensorsComponent,
+    DeviceScheduledJobsComponent,
+    DeviceJobListItemComponent,
     LogPageComponent,
     DashboardContainerComponent,
     LoginContainerComponent,

@@ -17,13 +17,16 @@ namespace AquariumApi.DeviceApi.Controllers
         private IConfiguration _config;
         private ILogger<ScheduleController> _logger;
         private ScheduleService _scheduleService;
+        private readonly IGpioService _gpioService;
 
         public ScheduleController(IConfiguration config,
             ILogger<ScheduleController> logger,
+            IGpioService gpioService,
             ScheduleService scheduleManagerService)
         {
             _config = config;
             _logger = logger;
+            _gpioService = gpioService;
             _scheduleService = scheduleManagerService;
 
         }
@@ -107,8 +110,8 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                _scheduleService.PerformTask(deviceScheduleTask);
-                return new OkResult();
+                var runningScheduledJob = _scheduleService.GenericPerformTask(deviceScheduleTask);
+                return new OkObjectResult(runningScheduledJob.ScheduledJob);
             }
             catch (DeviceException ex)
             {
@@ -141,6 +144,52 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_REMAINING_TASKS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
+        [HttpGet("/v1/AllSensors")]
+        public IActionResult GetAllSensors ()
+        {
+            try
+            {
+                var sernsors = _gpioService.GetAllSensors();
+                return new OkObjectResult(sernsors);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_REMAINING_TASKS} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_REMAINING_TASKS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
+        [HttpPost(DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP)]
+        public IActionResult StopScheduledJob([FromBody] ScheduledJob scheduledJob)
+        {
+            try
+            {
+                var stoppedJob = _scheduleService.StopScheduledJob(scheduledJob,JobEndReason.ForceStop);
+                return new OkObjectResult(stoppedJob);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {

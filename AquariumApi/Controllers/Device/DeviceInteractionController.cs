@@ -163,28 +163,6 @@ namespace AquariumApi.Controllers
             }
         }
 
-
-        //Device is asking for detailed device information
-        [HttpGet]
-        [Route(DeviceInboundEndpoints.RETRIEVE_DEVICE)]
-        public IActionResult GetDeviceInformation()
-        {
-            try
-            {
-                _logger.LogInformation($"GET {DeviceInboundEndpoints.RETRIEVE_DEVICE} called");
-                if (!ValidateRequest())
-                    return Unauthorized();
-
-                var aquarium = GetCurrentAquarium();
-                return new OkObjectResult(_aquariumService.GetAquariumDeviceById(aquarium.Device.Id));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET {DeviceInboundEndpoints.RETRIEVE_DEVICE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
-            }
-        }
-
         //Device is sending us a dispatch on a scheduled job
         [HttpPut]
         [Route(DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB)]
@@ -203,7 +181,7 @@ namespace AquariumApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"PUT {DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

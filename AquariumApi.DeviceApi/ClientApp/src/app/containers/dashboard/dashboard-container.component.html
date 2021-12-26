@@ -23,17 +23,23 @@
     <hardware-information [loginInformation]="loginInformation"></hardware-information>
   </div>
   <div class="col-md">
-    <h4>Exceptions</h4>
-    <exception-list></exception-list>
+    <h4>Scheduled Jobs</h4>
+    <device-scheduled-jobs></device-scheduled-jobs>
   </div>
 </div>
 <div class="row">
-    <div class="col-md">
-        <h4>Sensors</h4>
-        <device-sensors [loginInformation]="loginInformation"></device-sensors>
-    </div>
-    <div class="col-md">
-        <h4>Schedules</h4>
-        <schedule-information [loginInformation]="loginInformation"></schedule-information>
-    </div>
+  <div class="col-md">
+    <h4>Sensors</h4>
+    <device-sensors [loginInformation]="loginInformation"></device-sensors>
+  </div>
+  <div class="col-md">
+    <h4>Schedules</h4>
+    <schedule-information [loginInformation]="loginInformation"></schedule-information>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md">
+    <h4>Exceptions</h4>
+    <exception-list></exception-list>
+  </div>
 </div>

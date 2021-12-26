@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading.Tasks;
 using AquariumApi.Models;
 using AquariumApi.Models.Constants;
@@ -50,12 +52,25 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation($"GET {DeviceOutboundEndpoints.PING} called");
+
+                //todo maybe add authorization?? also maybe change how we do this process. the server should probably store a token
+                //_aquariumAuthService.RenewAuthenticationToken().Wait(); //nvm dont do this, we dont want to trigger an update every time.
+
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+                string version = fileVersionInfo.FileVersion;
+                string productVersion = fileVersionInfo.ProductVersion;
+
                 var information = new DeviceInformation()
                 {
+                    Version = productVersion,
                     Aquarium = _aquariumAuthService.GetAquarium(),
                     Config = System.IO.File.ReadAllText("config.json"),
                     Schedules = _scheduleService.GetAllSchedules(),
                     Sensors = _gpioService.GetAllSensors(),
+                    RunningJobs = _scheduleService.GetAllRunningJobs(),
+                    ScheduledJobs = _scheduleService.GetAllScheduledTasks(),
+                    UpdatedAt = DateTime.Now,
                     ATOStatus = null,
                 };
                 return new OkObjectResult(information);

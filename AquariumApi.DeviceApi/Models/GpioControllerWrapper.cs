@@ -9,7 +9,7 @@ public interface IGpioControllerWrapper
     void RegisterCallbackForPinValueChangedEvent(int pinNumber, PinEventTypes eventTypes, PinChangeEventHandler callback);
     void OpenPin(int pinNumber, PinMode mode);
     bool IsPinOpen(int pinNumber);
-    void Write(int pinNumber, PinValue value);
+    void Write(int pinNumber, GpioPinValue value);
     GpioPinValue Read(int pinNumber);
     void ClosePin(int pinNumber);
 
@@ -31,12 +31,12 @@ public class GpioControllerWrapper : IGpioControllerWrapper
         Controller.RegisterCallbackForPinValueChangedEvent(pinNumber, eventTypes, callback);
 
 
-    public void Write(int pinNumber, PinValue value) => Controller.Write(pinNumber, value);
+    public void Write(int pinNumber, GpioPinValue value) => Controller.Write(pinNumber, value == GpioPinValue.High ? PinValue.High:PinValue.Low);
     public GpioPinValue Read(int pinNumber) => Controller.Read(pinNumber) == PinValue.High ? GpioPinValue.High : GpioPinValue.Low;
 }
 public class MockGpioControllerWrapper : IGpioControllerWrapper
 {
-    Dictionary<int, PinValue> PinValues = new Dictionary<int, PinValue>();
+    Dictionary<int, GpioPinValue> PinValues = new Dictionary<int, GpioPinValue>();
     Dictionary<int, PinMode> PinModes = new Dictionary<int, PinMode>();
 
     public void ClosePin(int pinNumber)
@@ -68,7 +68,7 @@ public class MockGpioControllerWrapper : IGpioControllerWrapper
        // throw new NotImplementedException();
     }
 
-    public void Write(int pinNumber, PinValue value)
+    public void Write(int pinNumber, GpioPinValue value)
     {
         int? pin = PinModes.Keys.Where(p => p == pinNumber).FirstOrDefault();
         if(pin != null)

@@ -9,18 +9,19 @@ import { DeviceSensor } from '../models/DeviceSensor';
 import { DetailedDeviceInformation } from '../models/DetailedDeviceInformation';
 import { DeviceSensorTestRequest } from '../models/requests/DeviceSensorTestRequest';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DeviceInformation } from '../models/DeviceInformation';
+import { DeviceScheduledJob } from '../models/DeviceScheduledJob';
 
 @Component({
-  selector: 'device-sensors',
-  templateUrl: './device-sensors.component.html',
-  styleUrls: ['./device-sensors.component.scss']
+  selector: 'device-scheduled-jobs',
+  templateUrl: './device-scheduled-jobs.component.html',
+  styleUrls: ['./device-scheduled-jobs.component.scss']
 })
-export class DeviceSensorsComponent implements OnInit {
+export class DeviceScheduledJobsComponent implements OnInit {
 
-  @Input() loginInformation: LoginInformationResponse;
   scheduleState: DeviceScheduleState;
   public scanning: boolean;
-  public device: AquariumDevice;
+  public deviceInformation: DeviceInformation;
 
 
   constructor(public service: ClientService,
@@ -28,30 +29,23 @@ export class DeviceSensorsComponent implements OnInit {
 
   ngOnInit() {
 
-    this.clickGetDeviceScheduleStatus();
+    this.getDetailedDeviceInformation();
   }
-  clickGetDeviceScheduleStatus() {
+  getDetailedDeviceInformation() {
     this.scanning = true;
     this.service.getDeviceInformation().subscribe(
-      (deviceInfo: DetailedDeviceInformation) => {
-        var device = deviceInfo.aquarium.device;
-        this.device = device;
+      (deviceInfo: DeviceInformation) => {
+        this.deviceInformation = deviceInfo;
       }, err => {
         this.scanning = false;
         //this.notifier.notify("error", "Could not retrieve device information");
       })
   }
-  clickTestDeviceSensor(sensor: DeviceSensor) {
-    var request = new DeviceSensorTestRequest();
-    request.sensorId = sensor.id;
-    request.runtime = 3;
-
-    this.service.testDeviceSensor(request).subscribe(
-      (request: DeviceSensorTestRequest) => {
-        this.notifier.notify("success", `Successfully ran test for sensor: ${sensor.name}`);
-      }, (err: HttpErrorResponse) => {
-        this.scanning = false;
-        this.notifier.notify("error", `Could not run test for device sensor: ${sensor.name}: ${err.message}`);
-      })
+  public getSensorFromJob(job:DeviceScheduledJob) {
+    var sensor = this.deviceInformation.sensors.find(s => s.id == job.task.targetSensorId);
+    return sensor;
+  }
+  public clickPerformScheduledJob(job:DeviceScheduledJob) {
+    
   }
 }

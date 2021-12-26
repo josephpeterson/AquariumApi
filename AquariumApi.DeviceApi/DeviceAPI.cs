@@ -70,6 +70,7 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError(e.Message);
             }
 
+            /*
             _logger.LogInformation("Setting up ATO Service...");
             try
             {
@@ -79,6 +80,7 @@ namespace AquariumApi.DeviceApi
             {
                 _logger.LogError(e.Message);
             }
+            */
 
             _logger.LogInformation("Checking schedule information...");
             try

@@ -37,7 +37,7 @@ namespace AquariumApi.Core
         void DeleteDeviceSchedule(int deviceId,int scheduleId);
         DeviceSchedule CreateDeviceSchedule(int deviceId,DeviceSchedule deviceSchedule);
         DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
-        void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
+        ScheduledJob PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
         ScheduleState GetDeviceScheduleStatus(int deviceId);
         ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob);
         List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination);
@@ -69,7 +69,10 @@ namespace AquariumApi.Core
         #region Device Tasks
         DeviceScheduleTask CreateDeviceTask(int deviceId, DeviceScheduleTask deviceTask);
         void DeleteDeviceTask(int deviceId, int taskId);
-
+        Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
+        ScheduledJob StopScheduledJob(int deviceId, ScheduledJob scheduledJob);
+        List<ScheduledJob> GetScheduledJobsOnDevice(int deviceId);
+        void AttemptAuthRenewDevice(int deviceId);
         #endregion
     }
     public partial class AquariumService : IAquariumService
@@ -118,6 +121,12 @@ namespace AquariumApi.Core
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
             return _deviceClient.PingDevice();
+        }
+        public void AttemptAuthRenewDevice(int deviceId)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            _deviceClient.Configure(device);
+            _deviceClient.RenewDevice();
         }
         public string GetDeviceLog(int deviceId)
         {
@@ -181,6 +190,19 @@ namespace AquariumApi.Core
                 deviceSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
             else
                 deviceSchedule = _aquariumDao.AddDeviceSchedule(deviceSchedule);
+
+            //Update the actual device
+            var device = _aquariumDao.GetAquariumDeviceById(deviceSchedule.DeviceId);
+            try
+            {
+                var d = _aquariumDao.GetAquariumDeviceById(device.Id);
+                _deviceClient.Configure(d);
+                _deviceClient.ApplyUpdatedDevice(d);
+            }
+            catch (Exception e)
+            {
+                //todo could not update schedule assignment (pi is offline maybe)
+            }
             return deviceSchedule;
         }
         public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
@@ -201,11 +223,30 @@ namespace AquariumApi.Core
             }
             return updatedSchedule;
         }
-        public void PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask)
+        public ScheduledJob PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
-            _deviceClient.PerformScheduleTask(deviceScheduleTask);
+            var runningJob = _deviceClient.PerformScheduleTask(deviceScheduleTask);
+            return runningJob;
+        }
+        public ScheduledJob StopScheduledJob(int deviceId, ScheduledJob scheduledJob)
+        {
+            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
+            try
+            {
+                _deviceClient.Configure(device);
+                var stoppedJob = _deviceClient.StopScheduledJob(scheduledJob);
+                stoppedJob.DeviceId = deviceId;
+                _aquariumDao.UpsertDeviceScheduledJob(stoppedJob);
+                return stoppedJob;
+            }
+            catch(Exception e)
+            {
+                scheduledJob.EndReason = JobEndReason.Error;
+                scheduledJob.DeviceId = deviceId;
+                return _aquariumDao.UpsertDeviceScheduledJob(scheduledJob);
+            }
         }
 
         public ScheduleState GetDeviceScheduleStatus(int deviceId)
@@ -222,6 +263,13 @@ namespace AquariumApi.Core
         public ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob)
         {
             return _aquariumDao.UpsertDeviceScheduledJob(scheduledJob);
+        }
+        //This will returned the scheduled jobs actually deployed on the device, as well as the ones currently running
+        public List<ScheduledJob> GetScheduledJobsOnDevice(int deviceId)
+        {
+                var d = _aquariumDao.GetAquariumDeviceById(deviceId);
+                _deviceClient.Configure(d);
+                return _deviceClient.GetAllScheduledJobs();
         }
 
         #endregion

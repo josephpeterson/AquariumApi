@@ -24,6 +24,8 @@
         public const string DEVICE_CREATE = "/v1/Device/Add";
         public const string DEVICE_DISPATCH_SCAN = "/v1/Device/{deviceId}/Scan";
         public const string DEVICE_DISPATCH_PING = "/v1/Device/{deviceId}/Ping";
+        public const string DEVICE_DISPATCH_AUTH_RENEW = "/v1/Device/{deviceId}/Renew";
+
         public const string DEVICE_DISPATCH_SNAPSHOT_CONFIGURATION = "/v1/Device/{deviceId}/CameraConfiguration";
         public const string DEVICE_LOG = "/v1/Device/{deviceId}/Log";
         public const string DEVICE_LOG_CLEAR = "/v1/Device/{deviceId}/Log/Clear";
@@ -72,6 +74,9 @@
         public const string SCHEDULE_RETRIEVE_SCHEDULED_JOBS = "/v1/Device/{deviceId}/Schedule/Jobs";
         public const string SCHEDULE_DELETE = "/v1/Device/{deviceId}/Schedule/{scheduleId}/Delete";
         public const string SCHEDULE_UPDATE = "/v1/Schedule/Update";
+        public const string SCHEDULE_SCHEDULED_JOB_STOP = "/v1/Device/{deviceId}/Schedule/Job/Stop";
+        public const string SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE = "/v1/Device/{deviceId}/Schedule/Job/Deployed";
+
 
     }
 }
