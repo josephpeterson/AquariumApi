@@ -98,7 +98,7 @@ namespace AquariumApi.DeviceApi.Controllers
             {
                 _logger.LogInformation($"DELETE {DeviceOutboundEndpoints.AUTH_LOGOUT} called");
                 _aquariumAuthService.Logout();
-                _scheduleService.StopAsync(_scheduleService.token).Wait();  //todo refactor this
+                _scheduleService.StopAsync(_scheduleService._cancellationSource.Token).Wait();  //todo refactor this
                 return new OkResult();
             }
             catch (DeviceException ex)

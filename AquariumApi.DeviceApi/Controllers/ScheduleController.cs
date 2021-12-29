@@ -47,7 +47,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation($"GET /v1/Schedule/Start called");
-                _scheduleService.StopAsync(_scheduleService.token).Wait();
+                _scheduleService.StopAsync(_scheduleService._cancellationSource.Token).Wait();
                 _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
                 return new OkResult();
             }
@@ -72,7 +72,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_STOP} called");
-                _scheduleService.StopAsync(_scheduleService.token).Wait();
+                _scheduleService.StopAsync(_scheduleService._cancellationSource.Token).Wait();
                 return new OkResult();
             }
             catch (DeviceException ex)

@@ -377,6 +377,8 @@ namespace AquariumDeviceApiTests
                 var runningJob = _scheduleService.GenericPerformTask(job);
                 return runningJob.RunningTask;
             };
+
+            //assert
             Assert.ThrowsAsync<DeviceException>(ThrowExceptionFunc);
             var allTasks = _scheduleService.GetAllScheduledTasks();
             var tasks = allTasks.Where(sj => sj.Status == JobStatus.Running);

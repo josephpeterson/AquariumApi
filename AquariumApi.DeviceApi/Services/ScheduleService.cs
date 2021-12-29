@@ -28,7 +28,7 @@ namespace AquariumApi.DeviceApi
         private Dictionary<ScheduleTaskTypes, DeviceTaskProcess> _deviceTaskCallbacks = new Dictionary<ScheduleTaskTypes, DeviceTaskProcess>();
         private List<RunningScheduledJob> RunningJobs = new List<RunningScheduledJob>();
         private List<ScheduledJob> ScheduledJobsQueue = new List<ScheduledJob>();
-        public CancellationToken token;
+        public CancellationTokenSource _cancellationSource = new CancellationTokenSource();
         public bool Running;
 
 
@@ -48,9 +48,38 @@ namespace AquariumApi.DeviceApi
             _exceptionService = exceptionService;
             _gpioService = gpioService;
         }
+        public void Setup()
+        {
+            CleanUp();
+            var schedules = GetAllSchedules();
+            if(schedules.Count() == 0)
+            {
+                _logger.LogInformation("No schedules are deployed on this device.");
+                return;
+
+            }
+
+            _logger.LogInformation($"{schedules.Count()} Schedules found");
+
+            //Register all sensors
+            var aq = _aquariumAuthService.GetAquarium();
+            var sensors = aq.Device.Sensors;
+
+            //Register them in GpioService
+            _gpioService.Setup(sensors);
+            sensors.Where(s => s.Polarity == Polarity.Input).ToList().ForEach(s =>
+            {
+                _logger.LogInformation($"[ScheduleService] Registering sensor callback for sensor {s.Name} Gpio Pin: {s.Pin}");
+                s.OnSensorTriggered = (sender, value) => {
+                    OnDeviceSensorTriggered(s);
+                };
+            });
+            _cancellationSource = new CancellationTokenSource();
+            StartAsync(_cancellationSource.Token);
+        }
+        
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            token = stoppingToken;
             GenerateScheduledJobsQueue();
             Running = true;
             await Task.Run(() =>
@@ -139,35 +168,6 @@ namespace AquariumApi.DeviceApi
         {
             return RunningJobs.Select(running => running.ScheduledJob).ToList();
         }
-        public void Setup()
-        {
-            CleanUp();
-            var schedules = GetAllSchedules();
-            if(schedules.Count() == 0)
-            {
-                _logger.LogInformation("No schedules are deployed on this device.");
-                return;
-
-            }
-
-            _logger.LogInformation($"{schedules.Count()} Schedules found");
-
-            //Register all sensors
-            var aq = _aquariumAuthService.GetAquarium();
-            var sensors = aq.Device.Sensors;
-
-            //Register them in GpioService
-            _gpioService.Setup(sensors);
-            sensors.Where(s => s.Polarity == Polarity.Input).ToList().ForEach(s =>
-            {
-                _logger.LogInformation($"[ScheduleService] Registering sensor callback for sensor {s.Name} Gpio Pin: {s.Pin}");
-                s.OnSensorTriggered = (sender, value) => {
-                    OnDeviceSensorTriggered(s);
-                };
-            });
-
-            StartAsync(new System.Threading.CancellationToken());
-        }
 
         /* Tasks */
         public RunningScheduledJob GenericPerformTask(ScheduledJob job)
@@ -253,7 +253,11 @@ namespace AquariumApi.DeviceApi
         {
             StopAllScheduledJobs();
             Running = false;
-            StopAsync(token).Wait();
+            if(!_cancellationSource.IsCancellationRequested)
+            { 
+                _cancellationSource.Cancel();
+                StopAsync(_cancellationSource.Token).Wait();
+            }
         }
         private void OnDeviceSensorTriggered(DeviceSensor sensor)
         {

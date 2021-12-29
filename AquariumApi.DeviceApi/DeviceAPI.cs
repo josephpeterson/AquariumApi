@@ -59,6 +59,8 @@ namespace AquariumApi.DeviceApi
             {
                 _logger.LogError(e.Message);
             }
+            _logger.LogInformation("Schedule Service set up complete.");
+
         }
         public void CleanUp()
         {
