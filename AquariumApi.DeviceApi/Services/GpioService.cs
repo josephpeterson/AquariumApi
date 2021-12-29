@@ -13,12 +13,14 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
-    public interface IGpioService: IDeviceSetupService
+    public interface IGpioService
     {
+        void CleanUp();
         List<DeviceSensor> GetAllSensors();
         GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);
         void SetPinValue(DeviceSensor pin, GpioPinValue pinValue);
+        void Setup(ICollection<DeviceSensor> sensors);
         DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest);
     }
     public class GpioService : IGpioService
@@ -27,18 +29,16 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<GpioService> _logger;
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
-        private readonly IAquariumAuthService _aquariumAuthService;
         private readonly List<DeviceSensor> Pins = new List<DeviceSensor>();
         private IGpioControllerWrapper Controller;
         public bool ATOSystemRunning { get; private set; }
 
-        public GpioService(IConfiguration config, ILogger<GpioService> logger, IAquariumAuthService aquariumAuthService,ISerialService serialService,IHostingEnvironment hostingEnvironment)
+        public GpioService(IConfiguration config, ILogger<GpioService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
         {
             _config = config;
             _logger = logger;
             _serialService = serialService;
             _hostingEnvironment = hostingEnvironment;
-            _aquariumAuthService = aquariumAuthService;
             CreateController();
         }
         private void PreparePins()
@@ -53,10 +53,8 @@ namespace AquariumApi.DeviceApi
                     if (p.Polarity == 0) // Input only
                     {
                         Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
-                        {
-                            p.Value = Controller.Read(p.Pin);
-                            p.OnSensorTriggered(sender, 0);
-                        });
+                            OnDeviceSensorTriggered(p,sender,pinValueChangedEventArgs)
+                        );
                         p.Value = Controller.Read(p.Pin);
                     }
 
@@ -93,11 +91,9 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError(ex.StackTrace);
             }
         }
-        public void Setup()
+        public void Setup(ICollection<DeviceSensor> sensors)
         {
             CleanUp();
-            var device = _aquariumAuthService.GetAquarium().Device;
-            var sensors = device.Sensors;
             _logger.LogInformation($"{sensors.Count()} sensors found...");
             sensors.ToList().ForEach(s =>
             {
@@ -155,6 +151,11 @@ namespace AquariumApi.DeviceApi
                 pinValue = pinValue == GpioPinValue.Low ? GpioPinValue.High : GpioPinValue.Low;
             pin.Value = pinValue;
             Controller.Write(pin.Pin, pinValue);
+        }
+        public void OnDeviceSensorTriggered(DeviceSensor p,object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
+        {
+            p.Value = Controller.Read(p.Pin);
+            p.OnSensorTriggered(sender, 0);
         }
         public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)
         {

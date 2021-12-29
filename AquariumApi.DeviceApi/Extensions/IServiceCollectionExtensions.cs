@@ -1,4 +1,5 @@
 using AquariumApi.DeviceApi.Clients;
+using AquariumApi.DeviceApi.Providers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ namespace AquariumApi.DeviceApi.Extensions
 
     private static void RegisterServices(IServiceCollection services)
     {
+        services.AddSingleton<DateTimeProvider>();
         services.AddTransient<IHardwareService, HardwareService>();
         services.AddTransient<ISerialService, SerialService>();
         services.AddTransient<IAquariumClient, AquariumClient>();

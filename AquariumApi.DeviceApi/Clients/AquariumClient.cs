@@ -27,7 +27,7 @@ namespace AquariumApi.DeviceApi.Clients
         private IAquariumAuthService _aquariumAuthService;
 
 
-        public AquariumClient(ILogger<IAquariumClient> logger, IConfiguration config,
+        public AquariumClient(IConfiguration config,ILogger<IAquariumClient> logger,
             IAquariumAuthService aquariumAuthService)
         {
             _logger = logger;

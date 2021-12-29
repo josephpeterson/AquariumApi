@@ -30,16 +30,21 @@ namespace AquariumApi.DeviceApi
         private IConfiguration _config;
         private ILogger<DeviceService> _logger;
         private IHardwareService _hardwareService;
-        private ScheduleService _scheduleService;
+        //private ScheduleService _scheduleService;
         private IAquariumClient _aquariumClient;
         private IAquariumAuthService _aquariumAuthService;
 
-        public DeviceService(IConfiguration config, ILogger<DeviceService> logger, IHardwareService hardwareService, IAquariumAuthService aquariumAuthService, ScheduleService scheduleService,IAquariumClient aquariumClient)
+        public DeviceService(IConfiguration config, 
+            ILogger<DeviceService> logger, 
+            IHardwareService hardwareService, 
+            IAquariumAuthService aquariumAuthService, 
+            //ScheduleService scheduleService,
+            IAquariumClient aquariumClient)
         {
             _config = config;
             _logger = logger;
             _hardwareService = hardwareService;
-            _scheduleService = scheduleService;
+            //_scheduleService = scheduleService;
             _aquariumClient = aquariumClient;
             _aquariumAuthService = aquariumAuthService;
         }
@@ -72,11 +77,6 @@ namespace AquariumApi.DeviceApi
 
         public void Setup()
         {
-            RegisterDeviceTasks();
-        }
-        private void RegisterDeviceTasks()
-        {
-            _scheduleService.RegisterDeviceTask(ScheduleTaskTypes.Snapshot,PerformSnapshotTask);
         }
 
         public void PerformSnapshotTask(DeviceScheduleTask task)

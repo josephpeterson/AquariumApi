@@ -51,8 +51,7 @@ public class MockGpioControllerWrapper : IGpioControllerWrapper
 
     public bool IsPinOpen(int pinNumber)
     {
-        int? pin = PinModes.Keys.Where(p => p == pinNumber).FirstOrDefault();
-        if (pin != null)
+        if (PinModes.Keys.Any(p => p == pinNumber))
             return true;
         return false;
     }
@@ -78,10 +77,9 @@ public class MockGpioControllerWrapper : IGpioControllerWrapper
     public GpioPinValue Read(int pinNumber)
     {
         //actual gpio controller: what happens when we read an non open pin
-        var k = PinValues.Keys.Where(p => p == pinNumber).FirstOrDefault();
-        //if (k != null)
-        //    return (k != PinValue.High) ? GpioPinValue.High : GpioPinValue.Low;
-        return GpioPinValue.High;
-
+        var k = PinValues.Keys.Where(p => p == pinNumber);
+        if (!k.Any())
+            return GpioPinValue.Low;
+        return PinValues[k.First()];
     }
 }

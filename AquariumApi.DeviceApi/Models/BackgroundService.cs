@@ -8,7 +8,7 @@ namespace AquariumApi.DeviceApi
     public abstract class BackgroundService : IHostedService, IDisposable
     {
         private Task _executingTask;
-        private CancellationTokenSource _stoppingCts;
+        private CancellationToken _stoppingCts;
 
 
 
@@ -16,9 +16,9 @@ namespace AquariumApi.DeviceApi
 
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
-            _stoppingCts = new CancellationTokenSource();
+            _stoppingCts = cancellationToken;
             // Store the task we're executing
-            _executingTask = ExecuteAsync(_stoppingCts.Token);
+            _executingTask = ExecuteAsync(_stoppingCts);
 
             // If the task is completed then return it,
             // this will bubble cancellation and failure to the caller
@@ -41,7 +41,7 @@ namespace AquariumApi.DeviceApi
             try
             {
                 // Signal cancellation to the executing method
-                _stoppingCts.Cancel();
+                //_stoppingCts.Cancel();
             }
             finally
             {
@@ -55,7 +55,7 @@ namespace AquariumApi.DeviceApi
 
         public virtual void Dispose()
         {
-            _stoppingCts.Cancel();
+            //_stoppingCts.Cancel();
         }
     }
 }

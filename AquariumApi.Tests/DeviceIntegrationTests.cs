@@ -55,26 +55,7 @@ public class DeviceIntegrationTests
             _accountService,
             _activityService,
             null,
+            null,
             null);
-    }
-    [Fact]
-    public void GivenServiceAvailable_TestDeviceUploadIntegration()
-    {
-        var logger = new NullLogger<AquariumClient>();
-        var aquariumClient = new AquariumClient(logger, null);
-
-        var host = "http://localhost:5000/v1";
-        var deviceId = 18;
-        AquariumSnapshot snapshot = new AquariumSnapshot()
-        {
-            ManualEntry = true,
-            Date = Convert.ToDateTime("05/11/1996")
-        };
-
-        var photo = File.ReadAllBytes("temp.jpg");
-
-        var data = aquariumClient.SendAquariumSnapshotToHost(snapshot, photo);
-
-        Assert.NotNull(data);
     }
 }

@@ -19,6 +19,7 @@ namespace AquariumApi.Models
         public int? TriggerSensorId { get; set; }
         public GpioPinValue TriggerSensorValue { get; set; }
         public int? MaximumRuntime { get; set; }
+        public string DateConditions { get; set; }
 
         [ForeignKey("DeviceId")]
         public virtual AquariumDevice Device { get; set; }
@@ -26,5 +27,22 @@ namespace AquariumApi.Models
         public virtual DeviceSensor TargetSensor { get; set; }
         [ForeignKey("TriggerSensorId")]
         public virtual DeviceSensor TriggerSensor { get; set; }
+
+
+
+        public bool RunsOnDate(DateTime date)
+        {
+            var day = date.DayOfWeek;
+            if (string.IsNullOrEmpty(DateConditions))
+                return true;
+            if(DateConditions.Length < 7)
+                return int.Parse(DateConditions) == date.Day;
+            else
+            {
+                var dayCondition = DateConditions[(int) day];
+                var runs = dayCondition.Equals('1');
+                return runs;
+            }
+        }
     }   
 }

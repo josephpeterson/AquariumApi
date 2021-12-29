@@ -35,26 +35,11 @@ namespace AquariumApi.DeviceApi.Controllers
         [Route(DeviceOutboundEndpoints.SCHEDULE_STATUS)]
         public ActionResult<IEnumerable<string>> GetScheduleStatus()
         {
-            try
+            //todo remove
+            _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_STATUS} endpoint caught exception:");
+            return BadRequest(new DeviceException("Unknown device error occurred")
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_STATUS} called");
-                var scheduleStatus = _scheduleService.GetStatus();
-                return new OkObjectResult(scheduleStatus);
-            }
-            catch (DeviceException ex)
-            {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_STATUS} endpoint caught exception: {ex.Message}");
-                return BadRequest(new DeviceException(ex.Message));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_STATUS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return BadRequest(new DeviceException("Unknown device error occurred")
-                {
-                    Source = ex
-                });
-            }
+            });
         }
         [HttpGet(DeviceOutboundEndpoints.SCHEDULE_START)]
         public IActionResult Start()
@@ -110,7 +95,11 @@ namespace AquariumApi.DeviceApi.Controllers
         {
             try
             {
-                var runningScheduledJob = _scheduleService.GenericPerformTask(deviceScheduleTask);
+                var scheduledJob = new ScheduledJob()
+                {
+                    Task = deviceScheduleTask
+                };
+                var runningScheduledJob = _scheduleService.GenericPerformTask(scheduledJob);
                 return new OkObjectResult(runningScheduledJob.ScheduledJob);
             }
             catch (DeviceException ex)

@@ -50,39 +50,7 @@ namespace AquariumApi.DeviceApi
 
         public void Setup()
         {
-            _logger.LogInformation("Setting up Device Service...");
-            try
-            {
-                _deviceService.Setup();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.Message);
-            }
-
-            _logger.LogInformation("Setting up GPIO Service...");
-            try
-            {
-                _gpioService.Setup();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.Message);
-            }
-
-            /*
-            _logger.LogInformation("Setting up ATO Service...");
-            try
-            {
-                _atoService.Setup();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e.Message);
-            }
-            */
-
-            _logger.LogInformation("Checking schedule information...");
+            _logger.LogInformation("Setting up Schedule Service...");
             try
             {
                 _scheduleService.Setup();
@@ -95,7 +63,6 @@ namespace AquariumApi.DeviceApi
         public void CleanUp()
         {
             _logger.LogInformation("Cleaning up device services...");
-
             _deviceService.CleanUp();
             _gpioService.CleanUp();
             _atoService.CleanUp();
