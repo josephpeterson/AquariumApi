@@ -312,7 +312,7 @@ namespace AquariumApi.DeviceApi
 
                 var task = aq.Device.Tasks.First(t => t.Id == ta.TaskId);
 
-                if (!task.RunsOnDate(startTime))
+                if (!ta.RunsOnDate(startTime))
                     return;
 
                 var scheduledJob = new ScheduledJob()

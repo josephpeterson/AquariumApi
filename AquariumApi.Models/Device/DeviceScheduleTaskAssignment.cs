@@ -19,6 +19,8 @@ namespace AquariumApi.Models
         public bool Repeat { get; set; }
         public int? RepeatInterval { get; set; }
         public DateTime RepeatEndTime { get; set; }
+        public string DateConditions { get; set; }
+
 
         [ForeignKey("ScheduleId")]
         public DeviceSchedule Schedule { get; set; }
@@ -29,5 +31,19 @@ namespace AquariumApi.Models
         [ForeignKey("TriggerTaskId")]
         public DeviceScheduleTask TriggerTask { get; set; }
 
+        public bool RunsOnDate(DateTime date)
+        {
+            var day = date.DayOfWeek;
+            if (string.IsNullOrEmpty(DateConditions))
+                return true;
+            if (DateConditions.Length < 7)
+                return int.Parse(DateConditions) == date.Day;
+            else
+            {
+                var dayCondition = DateConditions[(int)day];
+                var runs = dayCondition.Equals('1');
+                return runs;
+            }
+        }
     }
 }

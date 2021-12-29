@@ -128,7 +128,6 @@ namespace AquariumDeviceApiTests
                         TargetSensorValue = GpioPinValue.High,
                         TriggerSensorId = 13, //Float Switch
                         TriggerSensorValue = GpioPinValue.High,
-                        DateConditions = null, //Run every day
                     },
                     new DeviceScheduleTask()
                     {
@@ -138,7 +137,6 @@ namespace AquariumDeviceApiTests
                         TargetSensorId = 14, //Water change solenoid
                         TriggerSensorId = 13, //Float Switch
                         TriggerSensorValue = GpioPinValue.High,
-                        DateConditions = "0100000", //Run every monday
                     },
                     new DeviceScheduleTask()
                     {
@@ -149,7 +147,6 @@ namespace AquariumDeviceApiTests
                         TargetSensorValue = GpioPinValue.High,
                         TriggerSensorId = 13, //Float Switch
                         TriggerSensorValue = GpioPinValue.High,
-                        DateConditions = "0100000", //Run every monday
                     }
                 }
                 }
@@ -258,7 +255,7 @@ namespace AquariumDeviceApiTests
             SetupAquariumDeviceSchedule();
             var taskAssignment = _aquarium.Device.Schedules.First().TaskAssignments.First();
             var targetTask = _aquarium.Device.Tasks.First(t => t.Id == taskAssignment.TaskId);
-            targetTask.DateConditions = "0100000";
+            taskAssignment.DateConditions = "0100000";
 
             //act
             _scheduleService.Setup();
@@ -276,7 +273,7 @@ namespace AquariumDeviceApiTests
             SetupAquariumDeviceSchedule();
             var taskAssignment = _aquarium.Device.Schedules.First().TaskAssignments.First();
             var targetTask = _aquarium.Device.Tasks.First(t => t.Id == taskAssignment.TaskId);
-            targetTask.DateConditions = "15";
+            taskAssignment.DateConditions = "15";
             _dateTimeProvider
                .Setup(m => m.Now)
                .Returns(DateTime.Parse("1/13/2020"));
