@@ -172,8 +172,8 @@ namespace AquariumApi.DeviceApi
         /* Tasks */
         public RunningScheduledJob GenericPerformTask(ScheduledJob job)
         {
-            var task = job.Task;
             var aq = _aquariumAuthService.GetAquarium();
+            var task = job.Task ?? aq.Device.Tasks.First(s => s.Id == job.TaskId);
             var targetSensor = aq.Device.Sensors.First(s => s.Id == task.TargetSensorId);
             DeviceSensor targetSensorValue = aq.Device.Sensors.First(s => s.Id == task.TargetSensorId);
             DeviceSensor triggerSensor = null;
@@ -370,6 +370,25 @@ namespace AquariumApi.DeviceApi
             RunningJobs.Remove(runningJob);
             _ = DispatchJobStatus(job);
             _logger.LogInformation($"[ScheduleService] Scheduled job {job.Id} stopped.");
+
+            if(jobEndReason == JobEndReason.Normally || jobEndReason ==  JobEndReason.MaximumRuntimeReached) //maybe move this out to where this method gets called
+            {
+                //find continuing task
+                var taskAssignments = GetAllSchedules().SelectMany(s => s.TaskAssignments)
+                    .Where(ta => ta.TriggerTypeId == TriggerTypes.TaskDependent && ta.TriggerTaskId == job.TaskId);
+                if (taskAssignments.Any())
+                {
+                    _logger.LogInformation($"[ScheduleService] Scheduled job {job.Id} will continue with another {taskAssignments.Count()} task(s)");
+                    taskAssignments.ToList().ForEach(ta =>
+                    {
+                        GenericPerformTask(new ScheduledJob()
+                        {
+                            TaskId = ta.TaskId,
+                        });
+                    });
+
+                }
+            }
             return job;
         }
         public List<ScheduledJob> StopAllScheduledJobs()

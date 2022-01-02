@@ -98,6 +98,31 @@ namespace AquariumApi.Controllers
         /// <returns>
         /// List of ScheduledJobs that fit within the provided pagination sliver
         /// </returns>
+        [HttpPost]
+        [Route(AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS)]
+        public IActionResult GetAllScheduledJobs(int deviceId,[FromBody] PaginationSliver pagination)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+
+            try
+            {
+                _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS.AggregateParams($"{deviceId}")} called");
+                List <ScheduledJob> scheduledJobs = _aquariumService.GetDeviceScheduledJobs(deviceId,pagination);
+                return new OkObjectResult(scheduledJobs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        /// <summary>
+        /// This endpoint returnsd all scheduled jobs on the device
+        /// </summary>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        [Obsolete]
         [HttpGet]
         [Route(AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE)]
         public IActionResult GetScheduledJobsOnDevice(int deviceId)
@@ -108,7 +133,7 @@ namespace AquariumApi.Controllers
             try
             {
                 _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE.AggregateParams($"{deviceId}")} called");
-                List <ScheduledJob> scheduledJobs = _aquariumService.GetScheduledJobsOnDevice(deviceId);
+                List<ScheduledJob> scheduledJobs = _aquariumService.GetScheduledJobsOnDevice(deviceId);
                 return new OkObjectResult(scheduledJobs);
             }
             catch (Exception ex)
@@ -155,6 +180,85 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        #region Device Schedules
+        [HttpPost]
+        [Route(AquariumApiEndpoints.DEVICE_SCHEDULE_STATUS)]
+        public IActionResult GetScheduleStatus(int deviceId)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+            try
+            {
+                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_SCHEDULE_STATUS.AggregateParams($"{deviceId}")} called");
+                ScheduleState scheduleState = _aquariumService.GetDeviceScheduleStatus(deviceId);
+                return new OkObjectResult(scheduleState);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_SCHEDULE_STATUS.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
+        [HttpPost]
+        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_TASK)]
+        public IActionResult PerformScheduleTask(int deviceId, [FromBody] DeviceScheduleTask deviceScheduleTask)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+            try
+            {
+                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_DISPATCH_TASK.AggregateParams($"{deviceId}")} called");
+                var runningJob = _aquariumService.PerformScheduleTask(deviceId, deviceScheduleTask);
+                return new OkObjectResult(runningJob);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_DISPATCH_TASK.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Device Tasks
+        [HttpPost]
+        [Route(AquariumApiEndpoints.DEVICE_TASK_CREATE)]
+        public IActionResult CreateDeviceTask(int deviceId, [FromBody] DeviceScheduleTask deviceTask)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+            try
+            {
+                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_TASK_CREATE.AggregateParams($"{deviceId}")} called");
+                var deviceSensor = _aquariumService.CreateDeviceTask(deviceId, deviceTask);
+                return new OkObjectResult(deviceSensor);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_TASK_CREATE.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpDelete]
+        [Route(AquariumApiEndpoints.DEVICE_TASK_DELETE)]
+        public IActionResult DeleteDeviceTask(int deviceId, int taskId)
+        {
+            if (!ValidateRequest(deviceId))
+                return Unauthorized();
+            try
+            {
+                _logger.LogInformation($"DELETE {AquariumApiEndpoints.DEVICE_TASK_DELETE.AggregateParams($"{deviceId}", $"{taskId}")} called");
+                _aquariumService.DeleteDeviceTask(deviceId, taskId);
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"DELETE {AquariumApiEndpoints.DEVICE_TASK_DELETE.AggregateParams($"{deviceId}", $"{taskId}")}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        #endregion
         private bool ValidateRequest(int deviceId)
         {
             var id = _accountService.GetCurrentUserId();

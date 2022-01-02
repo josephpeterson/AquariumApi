@@ -135,8 +135,8 @@ namespace AquariumDeviceApiTests
                         Id = 234,
                         MaximumRuntime = 30,
                         TargetSensorId = 14, //Water change solenoid
-                        TriggerSensorId = 13, //Float Switch
-                        TriggerSensorValue = GpioPinValue.High,
+                        //TriggerSensorId = 13, //Float Switch
+                        //TriggerSensorValue = GpioPinValue.High,
                     },
                     new DeviceScheduleTask()
                     {
@@ -380,6 +380,52 @@ namespace AquariumDeviceApiTests
             var allTasks = _scheduleService.GetAllScheduledTasks();
             var tasks = allTasks.Where(sj => sj.Status == JobStatus.Running);
             Assert.Empty(tasks);
+        }
+        [Fact]
+        public void GivenTaskAssignmentHasTaskTrigger_TaskStartsAfterTargetTask()
+        {
+            //setup
+            SetupAquariumDeviceSchedule();
+
+            var taskAssignment = new DeviceScheduleTaskAssignment()
+            {
+                Id = 1,
+                TriggerTypeId = TriggerTypes.TaskDependent,
+                TaskId = _aquarium.Device.Tasks.First(t => t.Id == 234).Id.Value, //water change drain
+                TriggerTaskId = _aquarium.Device.Tasks.First(t => t.Id == 123).Id, //Auto Top Off Task
+                Repeat = false,
+            };
+            _aquarium.Device.Schedules.First().TaskAssignments.Add(taskAssignment);
+
+            _scheduleService.Setup();
+
+            //act
+            var task = _aquarium.Device.Tasks.First(t => t.Id == 123); //auto top off task
+            var job = new ScheduledJob()
+            {
+                TaskId = task.Id.Value,
+                Task = task,
+            };
+            _scheduleService.GenericPerformTask(job);
+
+            //assert
+            var floatSensor = _aquarium.Device.Sensors.First(s => s.Id == task.TriggerSensorId);
+            var pumpSensor = _aquarium.Device.Sensors.First(s => s.Id == task.TargetSensorId);
+            Assert.Equal(GpioPinValue.Low, floatSensor.Value);
+            Assert.Equal(GpioPinValue.High, pumpSensor.Value);
+
+            //act
+            Thread.Sleep(100);
+            _gpioService.SetPinValue(floatSensor, GpioPinValue.High);
+            _gpioService.OnDeviceSensorTriggered(floatSensor, null, null);
+            Thread.Sleep(50);
+            var allTasks = _scheduleService.GetAllScheduledTasks();
+            var tasks = allTasks.Where(sj => sj.Status == JobStatus.Running);
+            Assert.Equal(GpioPinValue.High, floatSensor.Value);
+            Assert.Equal(GpioPinValue.Low, pumpSensor.Value);
+            Assert.Equal(234,tasks.First().TaskId);
+
+
         }
     }
 }

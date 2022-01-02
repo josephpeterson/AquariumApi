@@ -584,6 +584,7 @@ namespace AquariumApi.DataAccess
             var schedules = _dbAquariumContext.TblDeviceScheduledJob
                 .AsNoTracking()
                 .Where(sa => sa.DeviceId == deviceId)
+                .ApplyPaginationSliver(pagination)
                 .ToList();
             return schedules;
         }

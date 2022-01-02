@@ -75,7 +75,7 @@
         public const string SCHEDULE_DELETE = "/v1/Device/{deviceId}/Schedule/{scheduleId}/Delete";
         public const string SCHEDULE_UPDATE = "/v1/Schedule/Update";
         public const string SCHEDULE_SCHEDULED_JOB_STOP = "/v1/Device/{deviceId}/Schedule/Job/Stop";
-        public const string SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE = "/v1/Device/{deviceId}/Schedule/Job/Deployed";
+        public const string SCHEDULE_RETRIEVE_SCHEDULED_JOBS_ON_DEVICE = "/v1/Device/{deviceId}/Schedule/Job/Deployed"; //obsolete
 
 
     }

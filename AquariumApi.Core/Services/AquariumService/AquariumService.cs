@@ -415,6 +415,7 @@ namespace AquariumApi.Core
                         new KeyValuePair<string, int>("Start at Time",(int)TriggerTypes.Time),
                         new KeyValuePair<string, int>("Sensor Condition",(int)TriggerTypes.SensorDependent),
                         new KeyValuePair<string, int>("Task Condition",(int)TriggerTypes.TaskDependent),
+                        new KeyValuePair<string, int>("Task Assignment",(int)TriggerTypes.TaskAssignmentCompleted),
                     };
                     break;
                 default:

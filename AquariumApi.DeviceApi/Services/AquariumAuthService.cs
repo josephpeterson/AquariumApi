@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -145,7 +146,8 @@ namespace AquariumApi.DeviceApi
                 client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
                 client.Timeout = TimeSpan.FromMinutes(5);
 
-                var result = await client.PostAsJsonAsync(path, loginRequest);
+                var httpContent = new StringContent(JsonConvert.SerializeObject(loginRequest), Encoding.UTF8, "application/json");
+                var result = await client.PostAsync(path, httpContent);
                 if (!result.IsSuccessStatusCode)
                 {
                     if (result.StatusCode == System.Net.HttpStatusCode.NotFound)

@@ -187,5 +187,34 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
 
+        [HttpGet(DeviceOutboundEndpoints.HARDWARE_RETRIEVE_CAMERA_DEVICES)]
+        public IActionResult GetAllCameraDevices()
+        {
+            try
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.HARDWARE_RETRIEVE_CAMERA_DEVICES} called");
+                var devices = GetAllCameraDevices();
+                return new OkObjectResult(devices);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.HARDWARE_RETRIEVE_CAMERA_DEVICES} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.HARDWARE_RETRIEVE_CAMERA_DEVICES} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
+        public static List<string> GetAllConnectedCameras()
+        {
+            throw new NotImplementedException();
+        }
     }
+
 }

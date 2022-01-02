@@ -4,6 +4,7 @@
     {
         Time,
         SensorDependent,
-        TaskDependent
+        TaskDependent,
+        TaskAssignmentCompleted,
     }
 }
