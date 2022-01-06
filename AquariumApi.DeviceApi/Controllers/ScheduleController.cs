@@ -91,14 +91,10 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
         [HttpPost(DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM)]
-        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
+        public IActionResult PerformTask([FromBody] ScheduledJob scheduledJob)
         {
             try
             {
-                var scheduledJob = new ScheduledJob()
-                {
-                    Task = deviceScheduleTask
-                };
                 var runningScheduledJob = _scheduleService.GenericPerformTask(scheduledJob);
                 return new OkObjectResult(runningScheduledJob.ScheduledJob);
             }

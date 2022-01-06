@@ -252,6 +252,7 @@ namespace AquariumApi.DeviceApi
         public void CleanUp()
         {
             StopAllScheduledJobs();
+            ScheduledJobsQueue.Clear();
             Running = false;
             if(!_cancellationSource.IsCancellationRequested)
             { 

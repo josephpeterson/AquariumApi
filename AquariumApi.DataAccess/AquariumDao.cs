@@ -1300,7 +1300,9 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteDeviceTask(DeviceScheduleTask deviceTask)
         {
-            var assignments = _dbAquariumContext.TblDeviceScheduleTaskAssignment.Where(ta => ta.TaskId == deviceTask.Id || ta.TriggerTaskId == deviceTask.Id);
+            var assignments = _dbAquariumContext.TblDeviceScheduleTaskAssignment
+                .Where(ta => ta.TaskId == deviceTask.Id || ta.TriggerTaskId == deviceTask.Id);
+            _dbAquariumContext.TblDeviceScheduledJob.RemoveRange(_dbAquariumContext.TblDeviceScheduledJob.Where(sj => sj.TaskId == deviceTask.Id));
             _dbAquariumContext.TblDeviceScheduleTaskAssignment.RemoveRange(assignments);
             _dbAquariumContext.TblDeviceScheduleTask.Remove(deviceTask);
             _dbAquariumContext.SaveChanges();

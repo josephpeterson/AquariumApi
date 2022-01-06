@@ -17,7 +17,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatInputModule} from '@angular/material/input';
 import {MatRadioModule} from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
-import { MatProgressSpinnerModule } from '@angular/material';
+import { MatDialogModule, MatProgressSpinnerModule, MatSnackBarModule } from '@angular/material';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { LoginContainerComponent } from './containers/login/login-container.component';
 import { NotifierModule } from "angular-notifier";
@@ -27,6 +27,9 @@ import { ExceptionListComponent } from './exception-list/exception-list.componen
 import { DeviceSensorsComponent } from './device-sensors/device-sensors.component';
 import { DeviceScheduledJobsComponent } from './device-scheduled-jobs/device-scheduled-jobs.component';
 import { DeviceJobListItemComponent } from './device-job-list-item/device-job-list-item.component';
+import { NotificationDialogComponent } from './shared/notification-dialog/notification-dialog.component';
+import { DeviceScheduledJobListItemComponent } from './device-scheduled-job-list-item/device-scheduled-job-list-item.component';
+import { DeviceTaskCardComponent } from './device-task-card/device-task-card.component';
 
 @NgModule({
   declarations: [
@@ -43,11 +46,15 @@ import { DeviceJobListItemComponent } from './device-job-list-item/device-job-li
     LoginContainerComponent,
     ApplicationLogViewComponent,
     HardwareInformationComponent,
-    ExceptionListComponent
+    ExceptionListComponent,
+    NotificationDialogComponent,
+    DeviceScheduledJobListItemComponent,
+    DeviceTaskCardComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
+    MatDialogModule,
     NgbModule.forRoot(),
     BrowserAnimationsModule,
     FormsModule,
@@ -55,6 +62,7 @@ import { DeviceJobListItemComponent } from './device-job-list-item/device-job-li
     MatInputModule,
     MatRadioModule,
     MatCheckboxModule,
+    MatSnackBarModule,
     NotifierModule.withConfig(DeviceNotifierConfig),
     MatProgressSpinnerModule
   ],

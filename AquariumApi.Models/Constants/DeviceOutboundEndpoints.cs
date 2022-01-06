@@ -35,6 +35,7 @@ namespace AquariumApi.Models.Constants
         public const string SCHEDULE_SCHEDULEDJOB_STOP = "/v1/Schedule/Tasks/Stop";
 
         public const string HARDWARE_RETRIEVE_CAMERA_DEVICES = "/v1/Hardware/CameraDevices";
+        public const string HARDWARE_TAKE_PHOTO = "/v1/Hardware/Camera/Take";
 
 
     }

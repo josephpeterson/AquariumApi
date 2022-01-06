@@ -183,7 +183,7 @@ namespace AquariumApi.Controllers
        //Retrieve AquariumDeviceApi.log
         [HttpPost, DisableRequestSizeLimit]
         [Route(AquariumApiEndpoints.DEVICE_LOG)]
-        public IActionResult ClearDeviceLog(int deviceId)
+        public IActionResult GetDeviceLog(int deviceId)
         {
             if (!ValidateRequest(deviceId))
                 return Unauthorized();
@@ -203,7 +203,7 @@ namespace AquariumApi.Controllers
         
         [HttpPost, DisableRequestSizeLimit]
         [Route(AquariumApiEndpoints.DEVICE_LOG_CLEAR)]
-        public IActionResult GetDeviceLog(int deviceId)
+        public IActionResult ClearDeviceLog(int deviceId)
         {
             if (!ValidateRequest(deviceId))
                 return Unauthorized();

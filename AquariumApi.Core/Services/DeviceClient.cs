@@ -28,7 +28,7 @@ namespace AquariumApi.Core
         byte[] TakePhoto(int deviceId);
 
         ScheduleState GetDeviceScheduleStatus();
-        ScheduledJob PerformScheduleTask(DeviceScheduleTask deviceScheduleTask);
+        ScheduledJob PerformScheduleTask(ScheduledJob scheduledJob);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
 
 
@@ -117,10 +117,8 @@ namespace AquariumApi.Core
             using (var client = GetHttpClient())
             {
                 HttpResponseMessage response = client.GetAsync(path).Result;
-                if (response.IsSuccessStatusCode)
-                    return response.Content.ReadAsStringAsync().Result;
-                throw new KeyNotFoundException();
-
+                ValidateResponse(response);
+                return response.Content.ReadAsStringAsync().Result;
             }
         }
         public void ClearDeviceLog()
@@ -223,7 +221,7 @@ namespace AquariumApi.Core
             }
         }
 
-        public ScheduledJob PerformScheduleTask(DeviceScheduleTask deviceScheduleTask)
+        public ScheduledJob PerformScheduleTask(ScheduledJob scheduledJob)
         {
             var path = DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM;
             using (var client = GetHttpClient())
@@ -233,7 +231,7 @@ namespace AquariumApi.Core
                 var config = Device.CameraConfiguration;
                 //config.Device = null;
 
-                var httpContent = new StringContent(JsonConvert.SerializeObject(deviceScheduleTask, jss), Encoding.UTF8, "application/json");
+                var httpContent = new StringContent(JsonConvert.SerializeObject(scheduledJob, jss), Encoding.UTF8, "application/json");
                 var result = client.PostAsync(path, httpContent).Result;
                 ValidateResponse(result);
                 var runningJob = JsonConvert.DeserializeObject<ScheduledJob>(result.Content.ReadAsStringAsync().Result);

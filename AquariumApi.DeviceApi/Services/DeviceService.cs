@@ -14,17 +14,12 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.DeviceApi
 {
-    public interface IDeviceService: IDeviceSetupService
+    public interface IDeviceService
     {
-        AquariumSnapshot TakeSnapshot();
         byte[] TakePhoto(CameraConfiguration configuration);
 
         Task<AquariumDevice> PingAquariumService();
-        AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
-
-
-        void PerformSnapshotTask(DeviceScheduleTask task);
-    }
+ }
     public class DeviceService : IDeviceService
     {
         private IConfiguration _config;
@@ -53,48 +48,10 @@ namespace AquariumApi.DeviceApi
         {
             return _hardwareService.TakePhoto(configuration);
         }
-
-        public AquariumSnapshot TakeSnapshot()
-        {
-            var snapshot = new AquariumSnapshot()
-            {
-                StartTime = DateTime.UtcNow
-            };
-            //if (_accountLogin.Aquarium.Device.EnabledTemperature) snapshot.Temperature = _hardwareService.GetTemperatureC();
-            return snapshot;
-        }
-
         public async Task<AquariumDevice> PingAquariumService()
         {
             var response = await _aquariumClient.PingAquariumService();
             return response;
         }
-
-        public AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo)
-        {
-            return _aquariumClient.SendAquariumSnapshotToHost(snapshot, photo);
-        }
-
-        public void Setup()
-        {
-        }
-
-        public void PerformSnapshotTask(DeviceScheduleTask task)
-        {
-            _logger.LogInformation("Taking aquarium snapshot...");
-            var device = _aquariumAuthService.GetAquarium().Device;
-            var cameraConfiguration = device.CameraConfiguration;
-            var snapshot = TakeSnapshot();
-            var photo = TakePhoto(cameraConfiguration);
-
-            SendAquariumSnapshotToHost(snapshot, photo);
-            _logger.LogInformation("Aquarium snapshot sent successfully");
-        }
-
-        public void CleanUp()
-        {
-            //dont need to do anything
-        }
     }
-
 }

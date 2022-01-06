@@ -18,11 +18,8 @@
 </div>
 
 <div class="row">
-  <div class="col-md">
-    <h4>Hardware</h4>
-    <hardware-information [loginInformation]="loginInformation"></hardware-information>
-  </div>
-  <div class="col-md">
+
+  <div class="col-lg">
     <h4>Scheduled Jobs</h4>
     <device-scheduled-jobs></device-scheduled-jobs>
   </div>
@@ -31,6 +28,10 @@
   <div class="col-md">
     <h4>Sensors</h4>
     <device-sensors [loginInformation]="loginInformation"></device-sensors>
+  </div>
+  <div class="col-md" *ngIf="loginInformation.aquarium as aquarium">
+    <h4>Tasks</h4>
+    <device-task-card [device]="aquarium.device"></device-task-card>
   </div>
   <div class="col-md">
     <h4>Schedules</h4>

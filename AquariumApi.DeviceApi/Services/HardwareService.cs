@@ -11,10 +11,7 @@ namespace AquariumApi.DeviceApi
 {
     public interface IHardwareService
     {
-        int GetTemperatureC();
-        AquariumDevice ScanHardware();
         byte[] TakePhoto(CameraConfiguration config);
-        void WaterChangeBeginDrain();
     }
     public class HardwareService : IHardwareService
     {
@@ -30,23 +27,6 @@ namespace AquariumApi.DeviceApi
             _serialService = serialService;
             _hostingEnvironment = hostingEnvironment;
         }
-        public AquariumDevice ScanHardware()
-        {
-            var port = _hostingEnvironment;
-
-            var hardware = new AquariumDevice()
-            {
-                Port = _config["Port"],
-                EnabledPhoto = CanTakePhoto(),
-                EnabledTemperature = _serialService.CanRetrieveTemperature(),
-                EnabledNitrate = _serialService.CanRetrieveNitrate(),
-                EnabledPh = _serialService.CanRetrievePh(),
-            };
-            return hardware;
-        }
-
-
-
         public bool CanTakePhoto()
         {
             try
@@ -76,69 +56,6 @@ namespace AquariumApi.DeviceApi
             _logger.LogInformation($"Taking Photo...");
             $"/usr/bin/raspistill {config}".Bash();
             return System.IO.File.ReadAllBytes(config.Output);
-        }
-        public int GetTemperatureC()
-        {
-            return _serialService.GetTemperatureC();
-        }
-        public bool CanRetrievePh()
-        {
-            return false;
-        }
-        public bool CanRetrieveNitrate()
-        {
-            return false;
-        }
-
-
-
-        public List<DeviceSensor> ReadAllSensors()
-        {
-            List<DeviceSensor> sensors = new List<DeviceSensor>();
-            sensors.Add(
-                new DeviceSensor()
-                {
-                    Pin = 40,
-                    Type = SensorTypes.FloatSwitch,
-                    Polarity = Polarity.Input
-                }
-            );
-
-            sensors.ForEach(s =>
-            {
-               
-            });
-
-            return sensors;
-        }
-
-
-        public void WaterChangePrepare()
-        {
-            //Turn off return pump and Protein Skimmer
-
-        }
-        public void WaterChangeBeginDrain()
-        {
-            //Open solenoid until float sensor detects low water level
-
-            /*
-            var solenoid = Pi.Gpio[21];
-            solenoid.PinMode = GpioPinDriveMode.Output;
-            _logger.LogInformation("[WaterChange] SOLENOID OPEN");
-            solenoid.Write(GpioPinValue.High);
-            System.Threading.Thread.Sleep(2000);
-            solenoid.Write(GpioPinValue.Low);
-            _logger.LogInformation("[WaterChange] SOLENOID CLOSED");
-            */
-        }
-        public void WaterChangeBeginReplenish()
-        {
-            //Turn on replenish pump until sensor detects high water level
-        }
-        public void WaterChangeBeginATO()
-        {
-            //Turn on ATO pump until sensor detects high water level
         }
     }
 }

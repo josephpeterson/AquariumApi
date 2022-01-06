@@ -227,7 +227,14 @@ namespace AquariumApi.Core
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
-            var runningJob = _deviceClient.PerformScheduleTask(deviceScheduleTask);
+
+            var scheduledJob = new ScheduledJob()
+            {
+                DeviceId = deviceId,
+                TaskId = deviceScheduleTask.Id.Value,
+            };
+            scheduledJob = _aquariumDao.UpsertDeviceScheduledJob(scheduledJob);
+            var runningJob = _deviceClient.PerformScheduleTask(scheduledJob);
             return runningJob;
         }
         public ScheduledJob StopScheduledJob(int deviceId, ScheduledJob scheduledJob)

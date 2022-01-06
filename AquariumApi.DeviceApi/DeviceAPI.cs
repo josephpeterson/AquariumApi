@@ -65,7 +65,6 @@ namespace AquariumApi.DeviceApi
         public void CleanUp()
         {
             _logger.LogInformation("Cleaning up device services...");
-            _deviceService.CleanUp();
             _gpioService.CleanUp();
             _atoService.CleanUp();
             _scheduleService.CleanUp();
