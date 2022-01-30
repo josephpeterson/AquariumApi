@@ -10,8 +10,6 @@ namespace AquariumApi.Models
     [Table("tblSnapshot")]
     public class AquariumSnapshot : Indexable
     {
-        [Required]
-        public int Id { get; set; }
         public Aquarium Aquarium { get; set; }
         public int AquariumId { get; set; }
         public PhotoContent Photo { get; set; }

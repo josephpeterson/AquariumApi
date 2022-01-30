@@ -5,27 +5,9 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
-    public enum JobStatus
-    {
-        Ready,
-        Pending,
-        Running,
-        Completed,
-        Canceled,
-        Errored
-    }
-    public enum JobEndReason
-    {
-        Normally,
-        MaximumRuntimeReached,
-        Error,
-        Canceled,
-        ForceStop,
-    }
     [Table("tblDeviceScheduleJobs")]
     public class ScheduledJob : Indexable  //allow pagination of this object
     {
-        public int? Id { get; set; }
         public int DeviceId { get; set; }
         public int TaskId { get; set; }
         public JobStatus Status { get; set; }
@@ -36,5 +18,7 @@ namespace AquariumApi.Models
 
         public virtual DeviceScheduleTask Task { get; set; }
         public virtual AquariumDevice Device { get; set; }
+        [NotMapped]
+        public virtual ScheduledJob PreviousJob { get; set; }
     }
 }

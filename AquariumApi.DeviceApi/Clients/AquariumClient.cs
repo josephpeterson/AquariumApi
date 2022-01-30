@@ -16,9 +16,10 @@ namespace AquariumApi.DeviceApi.Clients
     {
         AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo);
         Task<AquariumDevice> PingAquariumService();
-        Task<ATOStatus> DispatchATOStatus(ATOStatus status);
         Task DispatchExceptions(List<BaseException> exceptions);
         Task<ScheduledJob> DispatchScheduledJob(ScheduledJob scheduledJob);
+        Task<WaterChange> DispatchWaterChange(WaterChange waterChange);
+        Task<ATOStatus> DispatchWaterATO(ATOStatus waterATO);
     }
     public class AquariumClient : IAquariumClient
     {
@@ -79,26 +80,6 @@ namespace AquariumApi.DeviceApi.Clients
             var response = JsonConvert.DeserializeObject<AquariumDevice>(res);
             return response;
         }
-        public async Task<ATOStatus> DispatchATOStatus(ATOStatus status)
-        {
-            var path = DeviceInboundEndpoints.DISPATCH_ATO;
-            _logger.LogInformation("Dispatching ATO status...");
-            _logger.LogInformation($" - Pump running: {status.PumpRunning}");
-            _logger.LogInformation($" - Max Run Time: {status.MaxRuntime}");
-            using (HttpClient client = GetHttpClient())
-            {
-                var httpContent = new StringContent(JsonConvert.SerializeObject(status), Encoding.UTF8, "application/json");
-                var result = await client.PostAsync(path, httpContent);
-                if (!result.IsSuccessStatusCode)
-                {
-                    throw new Exception($"Could not dispatch ATO status. Response: {result.StatusCode}: {result.ReasonPhrase} Destination: {client.BaseAddress + path}");
-                }
-                _logger.LogInformation($"ATO status successfully dispatched to service.");
-                var res = await result.Content.ReadAsStringAsync();
-                var response = JsonConvert.DeserializeObject<ATOStatus>(res);
-                return response;
-            }
-        }
         public async Task DispatchExceptions(List<BaseException> exceptions)
         {
             var path = DeviceInboundEndpoints.DISPATCH_EXCEPTION;
@@ -129,6 +110,40 @@ namespace AquariumApi.DeviceApi.Clients
                 _logger.LogInformation($"Scheduled job successfully dispatched to service.");
                 var res = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<ScheduledJob>(res);
+                return response;
+            }
+        }
+        public async Task<WaterChange> DispatchWaterChange(WaterChange waterChange)
+        {
+            var path = DeviceInboundEndpoints.DISPATCH_WATERCHANGE;
+            _logger.LogInformation($"Dispatching water change to service...");
+
+            using (HttpClient client = GetHttpClient())
+            {
+                var httpContent = new StringContent(JsonConvert.SerializeObject(waterChange), Encoding.UTF8, "application/json");
+                var result = await client.PutAsync(path, httpContent);
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not dispatch water change to service");
+                _logger.LogInformation($"Water change successfully dispatched to service.");
+                var res = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<WaterChange>(res);
+                return response;
+            }
+        }
+        public async Task<ATOStatus> DispatchWaterATO(ATOStatus waterATO)
+        {
+            var path = DeviceInboundEndpoints.DISPATCH_ATO;
+            _logger.LogInformation($"Dispatching water ATO to service...");
+
+            using (HttpClient client = GetHttpClient())
+            {
+                var httpContent = new StringContent(JsonConvert.SerializeObject(waterATO), Encoding.UTF8, "application/json");
+                var result = await client.PutAsync(path, httpContent);
+                if (!result.IsSuccessStatusCode)
+                    throw new Exception("Could not dispatch water ATO to service");
+                _logger.LogInformation($"Water ATO successfully dispatched to service.");
+                var res = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<ATOStatus>(res);
                 return response;
             }
         }

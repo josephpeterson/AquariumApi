@@ -277,6 +277,7 @@ namespace AquariumApi.DataAccess
             {
                 entity.ToTable("tblWaterChange");
                 entity.HasOne(e => e.Aquarium);
+                entity.HasOne(e => e.ScheduleJob);
 
             });
             modelBuilder.Entity<WaterDosing>(entity =>
@@ -294,8 +295,9 @@ namespace AquariumApi.DataAccess
             });
             modelBuilder.Entity<ATOStatus>(entity =>
             {
-                entity.ToTable("tblDeviceATOStatus");
-                entity.HasOne(e => e.Device);
+                entity.ToTable("tblWaterATO");
+                entity.HasOne(e => e.Aquarium);
+                entity.HasOne(e => e.ScheduleJob);
 
             });
             modelBuilder.Query<PostBoardView>().ToView("vw_PostBoards");

@@ -148,7 +148,7 @@ namespace AquariumApi.Controllers
                 _activityService.RegisterActivity(new CreateAquariumTestResultsActivity()
                 {
                     AccountId = uid,
-                    SnapshotId = snapshot.Id
+                    SnapshotId = snapshot.Id.Value
                 });
 
                 return new OkObjectResult(snapshot);

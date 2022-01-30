@@ -26,7 +26,7 @@ namespace AquariumApi.DeviceApi
         Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest);
         Task RenewAuthenticationToken();
         void Logout();
-        void ApplyAquariumDeviceFromService(AquariumDevice aquariumDevice);
+        void ApplyAquariumDeviceFromService(Aquarium assignedAquarium);
         Aquarium GetAquarium();
         AquariumUser GetAccount();
         
@@ -183,9 +183,9 @@ namespace AquariumApi.DeviceApi
             _bootstrapCleanup = cleanUpCallback;
         }
 
-        public void ApplyAquariumDeviceFromService(AquariumDevice aquariumDevice)
+        public void ApplyAquariumDeviceFromService(Aquarium assignedAquarium)
         {
-            _token.Aquarium.Device = aquariumDevice;
+            _token.Aquarium = assignedAquarium;
             SaveTokenToCache(_token);
             _bootstrapSetup();
         }
@@ -203,7 +203,7 @@ namespace AquariumApi.DeviceApi
                 if (!result.IsSuccessStatusCode)
                     throw new Exception(result.ReasonPhrase);
                 var res = result.Content.ReadAsStringAsync().Result;
-                var response = JsonConvert.DeserializeObject<AquariumDevice>(res);
+                var response = JsonConvert.DeserializeObject<Aquarium>(res);
                 ApplyAquariumDeviceFromService(response);
             }
         }

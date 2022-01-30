@@ -12,18 +12,16 @@ namespace AquariumApi.DeviceApi
         private IDeviceService _deviceService;
         private ScheduleService _scheduleService;
         private IGpioService _gpioService;
-        private IATOService _atoService;
         private ILogger<DeviceAPI> _logger;
         private IAquariumAuthService _aquariumAuthService;
 
-        public DeviceAPI(ILogger<DeviceAPI> logger,IAquariumAuthService aquariumAuthService, IDeviceService deviceService, ScheduleService scheduleService, IGpioService gpioService,IATOService atoService)
+        public DeviceAPI(ILogger<DeviceAPI> logger,IAquariumAuthService aquariumAuthService, IDeviceService deviceService, ScheduleService scheduleService, IGpioService gpioService)
         {
             _logger = logger;
             _aquariumAuthService = aquariumAuthService;
             _deviceService = deviceService;
             _scheduleService = scheduleService;
             _gpioService = gpioService;
-            _atoService = atoService;
         }
 
         public void Process()
@@ -66,7 +64,6 @@ namespace AquariumApi.DeviceApi
         {
             _logger.LogInformation("Cleaning up device services...");
             _gpioService.CleanUp();
-            _atoService.CleanUp();
             _scheduleService.CleanUp();
         }
     }

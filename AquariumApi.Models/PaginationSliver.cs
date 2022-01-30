@@ -11,6 +11,8 @@ namespace AquariumApi.Models
         public bool Descending { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public List<int> Ids { get; set; }
+        public Func<object,bool> CompareFunc;
     }
     public static class LINQPaginationSliverExtension
     {
@@ -42,6 +44,11 @@ namespace AquariumApi.Models
                     return obj.StartTime <= pagination.EndDate.Value;
                 });
             }
+            if (pagination.Ids != null && pagination.Ids.Any())
+                source = source.Where(p => !pagination.Ids.Contains(((Indexable)(object)p).Id.Value));
+
+            if (pagination.CompareFunc != null)
+                source = source.Where(p => pagination.CompareFunc(p));
             source = source.Skip(pagination.Start).Take(pagination.Count);
             return source;
         }

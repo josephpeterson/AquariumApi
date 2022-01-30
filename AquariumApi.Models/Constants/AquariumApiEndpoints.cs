@@ -53,6 +53,17 @@
         public const string AQUARIUM_RETRIEVE_SNAPSHOTS = "/v1/Aquarium/{aquariumId}/Snapshots";
         public const string AQUARIUM_DELETE_SNAPSHOTS = "/v1/Aquarium/{aquariumId}/Snapshots";
 
+        public const string AQUARIUM_WATER_RETRIEVE_WATERCHANGES = "/v1/Aquarium/{aquariumId}/Water/WaterChanges";
+        public const string AQUARIUM_WATER_RETRIEVE_AUTOWATERCHANGES = "/v1/Aquarium/{aquariumId}/Water/AutoWaterChanges";
+        public const string AQUARIUM_WATER_UPSERT_WATERCHANGE = "/v1/Aquarium/{aquariumId}/Water/WaterChanges";
+        public const string AQUARIUM_WATER_DELETE_WATERCHANGES = "/v1/Aquarium/{aquariumId}/Water/WaterChanges";
+        public const string AQUARIUM_WATER_RETRIEVE_WATERATOS = "/v1/Aquarium/{aquariumId}/Water/WaterATOs";
+        public const string AQUARIUM_WATER_RETRIEVE_AUTOWATERATOS = "/v1/Aquarium/{aquariumId}/Water/AutoWaterATOs";
+        public const string AQUARIUM_WATER_UPSERT_WATERATO = "/v1/Aquarium/{aquariumId}/Water/WaterATOs";
+        public const string AQUARIUM_WATER_DELETE_WATERATOS = "/v1/Aquarium/{aquariumId}/Water/WaterATOs";
+
+
+
         public const string AUTH_RENEW = "/v1/Auth/Renew";
         public const string AUTH_LOGIN = "/v1/Auth/Login";
         public const string AUTH_LOGIN_DEVICE = "/v1/Auth/Login/Device";

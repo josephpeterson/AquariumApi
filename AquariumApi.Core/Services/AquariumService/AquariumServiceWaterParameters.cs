@@ -16,8 +16,7 @@ namespace AquariumApi.Core
     public partial interface IAquariumService
     {
         ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination = null);
-        WaterChange AddWaterChange(WaterChange waterChange);
-        WaterChange UpdateWaterChange(WaterChange waterChange);
+        WaterChange UpsertWaterChange(WaterChange waterChange);
         void DeleteWaterChanges(List<int> waterChangeIds);
         ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId,PaginationSliver pagination = null);
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
@@ -26,10 +25,13 @@ namespace AquariumApi.Core
         ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId, PaginationSliver pagination);
         AquariumSnapshot AddWaterParametersByAquarium(int aquariumId, AquariumSnapshot snapshot);
         ICollection<ATOStatus> GetWaterATOStatusesByAquarium(int aquariumId, PaginationSliver pagination);
+        ATOStatus UpsertWaterATO(ATOStatus waterATO);
+
     }
     public partial class AquariumService : IAquariumService
     {
         /* Water Changes */
+        #region Water Parameters
         public ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId,PaginationSliver pagination)
         {
             return _aquariumDao.GetWaterParametersByAquarium(aquariumId,pagination);
@@ -39,29 +41,25 @@ namespace AquariumApi.Core
             snapshot.AquariumId = aquariumId;
             return _aquariumDao.AddSnapshot(snapshot);
         }
+        #endregion
+        #region Water Changes
         public ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination)
         {
             return _aquariumDao.GetWaterChangesByAquarium(aquariumId,pagination);
         }
-        public WaterChange AddWaterChange(WaterChange waterChange)
+        public WaterChange UpsertWaterChange(WaterChange waterChange)
         {
-            return _aquariumDao.AddWaterChange(waterChange);
-        }
-        public WaterChange UpdateWaterChange(WaterChange waterChange)
-        {
-            return _aquariumDao.UpdateWaterChange(waterChange);
+            return _aquariumDao.UpsertWaterChange(waterChange);
         }
         public void DeleteWaterChanges(List<int> waterChangeIds)
         {
             _aquariumDao.DeleteWaterChanges(waterChangeIds);
         }
+        #endregion
+        #region Water Dosing
         public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId, PaginationSliver pagination)
         {
             return _aquariumDao.GetWaterDosingsByAquarium(aquariumId,pagination);
-        }
-        public ICollection<ATOStatus> GetWaterATOStatusesByAquarium(int aquariumId,PaginationSliver pagination)
-        {
-            return _aquariumDao.GetWaterATOByAquarium(aquariumId,pagination);
         }
         public WaterDosing AddWaterDosing(WaterDosing waterDosing)
         {
@@ -75,5 +73,20 @@ namespace AquariumApi.Core
         {
             _aquariumDao.DeleteWaterDosings(waterDosingIds);
         }
+        #endregion
+        #region Water Auto Top Off
+        public ICollection<ATOStatus> GetWaterATOStatusesByAquarium(int aquariumId,PaginationSliver pagination)
+        {
+            return _aquariumDao.GetWaterATOs(aquariumId,pagination);
+        }
+        public ATOStatus UpsertWaterATO(ATOStatus waterATO)
+        {
+            return _aquariumDao.UpsertWaterATO(waterATO);
+        }
+        public void DeleteWaterATOs(List<int> waterATOIds)
+        {
+            _aquariumDao.DeleteWaterATOs(waterATOIds);
+        }
+        #endregion
     }
 }

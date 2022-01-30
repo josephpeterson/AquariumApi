@@ -30,11 +30,9 @@ namespace AquariumApi.Core
         ScheduleState GetDeviceScheduleStatus();
         ScheduledJob PerformScheduleTask(ScheduledJob scheduledJob);
         void ApplyUpdatedDevice(AquariumDevice aquariumDevice);
+        void ApplyAssignedAquarium(Aquarium assignedAquarium);
 
 
-        ATOStatus GetDeviceATOStatus(); //correct
-        ATOStatus PerformDeviceATO(int maxRuntime);
-        ATOStatus StopDeviceATO();
         void Configure(AquariumDevice device);
         Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
         ScheduledJob StopScheduledJob(ScheduledJob scheduledJob);
@@ -208,6 +206,20 @@ namespace AquariumApi.Core
             }
             _logger.LogInformation("Device information updated on device");
         }
+        public void ApplyAssignedAquarium(Aquarium assignedAquarium)
+        {
+            var path = DeviceOutboundEndpoints.UPDATE;
+            using (var client2 = GetHttpClient())
+            {
+                JsonSerializerSettings jss = new JsonSerializerSettings();
+                jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+
+                var httpContent = new StringContent(JsonConvert.SerializeObject(assignedAquarium, jss), Encoding.UTF8, "application/json");
+                var result = client2.PostAsync(path, httpContent).Result;
+                ValidateResponse(result);
+            }
+            _logger.LogInformation("Assigned aquarium deployed to device.");
+        }
 
         public ScheduleState GetDeviceScheduleStatus()
         {
@@ -268,45 +280,7 @@ namespace AquariumApi.Core
 
 
         /* Get device ATO status */
-        #region Device ATO
-        public ATOStatus GetDeviceATOStatus()
-        {
-            var path = DeviceOutboundEndpoints.WATER_CHANGE_STATUS;
-            var client = GetHttpClient();
-            var result = client.GetAsync(path).Result;
-            ValidateResponse(result);
-            var state = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
-            state.DeviceId = Device.Id; //the device could send bad data
-            return state;
-        }
-        
-        public ATOStatus PerformDeviceATO(int maxRuntime)
-        {
-            var path = DeviceOutboundEndpoints.WATER_CHANGE_BEGIN;
-            using (var client = GetHttpClient())
-            {
-                var httpContent = new StringContent(maxRuntime.ToString(), Encoding.UTF8, "application/json");
-                var result = client.PostAsync(path, httpContent).Result;
-                ValidateResponse(result);
-
-                var atoStatus = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
-                atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
-                return atoStatus;
-            }
-        }
-        public ATOStatus StopDeviceATO()
-        {
-            var path = DeviceOutboundEndpoints.WATER_CHANGE_STOP;
-            using (var client = GetHttpClient())
-            {
-                var result = client.PostAsync(path, null).Result;
-                ValidateResponse(result);
-
-                var atoStatus = JsonConvert.DeserializeObject<ATOStatus>(result.Content.ReadAsStringAsync().Result);
-                atoStatus = _aquariumDao.UpdateATOStatus(atoStatus);
-                return atoStatus;
-            }
-        }
+        #region Device ATO        
         #endregion
 
         #region Device Sensors

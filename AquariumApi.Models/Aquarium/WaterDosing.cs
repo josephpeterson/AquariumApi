@@ -5,9 +5,6 @@ namespace AquariumApi.Models
 {
     public class WaterDosing : Indexable
     {
-        [Required]
-        [Key]
-        public int Id { get; set; }
         public int AquariumId { get; set; }
         public decimal Amount { get; set; }
         public string Brand { get; set; }

@@ -128,8 +128,7 @@ namespace AquariumApi.DataAccess
         void DeleteAquariumPhotos(List<int> photoIds);
         IEnumerable<FishPhoto> GetAquariumFishPhotos(int aquariumId);
         ICollection<WaterChange> GetWaterChangesByAquarium(int aquariumId,PaginationSliver pagination);
-        WaterChange AddWaterChange(WaterChange waterChange);
-        WaterChange UpdateWaterChange(WaterChange waterChange);
+        WaterChange UpsertWaterChange(WaterChange waterChange);
         void DeleteWaterChanges(List<int> waterChangeIds);
         ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId,PaginationSliver pagination);
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
@@ -142,17 +141,21 @@ namespace AquariumApi.DataAccess
         DeviceSensor AddDeviceSensor(DeviceSensor deviceSensor);
         DeviceSensor UpdateDeviceSensor(DeviceSensor deviceSensor);
         void DeleteDeviceSensors(List<int> deviceSensorIds);
-        ATOStatus UpdateATOStatus(ATOStatus atoStatus);
-        ATOStatus AddATOStatus(ATOStatus atoStatus);
-        List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver sliver);
+       
         ICollection<AquariumSnapshot> GetWaterParametersByAquarium(int aquariumId, PaginationSliver pagination);
-        List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination);
         List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination);
         ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob);
         #region Device Tasks
         DeviceScheduleTask AddDeviceTask(DeviceScheduleTask deviceTask);
         DeviceScheduleTask UpdateDeviceTask(DeviceScheduleTask deviceTask);
         void DeleteDeviceTask(DeviceScheduleTask deviceTask);
+        #endregion
+
+        #region Auto Top Off ATO
+        void DeleteWaterATOs(List<int> waterATOIds);
+        List<ATOStatus> GetWaterATOs(int aquariumId, PaginationSliver pagination);
+        ATOStatus UpsertWaterATO(ATOStatus atoStatus);
+        Aquarium GetAssignedAquariumByDeviceId(int deviceId);
         #endregion
     }
 
@@ -309,6 +312,17 @@ namespace AquariumApi.DataAccess
                 .Where(aq => aq.OwnerId == userId)
                 .ToList();
         }
+        public Aquarium GetAssignedAquariumByDeviceId(int deviceId)
+        {
+            var aq = _dbAquariumContext.TblAquarium
+                .Include(a => a.Device)
+                .Where(a => a.Device.Id == deviceId)
+                .FirstOrDefault();
+
+            if (aq != null) //get the detailed aquarium
+                aq = GetAquariumById(aq.Id);
+            return aq;
+        }
         public List<Aquarium> GetAquariums()
         {
             return _dbAquariumContext.TblAquarium.AsNoTracking()
@@ -443,7 +457,7 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteSnapshots(List<int> snapshotIds)
         {
-            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id));
+            var snapshots = _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id.Value));
             _dbAquariumContext.RemoveRange(snapshots);
             _dbAquariumContext.SaveChanges();
         }
@@ -487,7 +501,7 @@ namespace AquariumApi.DataAccess
                 .SingleOrDefault(d => d.Id == deviceId);
             if (device == null)
                 throw new KeyNotFoundException();
-            _dbAquariumContext.TblDeviceATOStatus.RemoveRange(_dbAquariumContext.TblDeviceATOStatus.Where(aq => aq.DeviceId == deviceId));
+            //_dbAquariumContext.TblDeviceATOStatus.RemoveRange(_dbAquariumContext.TblDeviceATOStatus.Where(aq => aq.DeviceId == deviceId));
             _dbAquariumContext.Remove(device);
             _dbAquariumContext.SaveChanges();
             return device;
@@ -1191,32 +1205,27 @@ namespace AquariumApi.DataAccess
             var list = range.ToList();
             return list;
         }
-        public List<ATOStatus> GetWaterATOByAquarium(int aquariumId, PaginationSliver pagination)
+        #region Water Changes
+        public WaterChange UpsertWaterChange(WaterChange waterChange)
         {
-            var range = _dbAquariumContext.TblDeviceATOStatus
-                .AsNoTracking()
-                .Where(s => s.AquariumId == aquariumId).ApplyPaginationSliver<ATOStatus>(pagination);
-            var list = range.ToList();
-            return list;
-        }
-        public WaterChange AddWaterChange(WaterChange waterChange)
-        {
+            waterChange.ScheduleJob = null;
+            waterChange.Aquarium = null;
+            if (waterChange.Id.HasValue)
+                _dbAquariumContext.TblWaterChange.Update(waterChange);
+            else
+                _dbAquariumContext.TblWaterChange.Add(waterChange);
             _dbAquariumContext.TblWaterChange.Add(waterChange);
-            _dbAquariumContext.SaveChanges();
-            return waterChange;
-        }
-        public WaterChange UpdateWaterChange(WaterChange waterChange)
-        {
-            _dbAquariumContext.TblWaterChange.Update(waterChange);
             _dbAquariumContext.SaveChanges();
             return waterChange;
         }
         public void DeleteWaterChanges(List<int> waterChangeIds)
         {
-            var removedWaterChanges = _dbAquariumContext.TblWaterChange.Where(n => waterChangeIds.Contains(n.Id)).ToList();
+            var removedWaterChanges = _dbAquariumContext.TblWaterChange.Where(n => waterChangeIds.Contains(n.Id.Value)).ToList();
             _dbAquariumContext.RemoveRange(removedWaterChanges);
             _dbAquariumContext.SaveChanges();
         }
+        #endregion
+        #region Water Dosings
         public ICollection<WaterDosing> GetWaterDosingsByAquarium(int aquariumId,PaginationSliver pagination)
         {
             var waterDosings = _dbAquariumContext.TblWaterDosing.Where(n => n.AquariumId == aquariumId).ToList();
@@ -1240,16 +1249,44 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteWaterDosings(List<int> waterDosingIds)
         {
-            var removedWaterDosings = _dbAquariumContext.TblWaterDosing.Where(n => waterDosingIds.Contains(n.Id)).ToList();
+            var removedWaterDosings = _dbAquariumContext.TblWaterDosing.Where(n => waterDosingIds.Contains(n.Id.Value)).ToList();
             _dbAquariumContext.RemoveRange(removedWaterDosings);
             _dbAquariumContext.SaveChanges();
         }
-
+        #endregion
         public ICollection<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds)
         {
-            return _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id)).ToList();
+            return _dbAquariumContext.TblSnapshot.Where(s => snapshotIds.Contains(s.Id.Value)).ToList();
         }
 
+
+        #region Auto Top Off ATO
+        public ATOStatus UpsertWaterATO(ATOStatus waterATO)
+        {
+            waterATO.ScheduleJob = null;
+            waterATO.Aquarium = null;
+            if (waterATO.Id.HasValue)
+                _dbAquariumContext.TblDeviceATOStatus.Update(waterATO);
+            else
+                _dbAquariumContext.TblDeviceATOStatus.Add(waterATO);
+            _dbAquariumContext.SaveChanges();
+            return waterATO;
+        }
+        public List<ATOStatus> GetWaterATOs(int aquariumId, PaginationSliver pagination)
+        {
+            var range = _dbAquariumContext.TblDeviceATOStatus
+                .AsNoTracking()
+                .Where(s => s.AquariumId == aquariumId).ApplyPaginationSliver<ATOStatus>(pagination);
+            var list = range.ToList();
+            return list;
+        }
+        public void DeleteWaterATOs(List<int> waterATOIds)
+        {
+            var removedWaterATOs = _dbAquariumContext.TblDeviceATOStatus.Where(n => waterATOIds.Contains(n.Id.Value)).ToList();
+            _dbAquariumContext.RemoveRange(removedWaterATOs);
+            _dbAquariumContext.SaveChanges();
+        }
+        #endregion
 
 
 
@@ -1308,29 +1345,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.SaveChanges();
         }
         #endregion
-
-
-        public ATOStatus AddATOStatus(ATOStatus atoStatus)
-        {
-            _dbAquariumContext.TblDeviceATOStatus.Add(atoStatus);
-            _dbAquariumContext.SaveChanges();
-            return atoStatus;
-        }
-        public ATOStatus UpdateATOStatus(ATOStatus atoStatus)
-        {
-            _dbAquariumContext.TblDeviceATOStatus.Update(atoStatus);
-            _dbAquariumContext.SaveChanges();
-            return atoStatus;
-        }
-        [System.Obsolete]
-        public List<ATOStatus> GetATOHistory(int deviceId,PaginationSliver pagination)
-        {
-            var range = _dbAquariumContext.TblDeviceATOStatus
-                .AsNoTracking()
-                .Where(s => s.DeviceId == deviceId).ApplyPaginationSliver<ATOStatus>(pagination);
-            var list = range.ToList();
-            return list;
-        }
     }
 }
 

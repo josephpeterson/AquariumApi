@@ -14,7 +14,6 @@ namespace AquariumApi.DeviceApi.Controllers
         private ScheduleService _scheduleService;
         private IGpioService _gpioService;
         private IHardwareService _hardwareService;
-        private IATOService _atoService;
         private IAquariumAuthService _aquariumAuthService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
@@ -22,7 +21,6 @@ namespace AquariumApi.DeviceApi.Controllers
         public WaterChangeController(IDeviceService deviceService,
             ScheduleService scheduleService,
             IHardwareService hardwareService,
-            IATOService atoService,
             IGpioService gpioService,
             IAquariumAuthService aquariumAuthService,
             ILogger<HomeController> logger, IConfiguration config)
@@ -31,7 +29,6 @@ namespace AquariumApi.DeviceApi.Controllers
             _scheduleService = scheduleService;
             _gpioService = gpioService;
             _hardwareService = hardwareService;
-            _atoService = atoService;
             _aquariumAuthService = aquariumAuthService;
             _logger = logger;
             _config = config;
@@ -44,12 +41,8 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation($"POST {DeviceOutboundEndpoints.WATER_CHANGE_BEGIN} called");
-                _atoService.BeginAutoTopOff(new AutoTopOffRequest
-                {
-                    RunIndefinitely = false,
-                    Runtime = maxRuntime,
-                });
-                return new OkObjectResult(_atoService.GetATOStatus());
+                //basically look for the tasks to trigger water change if its configured
+                throw new NotImplementedException();
             }
             catch (DeviceException ex)
             {
@@ -73,8 +66,7 @@ namespace AquariumApi.DeviceApi.Controllers
             try
             {
                 _logger.LogInformation($"GET {DeviceOutboundEndpoints.WATER_CHANGE_STOP} endpoint called");
-                _atoService.StopAutoTopOff();
-                return new OkObjectResult(_atoService.GetATOStatus());
+                throw new NotImplementedException();
             }
             catch (DeviceException ex)
             {
@@ -84,30 +76,6 @@ namespace AquariumApi.DeviceApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"GET {DeviceOutboundEndpoints.WATER_CHANGE_STOP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return BadRequest(new DeviceException("Unknown device error occurred")
-                {
-                    Source = ex
-                });
-            }
-        }
-        [HttpGet]
-        [Route(DeviceOutboundEndpoints.WATER_CHANGE_STATUS)]
-        public IActionResult WaterChangeATOStatus()
-        {
-            try
-            {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.WATER_CHANGE_STATUS} called");
-                return new OkObjectResult(_atoService.GetATOStatus());
-            }
-            catch (DeviceException ex)
-            {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.WATER_CHANGE_STATUS} endpoint caught exception: {ex.Message}");
-                return BadRequest(new DeviceException(ex.Message));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.WATER_CHANGE_STATUS} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {

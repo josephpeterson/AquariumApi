@@ -51,12 +51,6 @@ namespace AquariumApi.Core
         #endregion
 
         #region Auto Top Off
-        /* ATO */
-        ATOStatus GetDeviceATOStatus(int deviceId);
-        ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus);
-        List<ATOStatus> GetDeviceATOHistory(int deviceId, PaginationSliver paginationSliver);
-        ATOStatus PerformDeviceATO(int deviceId, int maxRuntime);
-        ATOStatus StopDeviceATO(int deviceId);
         #endregion
 
         #region Device Sensors
@@ -73,6 +67,7 @@ namespace AquariumApi.Core
         ScheduledJob StopScheduledJob(int deviceId, ScheduledJob scheduledJob);
         List<ScheduledJob> GetScheduledJobsOnDevice(int deviceId);
         void AttemptAuthRenewDevice(int deviceId);
+        void DeleteWaterATOs(List<int> waterATOIds);
         #endregion
     }
     public partial class AquariumService : IAquariumService
@@ -101,8 +96,7 @@ namespace AquariumApi.Core
             var updatedDevice = _aquariumDao.UpdateAquariumDevice(device);
             try
             {
-                _deviceClient.Configure(updatedDevice);
-                _deviceClient.ApplyUpdatedDevice(updatedDevice);
+                ApplyUpdatedDevice(updatedDevice.Id);
             }
             catch (Exception ex)
             {
@@ -160,9 +154,7 @@ namespace AquariumApi.Core
             _aquariumDao.DeleteDeviceSchedule(scheduleId);
             try
             {
-                var d = _aquariumDao.GetAquariumDeviceById(device.Id);
-                _deviceClient.Configure(d);
-                _deviceClient.ApplyUpdatedDevice(d);
+                ApplyUpdatedDevice(deviceId);
             }
             catch (Exception e)
             {
@@ -195,13 +187,17 @@ namespace AquariumApi.Core
             var device = _aquariumDao.GetAquariumDeviceById(deviceSchedule.DeviceId);
             try
             {
-                var d = _aquariumDao.GetAquariumDeviceById(device.Id);
-                _deviceClient.Configure(d);
-                _deviceClient.ApplyUpdatedDevice(d);
+                ApplyUpdatedDevice(deviceId);
             }
             catch (Exception e)
             {
                 //todo could not update schedule assignment (pi is offline maybe)
+                _logger.LogError("Error while attempting to update schedule on device");
+                _logger.LogError($"{e}");
+                var aq = _aquariumDao.GetAquariumById(device.AquariumId);
+                _notificationService.EmitAsync(aq.OwnerId, "Aquarium Device", $"[{device.Name}] Unable to deploy schedule to aquarium device. Your device may be offline. " +
+                    $"We attempted to contact: " +
+                    $"${device.Address}:{device.Port}").Wait();
             }
             return deviceSchedule;
         }
@@ -213,9 +209,7 @@ namespace AquariumApi.Core
             var device = _aquariumDao.GetAquariumDeviceById(deviceSchedule.DeviceId);
             try
             {
-                var d = _aquariumDao.GetAquariumDeviceById(device.Id);
-                _deviceClient.Configure(d);
-                _deviceClient.ApplyUpdatedDevice(d);
+                ApplyUpdatedDevice(device.Id);
             }
             catch (Exception e)
             {
@@ -311,72 +305,10 @@ namespace AquariumApi.Core
             return _aquariumDao.ApplyAquariumDeviceHardware(deviceId, updatedDevice);
         }
         #endregion
+
         #region Device Auto Top Off
-        /* ATO */
-        public ATOStatus GetDeviceATOStatus(int deviceId)
-        {
-            try
-            {
-                //attempt to get status from pi
-                var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-                _deviceClient.Configure(device);
-                var state = _deviceClient.GetDeviceATOStatus();
-
-                //insert into db
-                if (state.Id.HasValue)
-                    state = _aquariumDao.UpdateATOStatus(state);
-                return state;
-            }
-            catch (Exception e)
-            {
-                _logger.LogInformation("Could not retrieve ATO status from device. Loading from cache...");
-                //load from cache
-                return _aquariumDao.GetATOHistory(deviceId, new PaginationSliver
-                {
-                    Count = 1,
-                    Descending = true
-                }).FirstOrDefault();
-            }
-        }
-        public ATOStatus UpdateDeviceATOStatus(ATOStatus atoStatus)
-        {
-            //Get last ATO
-            var uncompletedATOs = _aquariumDao.GetATOHistory(atoStatus.DeviceId, new PaginationSliver
-            {
-                Descending = true,
-                Count = 10 //doesn't matter, just not all of them
-            }).Where(a => !a.Completed).OrderBy(a => a.UpdatedAt);
-            uncompletedATOs.ToList().ForEach(ato =>
-            {
-                if (ato.Id == atoStatus.Id)
-                    return;
-                ato.UpdatedAt = DateTime.Now.ToUniversalTime();
-                ato.EndReason = "Error"; //todo
-                ato.Completed = true;
-                _aquariumDao.UpdateATOStatus(ato);
-            });
-            if (!atoStatus.PumpRunning && atoStatus.Id == null)
-                return atoStatus;
-            return _aquariumDao.UpdateATOStatus(atoStatus);
-        }
-        public List<ATOStatus> GetDeviceATOHistory(int deviceId, PaginationSliver paginationSliver)
-        {
-            return _aquariumDao.GetATOHistory(deviceId, paginationSliver);
-        }
-        public ATOStatus PerformDeviceATO(int deviceId, int maxRuntime)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.PerformDeviceATO(maxRuntime);
-        }
-
-        public ATOStatus StopDeviceATO(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.StopDeviceATO();
-        }
         #endregion
+
         #region Device Sensors
         /* Device Sensors */
         public DeviceSensor CreateDeviceSensor(int deviceId, DeviceSensor deviceSensor)
@@ -481,7 +413,8 @@ namespace AquariumApi.Core
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
-            _deviceClient.ApplyUpdatedDevice(device);
+            var aq = _aquariumDao.GetAssignedAquariumByDeviceId(device.Id);
+            _deviceClient.ApplyAssignedAquarium(aq);
         }
     }
 }

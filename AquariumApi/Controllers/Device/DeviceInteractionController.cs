@@ -100,7 +100,7 @@ namespace AquariumApi.Controllers
 
                 var aquarium = GetCurrentAquarium();
                 aquarium.Device = _aquariumService.GetAquariumDeviceById(aquarium.Device.Id); //get detailed device
-                return new OkObjectResult(aquarium.Device);
+                return new OkObjectResult(aquarium);
             }
             catch (Exception ex)
             {
@@ -133,36 +133,6 @@ namespace AquariumApi.Controllers
             }
         }
 
-        //Device is sending us ATO dispatch
-        [HttpPost]
-        [Route(DeviceInboundEndpoints.DISPATCH_ATO)]
-        public IActionResult RecieveATOStatus([FromBody] ATOStatus atoStatus)
-        {
-            try
-            {
-                _logger.LogInformation($"POST {DeviceInboundEndpoints.DISPATCH_ATO} called");
-                if (!ValidateRequest())
-                    return Unauthorized();
-
-                var aquarium = GetCurrentAquarium();
-                atoStatus.DeviceId = aquarium.Device.Id;
-                atoStatus.AquariumId = aquarium.Id;
-
-                var s = _aquariumService.UpdateDeviceATOStatus(atoStatus);
-
-                if(s.Completed)
-                    _logger.LogInformation($"ATO was completed for aquarium id: {aquarium.Id}");
-
-                return new OkObjectResult(s);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {DeviceInboundEndpoints.DISPATCH_ATO}: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return BadRequest(ex.Message);
-            }
-        }
-
         //Device is sending us a dispatch on a scheduled job
         [HttpPut]
         [Route(DeviceInboundEndpoints.DISPATCH_SCHEDULEDJOB)]
@@ -185,6 +155,57 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
+        [HttpPut]
+        [Route(DeviceInboundEndpoints.DISPATCH_WATERCHANGE)]
+        public IActionResult ReceiveWaterChange([FromBody] WaterChange waterChange)
+        {
+            try
+            {
+                _logger.LogInformation($"PUT {DeviceInboundEndpoints.DISPATCH_WATERCHANGE} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
+
+                //Cleanse data
+                var aquarium = GetCurrentAquarium();
+                waterChange.Aquarium = aquarium;
+                waterChange.AquariumId = aquarium.Id;
+                
+                //act
+                WaterChange addedWaterChange = _aquariumService.UpsertWaterChange(waterChange);
+                return new OkObjectResult(addedWaterChange);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"PUT {DeviceInboundEndpoints.DISPATCH_WATERCHANGE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        [HttpPut]
+        [Route(DeviceInboundEndpoints.DISPATCH_ATO)]
+        public IActionResult ReceiveWaterATO([FromBody] ATOStatus waterATO)
+        {
+            try
+            {
+                _logger.LogInformation($"PUT {DeviceInboundEndpoints.DISPATCH_ATO} called");
+                if (!ValidateRequest())
+                    return Unauthorized();
+
+                //Cleanse data
+                var aquarium = GetCurrentAquarium();
+                waterATO.Aquarium = aquarium;
+                waterATO.AquariumId = aquarium.Id;
+
+                //act
+                ATOStatus addedWaterATO = _aquariumService.UpsertWaterATO(waterATO);
+                return new OkObjectResult(addedWaterATO);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"PUT {DeviceInboundEndpoints.DISPATCH_ATO} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+
         private bool ValidateRequest()
         {
             var userId = _accountService.GetCurrentUserId();

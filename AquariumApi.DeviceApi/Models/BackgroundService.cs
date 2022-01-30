@@ -24,6 +24,8 @@ namespace AquariumApi.DeviceApi
             // this will bubble cancellation and failure to the caller
             if (_executingTask.IsCompleted)
             {
+                if (_executingTask.Exception != null)
+                    throw _executingTask.Exception;
                 return _executingTask;
             }
 

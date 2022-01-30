@@ -166,7 +166,7 @@ namespace AquariumApi.Core
             var snapshot = GetSnapshotById(snapshotId);
             if (snapshot.PhotoId.HasValue)
                 _photoManager.DeletePhoto(snapshot.PhotoId.Value);
-            _aquariumDao.DeleteSnapshot(snapshot.Id);
+            _aquariumDao.DeleteSnapshot(snapshot.Id.Value);
         }
 
         public AquariumSnapshot TakeSnapshot(int aquariumId, bool takePhoto)
@@ -405,7 +405,8 @@ namespace AquariumApi.Core
                     {
                         new KeyValuePair<string, int>("Take Snapshot",(int)ScheduleTaskTypes.Snapshot),
                         new KeyValuePair<string, int>("Start ATO",(int)ScheduleTaskTypes.StartATO),
-                        new KeyValuePair<string, int>("Start Water Change",(int)ScheduleTaskTypes.StartWaterChange),
+                        new KeyValuePair<string, int>("Water Change Drain",(int)ScheduleTaskTypes.WaterChangeDrain),
+                        new KeyValuePair<string, int>("Water Change Replentish",(int)ScheduleTaskTypes.WaterChangeReplentish),
                         new KeyValuePair<string, int>("Unknown",(int)ScheduleTaskTypes.Unknown),
                     };
                     break;

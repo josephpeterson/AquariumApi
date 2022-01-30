@@ -80,12 +80,13 @@ namespace AquariumApi.DeviceApi
         
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            GenerateScheduledJobsQueue();
-            Running = true;
-            await Task.Run(() =>
+            try
             {
-                try
+                GenerateScheduledJobsQueue();
+                Running = true;
+                await Task.Run(() =>
                 {
+
                     while (!stoppingToken.IsCancellationRequested)
                     {
                         var pendingJobs = GetNextTask();
@@ -95,8 +96,8 @@ namespace AquariumApi.DeviceApi
                             {
                                 var eta = (scheduledJob.StartTime - _dateTimeProvider.Now);
 
-                                //readable time
-                                string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
+                            //readable time
+                            string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
                                 _logger.LogInformation($"Next task/job scheduled in {time} Maximum Runtime: {scheduledJob.MaximumEndTime} Task: {scheduledJob.Task.Name}");
                                 GenericPerformTask(scheduledJob);
                                 ScheduledJobsQueue.Remove(scheduledJob);
@@ -105,15 +106,15 @@ namespace AquariumApi.DeviceApi
                             PrintScheduleStatus();
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError($"Error occured during schedule: {e.Message}");
-                    _logger.LogError($"{e.StackTrace}");
-                }
-                _logger.LogInformation($"Schedule service stopped.");
-                CleanUp();
-            },stoppingToken);
+                }, stoppingToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error occured during schedule: {e.Message}");
+                _logger.LogError($"{e.StackTrace}");
+            }
+            _logger.LogInformation($"Schedule service stopped.");
+            CleanUp();
         }
         private void GenerateScheduledJobsQueue()
         {
@@ -177,6 +178,10 @@ namespace AquariumApi.DeviceApi
             var targetSensor = aq.Device.Sensors.First(s => s.Id == task.TargetSensorId);
             DeviceSensor targetSensorValue = aq.Device.Sensors.First(s => s.Id == task.TargetSensorId);
             DeviceSensor triggerSensor = null;
+
+            //Cleanse
+            if (!task.MaximumRuntime.HasValue)
+                task.MaximumRuntime = 30;
 
             //preflight job
             var maxRuntime = TimeSpan.FromSeconds(task.MaximumRuntime.Value); //maybe switch this to job.MaximumEndTime
@@ -278,6 +283,34 @@ namespace AquariumApi.DeviceApi
             {
                 var s = await _aquariumClient.DispatchScheduledJob(job);
                 job.Id = s.Id;
+
+
+                if(job.Status == JobStatus.Completed)
+                {
+                    if (job.Task.TaskTypeId == ScheduleTaskTypes.StartATO)
+                    {
+                        await _aquariumClient.DispatchWaterATO(new ATOStatus()
+                        {
+                            StartTime = job.StartTime,
+                            EndTime = job.EndTime.Value,
+                            MlPerSec = 5,
+                            ScheduleJobId = job.Id.Value
+                        });
+                    }
+                    else if (job.Task.TaskTypeId == ScheduleTaskTypes.WaterChangeReplentish)
+                    {
+                        var previousJob = job;
+                        while (previousJob.PreviousJob != null)
+                            previousJob = previousJob.PreviousJob;
+                        await _aquariumClient.DispatchWaterChange(new WaterChange()
+                        {
+                            StartTime = previousJob.StartTime,
+                            EndTime = job.EndTime.Value,
+                            ScheduleJobId = job.Id.Value
+                        });
+                    }
+                }
+                
             }
             catch (Exception e)
             {
@@ -320,10 +353,10 @@ namespace AquariumApi.DeviceApi
                 {
                     TaskId = task.Id.Value,
                     Task = task,
-                    StartTime = startTime,
-                    MaximumEndTime = startTime + TimeSpan.FromSeconds(task.MaximumRuntime.Value)
-                //ScheduleId = Id
-            };
+                    StartTime = startTime
+                };
+                if (task.MaximumRuntime.HasValue)
+                    scheduledJob.MaximumEndTime = startTime + TimeSpan.FromSeconds(task.MaximumRuntime.Value);
                 allScheduledJobs.Add(scheduledJob);
 
                 //Check if this task assignment repeats
@@ -382,10 +415,15 @@ namespace AquariumApi.DeviceApi
                     _logger.LogInformation($"[ScheduleService] Scheduled job {job.Id} will continue with another {taskAssignments.Count()} task(s)");
                     taskAssignments.ToList().ForEach(ta =>
                     {
-                        GenericPerformTask(new ScheduledJob()
+                        Task.Run(() =>
                         {
-                            TaskId = ta.TaskId,
+                            GenericPerformTask(new ScheduledJob()
+                            {
+                                TaskId = ta.TaskId,
+                                PreviousJob = job
+                            });
                         });
+                        
                     });
 
                 }

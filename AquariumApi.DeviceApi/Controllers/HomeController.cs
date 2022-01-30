@@ -22,7 +22,6 @@ namespace AquariumApi.DeviceApi.Controllers
         private IGpioService _gpioService;
         private IHardwareService _hardwareService;
         private IAquariumAuthService _aquariumAuthService;
-        private IATOService _atoService;
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
         private DeviceAPI _deviceAPI;
@@ -32,7 +31,6 @@ namespace AquariumApi.DeviceApi.Controllers
             ScheduleService scheduleService,
             IHardwareService hardwareService,
             IGpioService gpioService,
-            IATOService atoService,
             IAquariumAuthService aquariumAuthService,
             ILogger<HomeController> logger, IConfiguration config)
         {
@@ -41,7 +39,6 @@ namespace AquariumApi.DeviceApi.Controllers
             _gpioService = gpioService;
             _hardwareService = hardwareService;
             _aquariumAuthService = aquariumAuthService;
-            _atoService = atoService;
             _logger = logger;
             _config = config;
             _deviceAPI = deviceAPI;
@@ -92,12 +89,12 @@ namespace AquariumApi.DeviceApi.Controllers
         }
         
         [HttpPost(DeviceOutboundEndpoints.UPDATE)]
-        public IActionResult UpdateDeviceInformation([FromBody] AquariumDevice aquariumDevice)
+        public IActionResult UpdateDeviceInformation([FromBody] Aquarium assignedAquarium)
         {
             try
             {
                 _logger.LogInformation($"POST {DeviceOutboundEndpoints.UPDATE} called");
-                _aquariumAuthService.ApplyAquariumDeviceFromService(aquariumDevice);
+                _aquariumAuthService.ApplyAquariumDeviceFromService(assignedAquarium);
                 return Ok();
             }
             catch (DeviceException ex)

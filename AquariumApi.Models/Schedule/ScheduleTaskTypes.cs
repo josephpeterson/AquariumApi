@@ -10,6 +10,7 @@ namespace AquariumApi.Models
         Unknown = 0,
         Snapshot = 1,
         StartATO = 2,
-        StartWaterChange = 3,
+        WaterChangeDrain = 3,
+        WaterChangeReplentish = 4,
     }
 }
