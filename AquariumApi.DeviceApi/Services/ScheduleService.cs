@@ -52,18 +52,12 @@ namespace AquariumApi.DeviceApi
         {
             CleanUp();
             var schedules = GetAllSchedules();
-            if(schedules.Count() == 0)
-            {
-                _logger.LogInformation("No schedules are deployed on this device.");
-                return;
-
-            }
-
             _logger.LogInformation($"{schedules.Count()} Schedules found");
 
             //Register all sensors
             var aq = _aquariumAuthService.GetAquarium();
             var sensors = aq.Device.Sensors;
+            _logger.LogInformation($"{sensors.Count()} Device sensors found");
 
             //Register them in GpioService
             _gpioService.Setup(sensors);
@@ -74,6 +68,14 @@ namespace AquariumApi.DeviceApi
                     OnDeviceSensorTriggered(s);
                 };
             });
+
+
+            if (schedules.Count() == 0)
+            {
+                _logger.LogInformation("No schedules are deployed on this device. Will not begin ScheduleService loop");
+                return;
+            }
+
             _cancellationSource = new CancellationTokenSource();
             StartAsync(_cancellationSource.Token);
         }
@@ -96,10 +98,23 @@ namespace AquariumApi.DeviceApi
                             {
                                 var eta = (scheduledJob.StartTime - _dateTimeProvider.Now);
 
-                            //readable time
-                            string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
+                                //readable time
+                                string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
                                 _logger.LogInformation($"Next task/job scheduled in {time} Maximum Runtime: {scheduledJob.MaximumEndTime} Task: {scheduledJob.Task.Name}");
-                                GenericPerformTask(scheduledJob);
+                                try
+                                {
+                                    GenericPerformTask(scheduledJob);
+                                }
+                                catch(DeviceException ex)
+                                {
+                                    //we probably did not need to run this
+                                    _logger.LogWarning($"GenericPerformTask threw a DeviceException: {ex}");
+                                }
+                                catch(Exception ex)
+                                {
+                                    _logger.LogError($"Error occured during task: {ex.Message}");
+                                    _logger.LogError($"{ex.StackTrace}");
+                                }
                                 ScheduledJobsQueue.Remove(scheduledJob);
                             });
                             TopOffScheduledJobsQueue();
@@ -417,11 +432,18 @@ namespace AquariumApi.DeviceApi
                     {
                         Task.Run(() =>
                         {
-                            GenericPerformTask(new ScheduledJob()
+                            try
                             {
-                                TaskId = ta.TaskId,
-                                PreviousJob = job
-                            });
+                                GenericPerformTask(new ScheduledJob()
+                                {
+                                    TaskId = ta.TaskId,
+                                    PreviousJob = job
+                                });
+                            }
+                            catch(DeviceException ex)
+                            {
+                                //we probably did not need to run this
+                            }
                         });
                         
                     });

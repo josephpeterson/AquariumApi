@@ -380,6 +380,7 @@ namespace AquariumDeviceApiTests
             var allTasks = _scheduleService.GetAllScheduledTasks();
             var tasks = allTasks.Where(sj => sj.Status == JobStatus.Running);
             Assert.Empty(tasks);
+            Assert.True(_scheduleService.Running);
         }
         [Fact]
         public void GivenTaskAssignmentHasTaskTrigger_TaskStartsAfterTargetTask()

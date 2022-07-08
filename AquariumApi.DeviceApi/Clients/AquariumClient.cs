@@ -106,8 +106,8 @@ namespace AquariumApi.DeviceApi.Clients
                 var httpContent = new StringContent(JsonConvert.SerializeObject(scheduledJob), Encoding.UTF8, "application/json");
                 var result = await client.PutAsync(path, httpContent);
                 if (!result.IsSuccessStatusCode)
-                    throw new Exception("Could not dispatch scheduled job to service");
-                _logger.LogInformation($"Scheduled job successfully dispatched to service.");
+                    throw new Exception($"Could not dispatch scheduled job to service ScheduledJobId: {scheduledJob.Id}");
+                _logger.LogInformation($"Scheduled job successfully dispatched to service. ScheduledJobId: {scheduledJob.Id}");
                 var res = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<ScheduledJob>(res);
                 return response;
@@ -124,10 +124,10 @@ namespace AquariumApi.DeviceApi.Clients
                 var result = await client.PutAsync(path, httpContent);
                 if (!result.IsSuccessStatusCode)
                     throw new Exception("Could not dispatch water change to service");
-                _logger.LogInformation($"Water change successfully dispatched to service.");
                 var res = await result.Content.ReadAsStringAsync();
-                var response = JsonConvert.DeserializeObject<WaterChange>(res);
-                return response;
+                waterChange = JsonConvert.DeserializeObject<WaterChange>(res);
+                _logger.LogInformation($"Water change successfully dispatched to service. WaterChangeId: {waterChange.Id} ScheduledJobId: {waterChange.ScheduleJobId}");
+                return waterChange;
             }
         }
         public async Task<ATOStatus> DispatchWaterATO(ATOStatus waterATO)
@@ -141,10 +141,10 @@ namespace AquariumApi.DeviceApi.Clients
                 var result = await client.PutAsync(path, httpContent);
                 if (!result.IsSuccessStatusCode)
                     throw new Exception("Could not dispatch water ATO to service");
-                _logger.LogInformation($"Water ATO successfully dispatched to service.");
                 var res = await result.Content.ReadAsStringAsync();
-                var response = JsonConvert.DeserializeObject<ATOStatus>(res);
-                return response;
+                waterATO = JsonConvert.DeserializeObject<ATOStatus>(res);
+                _logger.LogInformation($"Water ATO successfully dispatched to service. WaterATOId: {waterATO.Id} ScheduledJobId: {waterATO.ScheduleJobId}");
+                return waterATO;
             }
         }
 
