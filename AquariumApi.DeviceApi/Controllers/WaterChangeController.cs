@@ -84,23 +84,23 @@ namespace AquariumApi.DeviceApi.Controllers
             }
         }
         [HttpPost]
-        [Route(DeviceOutboundEndpoints.DEVICE_SENSOR_TEST)]
+        [Route(DeviceOutboundEndpoints.SENSOR_TEST)]
         public IActionResult TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
         {
             try
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.DEVICE_SENSOR_TEST} called");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SENSOR_TEST} called");
                 var finishedRequest = _gpioService.TestDeviceSensor(testRequest);
                 return new OkObjectResult(finishedRequest);
             }
             catch(DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.DEVICE_SENSOR_TEST} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SENSOR_TEST} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.DEVICE_SENSOR_TEST} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SENSOR_TEST} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {

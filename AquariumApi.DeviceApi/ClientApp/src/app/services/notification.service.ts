@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { NotificationDialogComponent } from '../shared/notification-dialog/notification-dialog.component';
+import { NotificationDialogComponent } from '../components/shared/notification-dialog/notification-dialog.component';
 @Injectable({
   providedIn: "root"
 })

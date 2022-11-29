@@ -3,7 +3,7 @@
 <div class="container" *ngIf="(!loading)">
   <notifier-container></notifier-container>
 
-  <ng-container *ngIf="!isLoggedIn() else route">
+  <ng-container *ngIf="!isDeviceAvailable() else route">
     <login-container></login-container>
   </ng-container>
   <ng-template #route>
@@ -12,7 +12,6 @@
 </div>
 <ng-container *ngIf="loading">
   <div class="row justify-content-center p-5">
-
     <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
   </div>
 </ng-container>

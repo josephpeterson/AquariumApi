@@ -14,6 +14,11 @@ namespace AquariumApi.Models.Constants
         public const string REBOOT =        "/v1/Device/Reboot";
         public const string LOG =           "/v1/Device/Log";
         public const string LOG_CLEAR =     "/v1/Device/Log/Clear";
+        public const string MIXING_STATION_UPDATE = "/v1/Device/MixingStation";
+        public const string MIXING_STATION_DELETE = "/v1/Device/MixingStation";
+        public const string MIXING_STATION_STATUS = "/v1/Device/MixingStation";
+        public const string MIXING_STATION_SEARCH = "/v1/Device/MixingStation/Search";
+
 
         public const string AUTH_CURRENT =  "/v1/Auth/";
         public const string AUTH_RENEW =    "/v1/Auth/Renew";
@@ -24,8 +29,13 @@ namespace AquariumApi.Models.Constants
         public const string WATER_CHANGE_STOP =     "/v1/WaterChange/ATO/Stop";
         public const string WATER_CHANGE_STATUS =   "/v1/WaterChange/ATO/Status";
 
-        public const string DEVICE_SENSOR_TEST =        "/v1/Sensor/Test/";
+        public const string SENSOR_UPDATE = "/v1/Sensor";
+        public const string SENSOR_RETRIEVE = "/v1/Sensor/All/";
+        public const string SENSOR_TEST =        "/v1/Sensor/Test/";
 
+        public const string SCHEDULE_UPDATE =  "/v1/Schedule";
+        public const string SCHEDULE_RETRIEVE =  "/v1/Schedule/All";
+        public const string SCHEDULE_RETRIEVE_TASK_TYPES =  "/v1/Schedule/Task/Types";
         public const string SCHEDULE_START =            "/v1/Schedule/Start/";
         public const string SCHEDULE_STOP =             "/v1/Schedule/Stop/";
         public const string SCHEDULE_STATUS =           "/v1/Schedule/Status/";

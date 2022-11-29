@@ -9,5 +9,7 @@
   "ATOMaximumRuntime": 600,
   "WaterChangeMaximumRuntime": 30,
   "DeviceSensorTestMaximumRuntime": 600,
-  "ATOScheduledRuntime": 90
+  "ATOScheduledRuntime": 90,
+  "DefaultMixingStationHostname": "mixingstation",
+  "configuration":  "configured_device.json"
 }

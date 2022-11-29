@@ -23,4 +23,23 @@ export class DeviceEndpoints {
     static SCHEDULE_REMAINING_TASKS: string =  "/v1/Schedule/Tasks/Remaining";
 
     static SCHEDULE_SCHEDULEDJOB_STOP: string =  "/v1/Schedule/Tasks/Stop";
+
+    static MIXING_STATION_UPDATE: string = "/v1/Device/MixingStation";
+    static MIXING_STATION_DELETE: string = "/v1/Device/MixingStation";
+    static MIXING_STATION_STATUS: string = "/v1/Device/MixingStation";
+    static MIXING_STATION_SEARCH: string = "/v1/Device/MixingStation/Search";
 }
+declare global {
+    interface String {
+      aggregate(...params): string;
+    }
+  }
+  
+  String.prototype.aggregate = function (...params: string[]) {
+    var str = String(this);
+    var paramsToReplace = str.match(/(?<=\{).+?(?=\})/g);
+    paramsToReplace.forEach((p, i) => {
+      str = str.replace(new RegExp(`{${p}}`, 'g'), params[i]);
+    });
+    return str;
+  };

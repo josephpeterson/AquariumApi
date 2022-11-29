@@ -29,7 +29,9 @@ namespace AquariumApi.DeviceApi.Extensions
         services.AddSingleton<IDeviceService, DeviceService>();
         services.AddSingleton<IExceptionService, ExceptionService>();
         services.AddSingleton<IQueueService, QueueService>();
-            services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
+        services.AddSingleton<IMixingStationService, MixingStationService>();
+        services.AddSingleton<IAquariumAuthService, AquariumAuthService>();
+        services.AddSingleton<IDeviceConfigurationService, DeviceConfigurationService>();
             services.AddSingleton<DeviceAPI, DeviceAPI>();
     }
     /* Background services */

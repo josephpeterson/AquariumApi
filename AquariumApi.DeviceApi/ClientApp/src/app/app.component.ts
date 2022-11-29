@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ClientService } from './services/client.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LoginInformationResponse } from './models/LoginInformationResponse';
+import { DeviceInformation } from './models/DeviceInformation';
 
 @Component({
   selector: 'app-root',
@@ -21,18 +22,21 @@ export class AppComponent implements OnInit {
   }
   public loadInformation() {
     this.loading = true;
-    this.service.getDeviceInformation().subscribe((data: LoginInformationResponse) => {
+    this.service.getDeviceInformation().subscribe((data: DeviceInformation) => {
       console.log(data);
       this.loading = false;
-      this.service.loginInformation = data;
+      this.service.deviceInformation = data;
     }, () => {
       this.loading = false;
     });
   }
+  public isDeviceAvailable() {
+    return this.service.deviceInformation != null;
+  }
   public isLoggedIn() {
-    if(!this.service.loginInformation)
+    if(!this.service.deviceInformation)
       return false;
-    return this.service.loginInformation.aquarium != null; //todo change this
+    return this.service.deviceInformation.account != null; //todo change this
   }
 }
 

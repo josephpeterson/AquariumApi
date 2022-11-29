@@ -1,17 +1,17 @@
 import { Aquarium } from './Aquarium'
+import { AquariumAccount } from './AquariumAccount'
 import { ATOStatus } from './ATOStatus'
+import { DeviceConfiguration } from './DeviceConfiguration'
 import { DeviceSchedule } from './DeviceSchedule'
 import { DeviceScheduledJob } from './DeviceScheduledJob'
-import { DeviceSensor } from './DeviceSensor'
 import { GpioPinTypes } from './GpioPinTypes'
 
-export class DeviceInformation
-{
-  aquarium: Aquarium
+export class DeviceInformation {
+  version: string
   config: object
-  schedules: DeviceSchedule[]
-  sensors: DeviceSensor[]
+  account: AquariumAccount
+  configuredDevice: DeviceConfiguration
   runningJobs: DeviceScheduledJob[]
   scheduledJobs: DeviceScheduledJob[]
-  atoStatus: ATOStatus
 }
+

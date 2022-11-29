@@ -61,24 +61,52 @@ namespace AquariumDeviceApiTests
                 .Returns(DateTime.Parse("1/10/2021"));
 
 
-            SetupAquariumDevice();
+            var mockDeviceConfiguration = SetupAquariumDevice();
             SetupAquariumAuthService();
             SetupAquariumClient();
 
             _exceptionService = new ExceptionService(_config, Mock.Of<ILogger<ExceptionService>>(), _aquariumClient.Object);
-            _gpioService = new GpioService(_config, Mock.Of<ILogger<GpioService>>(), null, mockEnvironment.Object);
-            _scheduleService = new ScheduleService(_config, Mock.Of<ILogger<ScheduleService>>(), _dateTimeProvider.Object,_aquariumAuthService.Object, _aquariumClient.Object, _exceptionService, _gpioService);
+            _gpioService = new GpioService(_config, Mock.Of<ILogger<GpioService>>(), null, mockEnvironment.Object, mockDeviceConfiguration.Object);
+            _scheduleService = new ScheduleService(_config, Mock.Of<ILogger<ScheduleService>>(), _dateTimeProvider.Object,_aquariumAuthService.Object, _aquariumClient.Object, _exceptionService, mockDeviceConfiguration.Object,_gpioService);
 
         }
-        private void SetupAquariumDevice()
+        private Mock<DeviceConfigurationService> SetupAquariumDevice()
         {
-            _aquarium = new Aquarium()
+            var configuration = new DeviceConfiguration()
             {
-                Name = "Test Aquarium",
-                StartDate = DateTime.Now.Subtract(TimeSpan.FromDays(200)),
-                Device = new AquariumDevice()
+                Tasks = new List<DeviceScheduleTask>()
                 {
-                    Sensors = new Collection<DeviceSensor>()
+                     new DeviceScheduleTask()
+                     {
+                         Name = "Auto Top Off Task",
+                         Id = 123,
+                         MaximumRuntime = 30,
+                         TargetSensorId = 10, //ATO Pump
+                         TargetSensorValue = GpioPinValue.High,
+                         TriggerSensorId = 13, //Float Switch
+                         TriggerSensorValue = GpioPinValue.High,
+                     },
+                    new DeviceScheduleTask()
+                    {
+                        Name = "Water Change Drain",
+                        Id = 234,
+                        MaximumRuntime = 30,
+                        TargetSensorId = 14, //Water change solenoid
+                                             //TriggerSensorId = 13, //Float Switch
+                                             //TriggerSensorValue = GpioPinValue.High,
+                    },
+                    new DeviceScheduleTask()
+                    {
+                        Name = "Water Change Replentish",
+                        Id = 345,
+                        MaximumRuntime = 30,
+                        TargetSensorId = 15, //Water change replentish pump
+                        TargetSensorValue = GpioPinValue.High,
+                        TriggerSensorId = 13, //Float Switch
+                        TriggerSensorValue = GpioPinValue.High,
+                    }
+                },
+                Sensors = new List<DeviceSensor>()
                 {
                     new DeviceSensor()
                     {
@@ -115,42 +143,12 @@ namespace AquariumDeviceApiTests
                         AlwaysOn = true,
                         Polarity = Polarity.Output,
                         Type = SensorTypes.ATOPumpRelay
-                    },
-                },
-                    Tasks = new Collection<DeviceScheduleTask>()
-                {
-                    new DeviceScheduleTask()
-                    {
-                        Name = "Auto Top Off Task",
-                        Id = 123,
-                        MaximumRuntime = 30,
-                        TargetSensorId = 10, //ATO Pump
-                        TargetSensorValue = GpioPinValue.High,
-                        TriggerSensorId = 13, //Float Switch
-                        TriggerSensorValue = GpioPinValue.High,
-                    },
-                    new DeviceScheduleTask()
-                    {
-                        Name = "Water Change Drain",
-                        Id = 234,
-                        MaximumRuntime = 30,
-                        TargetSensorId = 14, //Water change solenoid
-                        //TriggerSensorId = 13, //Float Switch
-                        //TriggerSensorValue = GpioPinValue.High,
-                    },
-                    new DeviceScheduleTask()
-                    {
-                        Name = "Water Change Replentish",
-                        Id = 345,
-                        MaximumRuntime = 30,
-                        TargetSensorId = 15, //Water change replentish pump
-                        TargetSensorValue = GpioPinValue.High,
-                        TriggerSensorId = 13, //Float Switch
-                        TriggerSensorValue = GpioPinValue.High,
                     }
                 }
-                }
             };
+            var mockDeviceConfiguration = new Mock<DeviceConfigurationService>();
+            mockDeviceConfiguration.Setup(x => x.LoadDeviceConfiguration()).Returns(configuration);
+            return mockDeviceConfiguration;
         }
         private void SetupAquariumDeviceSchedule()
         {

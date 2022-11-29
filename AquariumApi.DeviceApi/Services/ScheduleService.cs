@@ -24,6 +24,7 @@ namespace AquariumApi.DeviceApi
         public IExceptionService _exceptionService { get; }
 
         private IGpioService _gpioService;
+        private IDeviceConfigurationService _deviceConfiguration;
         private readonly IConfiguration _config;
         private Dictionary<ScheduleTaskTypes, DeviceTaskProcess> _deviceTaskCallbacks = new Dictionary<ScheduleTaskTypes, DeviceTaskProcess>();
         private List<RunningScheduledJob> RunningJobs = new List<RunningScheduledJob>();
@@ -38,6 +39,7 @@ namespace AquariumApi.DeviceApi
             IAquariumAuthService aquariumAuthService,
             IAquariumClient aquariumClient,
             IExceptionService exceptionService,
+            IDeviceConfigurationService deviceConfigurationService,
             IGpioService gpioService)
         {
             _config = config;
@@ -47,6 +49,7 @@ namespace AquariumApi.DeviceApi
             _aquariumClient = aquariumClient;
             _exceptionService = exceptionService;
             _gpioService = gpioService;
+            _deviceConfiguration = deviceConfigurationService;
         }
         public void Setup()
         {
@@ -155,16 +158,6 @@ namespace AquariumApi.DeviceApi
             var scheduledJobs = ExpandTasks(finalTaskTime, length);
             _logger.LogInformation($"[ScheduleService] Adding {scheduledJobs.Count()} scheduled jobs to the queue!");
             ScheduledJobsQueue.AddRange(scheduledJobs);
-        }
-        public List<DeviceSchedule> GetAllSchedules()
-        {
-            var aq = _aquariumAuthService.GetAquarium();
-            if(aq == null || aq.Device == null)
-                return new List<DeviceSchedule>();
-            var sa = aq.Device.Schedules;
-            if (sa == null)
-                return new List<DeviceSchedule>();
-            return sa.ToList();
         }
         public List<ScheduledJob> GetNextTask()
         {
@@ -284,6 +277,7 @@ namespace AquariumApi.DeviceApi
         {
             //check if any running jobs contain this sensor
             var currentValue = _gpioService.GetPinValue(sensor);
+            //_logger.LogInformation($"[ScheduleService] OnDeviceSensorTriggered: Device Sensor triggered {sensor.Name} (ID: {sensor.Id}) was triggered to value {currentValue}");
             RunningJobs.Where(j => j.ScheduledJob.Task.TriggerSensorId == sensor.Id && j.ScheduledJob.Task.TriggerSensorValue == currentValue && j.ScheduledJob.Status == JobStatus.Running)
                 .ToList()
                 .ForEach(job =>
@@ -464,5 +458,22 @@ namespace AquariumApi.DeviceApi
             _deviceTaskCallbacks[taskType] = callback;
             _logger.LogInformation($"Registered callback for task id: {taskType}");
         }
+
+        #region CRUD
+        public List<DeviceSchedule> GetAllSchedules()
+        {
+            var schedules = _deviceConfiguration.LoadDeviceConfiguration()?.Schedules;
+            return schedules;
+        }
+        public List<DeviceSchedule> ApplyDeviceSchedules(List<DeviceSchedule> deviceSchedules)
+        {
+            _logger.LogInformation($"Saving {deviceSchedules.Count()} to device...");
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            deviceConfiguration.Schedules = deviceSchedules;
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+            return deviceSchedules;
+        }
+        #endregion
+
     }
 }

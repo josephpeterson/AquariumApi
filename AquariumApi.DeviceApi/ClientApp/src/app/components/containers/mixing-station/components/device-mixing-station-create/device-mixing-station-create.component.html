@@ -1,0 +1,55 @@
+<div *ngIf="connectingStation == null else connectingContainer">
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h5>Connect a Mixing Station</h5>
+        <p>
+            This device does not have a mixing station configured. Connecting a mixing station allows you to control
+            water changes on your aquarium. You may search for a mixing
+            station on your local network below. </p>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label for="basic-url">Hostname/IP Address</label>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon3">http://</span>
+                </div>
+                <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3"
+                    [(ngModel)]="searchingHostname">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" (click)="clickSearchByHostname()"
+                        [disabled]="disabled">Search</button>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <label for="basic-url">Search Results</label>
+            <ng-container *ngFor="let station of mixingStationResults">
+                <div class="card w-100 m-3">
+                    <div class="card-body">
+                        <div>
+                            <b>{{station.hostname ? station.hostname:'Unknown'}}</b>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                Status: {{station.sessionId != -1 ? 'Ready':'Busy'}}
+                            </div>
+                            <div class="col">
+                                Valves: {{station.valves.length}}
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-outline-primary" type="button" (click)="clickConnect(station)"
+                                    [disabled]="disabled">Connect</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+
+</div>
+<ng-template #connectingContainer>
+    Connecting to mixing station with hostname <b>{{connectingStation.hostname}}</b>...
+    <loading-spinner></loading-spinner>
+</ng-template>

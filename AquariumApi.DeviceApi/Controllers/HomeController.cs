@@ -25,6 +25,8 @@ namespace AquariumApi.DeviceApi.Controllers
         private ILogger<HomeController> _logger;
         private IConfiguration _config;
         private DeviceAPI _deviceAPI;
+        private IMixingStationService _mixingStationService;
+        private readonly IDeviceConfigurationService _deviceConfiguration;
 
         public HomeController(IDeviceService deviceService,
             DeviceAPI deviceAPI,
@@ -32,6 +34,8 @@ namespace AquariumApi.DeviceApi.Controllers
             IHardwareService hardwareService,
             IGpioService gpioService,
             IAquariumAuthService aquariumAuthService,
+            IMixingStationService mixingStationService,
+            IDeviceConfigurationService deviceConfiguration,
             ILogger<HomeController> logger, IConfiguration config)
         {
             _deviceService = deviceService;
@@ -42,6 +46,8 @@ namespace AquariumApi.DeviceApi.Controllers
             _logger = logger;
             _config = config;
             _deviceAPI = deviceAPI;
+            _mixingStationService = mixingStationService;
+            _deviceConfiguration = deviceConfiguration;
         }
         [HttpGet(DeviceOutboundEndpoints.PING)]
         public IActionResult PingDevice()
@@ -61,14 +67,10 @@ namespace AquariumApi.DeviceApi.Controllers
                 var information = new DeviceInformation()
                 {
                     Version = productVersion,
-                    Aquarium = _aquariumAuthService.GetAquarium(),
                     Config = System.IO.File.ReadAllText("config.json"),
-                    Schedules = _scheduleService.GetAllSchedules(),
-                    Sensors = _gpioService.GetAllSensors(),
+                    ConfiguredDevice = _deviceConfiguration.LoadDeviceConfiguration(),
                     RunningJobs = _scheduleService.GetAllRunningJobs(),
                     ScheduledJobs = _scheduleService.GetAllScheduledTasks(),
-                    UpdatedAt = DateTime.Now,
-                    ATOStatus = null,
                 };
                 return new OkObjectResult(information);
             }
@@ -112,45 +114,21 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
             }
         }
-        [HttpGet(DeviceOutboundEndpoints.LOG)]
-        public IActionResult GetDeviceLog()
+        [HttpPost(DeviceOutboundEndpoints.MIXING_STATION_SEARCH)]
+        public async Task<IActionResult> SearchForMixingStationByHostname([FromQuery] string hostname)
         {
-            string txt;
             try
             {
-                txt = System.IO.File.ReadAllText("AquariumDeviceApi.log");
+                var response = await _mixingStationService.SearchByHostname(hostname);
+                return new OkObjectResult(response);
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.LOG} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.LOG} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                _logger.LogError(ex.StackTrace);
-                return BadRequest(new DeviceException("Unknown device error occurred")
-                {
-                    Source = ex
-                });
-            }
-            return new OkObjectResult(txt);
-        }
-        [HttpPost(DeviceOutboundEndpoints.LOG_CLEAR)]
-        public IActionResult ClearDeviceLog()
-        {
-            try
-            {
-                System.IO.File.Delete("AquariumDeviceApi.log");
-            }
-            catch (DeviceException ex)
-            {
-                _logger.LogInformation($"POST {DeviceOutboundEndpoints.LOG_CLEAR} endpoint caught exception: {ex.Message}");
-                return BadRequest(new DeviceException(ex.Message));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {DeviceOutboundEndpoints.LOG_CLEAR} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.MIXING_STATION_SEARCH} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -159,21 +137,25 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             return new OkResult();
         }
-        [HttpPost(DeviceOutboundEndpoints.REBOOT)]
-        public IActionResult AttemptReboot()
+        [HttpGet(DeviceOutboundEndpoints.MIXING_STATION_STATUS)]
+        public async Task<IActionResult> GetMixingStation()
         {
             try
             {
-                _deviceAPI.Process();
+                var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+
+                if (deviceConfiguration.MixingStation == null || string.IsNullOrEmpty(deviceConfiguration.MixingStation.Hostname))
+                    return BadRequest("No mixing station connected.");
+                var response = await _mixingStationService.SearchByHostname(deviceConfiguration.MixingStation.Hostname);
+                return new OkObjectResult(response);
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceOutboundEndpoints.REBOOT} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceOutboundEndpoints.REBOOT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.MIXING_STATION_SEARCH} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -181,6 +163,55 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
             }
             return new OkResult();
+        }
+        [HttpPost(DeviceOutboundEndpoints.MIXING_STATION_UPDATE)]
+        public async Task<IActionResult> UpsertMixingStation([FromBody] AquariumMixingStation mixingStation)
+        {
+            try
+            {
+                var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+                deviceConfiguration.MixingStation = mixingStation;
+                _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+                return new OkObjectResult(deviceConfiguration);
+            }
+            catch (DeviceException ex)
+            {
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.MIXING_STATION_SEARCH} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+            return new OkResult();
+        }
+        [HttpDelete(DeviceOutboundEndpoints.MIXING_STATION_DELETE)]
+        public IActionResult DisconnectMixingStation()
+        {
+            try
+            {
+                var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+                deviceConfiguration.MixingStation = null;
+                _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+                return new OkResult();
+            }
+            catch (DeviceException ex)
+            {
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.MIXING_STATION_SEARCH} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
         }
     }
 }
