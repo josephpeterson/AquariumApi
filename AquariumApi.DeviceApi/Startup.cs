@@ -45,7 +45,7 @@ namespace AquariumApi.DeviceApi
 
             services.AddSpaStaticFiles(configuration =>
             {
-                configuration.RootPath = "ClientApp/dist";
+                configuration.RootPath = "ClientApp/dist/aquarium-device-dashboard/";
             });
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
