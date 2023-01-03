@@ -1,0 +1,19 @@
+<div class="card exception-list">
+  <div class="card-body">
+    <div *ngIf="any() else none">
+      <ul *ngFor="let ex of exceptions" class="list-group">
+        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start mb-2">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ex.source.message}}</h5>
+            <small>{{readableDate(ex.date)}}</small>
+          </div>
+          <p class="mb-1">maybe stack trace here</p>
+        </a>
+      </ul>
+    </div>
+    <ng-template #none>
+      <p class="text-muted">There are no exceptions</p>
+    </ng-template>
+    
+  </div>
+</div>

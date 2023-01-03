@@ -1,38 +1,40 @@
 import { Component, OnInit } from '@angular/core';
-import { ClientService } from './services/client.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import { AquariumDeviceService } from './modules/SharedDeviceModule/aquarium-device.service';
+import { DeviceInformation } from './modules/SharedDeviceModule/models/DeviceInformation';
 import { LoginInformationResponse } from './models/LoginInformationResponse';
+import { DeviceConfiguration } from './modules/SharedDeviceModule/models/DeviceConfiguration';
+import { Store } from '@ngrx/store';
+import { selectDeviceConnection } from './modules/SharedDeviceModule/store/device.selectors';
+import { connectToDevice, connectToMixingStation, loadDeviceTypesByType } from './modules/SharedDeviceModule/store/device.actions';
+import { DeviceConnectionState } from './modules/SharedDeviceModule/store/device.reducer';
+import { DeviceConnectionStatus } from './modules/SharedDeviceModule/models/RaspberyPiModels';
 
 @Component({
-  selector: 'app-root',
+  selector: 'device-app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
 
-  public loading: boolean = true;
+  public loading = true;
+  loadingAccount: boolean;
+  //public deviceInformation: DeviceInformation;
+  public deviceConnection$ = this.store.select(selectDeviceConnection);
 
-  constructor(public service: ClientService) {
+  constructor(public service: AquariumDeviceService, private store: Store) {
 
   }
 
   public ngOnInit(): void {
-    this.loadInformation();
+    this.store.dispatch(connectToDevice());
+    this.store.dispatch(connectToMixingStation());
+    this.store.dispatch(loadDeviceTypesByType({ payload: "DeviceSensorTypes" }));
   }
-  public loadInformation() {
-    this.loading = true;
-    this.service.getDeviceInformation().subscribe((data: LoginInformationResponse) => {
-      console.log(data);
-      this.loading = false;
-      this.service.loginInformation = data;
-    }, () => {
-      this.loading = false;
-    });
+  public isConnecting(state: DeviceConnectionState) {
+    return state.deviceConnectionStatus == DeviceConnectionStatus.Connecting
   }
-  public isLoggedIn() {
-    if(!this.service.loginInformation)
-      return false;
-    return this.service.loginInformation.aquarium != null; //todo change this
+  public isConnected(state: DeviceConnectionState) {
+    return state.deviceConnectionStatus == DeviceConnectionStatus.Connected || state.deviceConnection != null
   }
 }
 

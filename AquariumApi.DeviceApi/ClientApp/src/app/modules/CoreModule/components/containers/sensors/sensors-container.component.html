@@ -1,0 +1,14 @@
+<div class="container" *ngIf="(deviceInformation$ | async).configuredDevice as configuredDevice">
+    <div class="row">
+        <div class="col-md">
+            <h4>Onboard GPIO Sensors</h4>
+            <device-sensor-gpio-board [configuredDevice]="configuredDevice"></device-sensor-gpio-board>
+        </div>
+        <div class="col-md">
+            <h4>Sensors</h4>
+
+            <device-sensor-list [configuredDevice]="configuredDevice"></device-sensor-list>
+            <device-sensor-upsert-button>New Sensor...</device-sensor-upsert-button>
+        </div>
+    </div>
+</div>

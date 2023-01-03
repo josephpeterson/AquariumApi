@@ -1,0 +1,5 @@
+<div (click)="clickValve()"
+    [matTooltip]="(selectable != null ? 'Select ':testable != null ? 'Test ':'') + 'Valve ' + valve.id"
+    [class.mixing-station-sensor-active]="selected === true">
+    <i class="bi" [class.bi-check-circle]="valve.value || selected === true" [class.bi-circle]="selected != true && !valve.value"></i>
+</div>

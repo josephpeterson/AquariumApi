@@ -1,0 +1,29 @@
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-body">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+            <h3>Account</h3>
+            <div *ngIf="account else loginContainer">
+              <h3>{{account.username}}</h3>
+              <span>Email: {{account.email}}</span>
+            </div>
+            <ng-template #loginContainer>
+              <p>You are currently not logged in. Connect your device to Aquarium Monitor for more features.</p>
+              <device-login-button></device-login-button>
+            </ng-template>
+
+          </div>
+          <div class="col">
+            <h3>Aquarium</h3>
+            <span>{{aquarium.name}}</span>
+            <span>Size: {{aquarium.gallons}} gallons</span>
+            <span>Livestock: {{aquarium.fish?.length}} fish</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

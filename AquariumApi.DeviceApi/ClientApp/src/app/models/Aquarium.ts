@@ -7,7 +7,7 @@ export class Aquarium
   name: string
   gallons: number
   type: string
-  startDate: Date
+  startDate: string
   fish: any[]
   waterSalinity: number
 

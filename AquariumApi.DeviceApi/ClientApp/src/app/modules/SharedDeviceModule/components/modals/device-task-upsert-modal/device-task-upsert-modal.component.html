@@ -1,0 +1,77 @@
+<h1 mat-dialog-title>Add Task</h1>
+<div mat-dialog-content>
+  <div class="row">
+    <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  </div>
+  <h3>General</h3>
+  <div class="row">
+    <div class="col-sm">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon3">Name</span>
+        </div>
+        <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3"
+          [(ngModel)]="newTask.name" [disabled]="loading">
+      </div>
+    </div>
+    <div class="col-sm">
+
+    </div>
+  </div>
+
+
+
+
+  <h3>Actions</h3>
+  <ul class="list-group list-group-flush" *ngFor="let action of newTask.actions">
+    <li class="list-group-item">
+      <device-task-action-list-item [action]="action" editable [disabled]="loading"></device-task-action-list-item>
+      <button class="btn" (click)="clickRemoveAction(action)" *ngIf="newTask.actions.indexOf(action) != 0"
+        [disabled]="loading">
+        <fa-icon [icon]="faTrashAlt"></fa-icon>
+      </button>
+
+    </li>
+  </ul>
+  <button (click)="clickAddAction()" class="btn btn-primary" [disabled]="loading">Add Action</button>
+
+
+
+
+
+  <div class="row">
+    <h3>End Conditions</h3>
+    <div class="col">
+      <mat-form-field>
+        <input [disabled]="loading" type="number" matInput placeholder="Maximum Runtime (s)"
+          [(ngModel)]="newTask.maximumRuntime">
+      </mat-form-field>
+    </div>
+    <div class="col">
+      <mat-checkbox [(ngModel)]='readSensorChecked' class="pl-2" [disabled]="loading">Read Sensor Value</mat-checkbox>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div>
+      </div>
+      <div [class.d-none]="!readSensorChecked">
+        Until
+        <device-generic-object-select label="Sensor Select" [(inputModel)]="newTask.triggerSensorId"
+          [availableObjects]="getReadableSensors()" [disabled]="loading">
+        </device-generic-object-select>
+        is
+        <device-generic-select label="Sensor Value" [deviceSelectType]="'DeviceSensorValues'" [disabled]="loading"
+          [(inputModel)]="newTask.triggerSensorValue">
+        </device-generic-select>
+      </div>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button *ngIf="newTask.id != null" (click)="clickRemoveTask()" class="m-2 btn btn-danger" [disabled]="loading">
+    <fa-icon [icon]="faTrashAlt"></fa-icon> Delete
+  </button>
+  <button [disabled]="loading" class="m-2 btn btn-danger" mat-dialog-close>Cancel</button>
+  <button [disabled]="loading" class="m-2 btn btn-success md-float-right" (click)='clickFinishTask()'>Save</button>
+</div>

@@ -1,0 +1,28 @@
+<div class="container-fluid m-3" *ngIf="(deviceInformation$ | async).configuredDevice as configuredDevice">
+  <div class="row">
+    <div class="col col-sm-4">
+      <h4>Aquarium Monitor</h4>
+      <device-aquarium-overview-card [aquarium]="configuredDevice.aquarium" [account]="account$ | async"
+        *ngIf="configuredDevice.aquarium">
+      </device-aquarium-overview-card>
+      <h4>Sensors</h4>
+      <device-sensor-list [configuredDevice]="configuredDevice" hideEdit small></device-sensor-list>
+    </div>
+    <div class="col">
+      <h4>Schedule Status</h4>
+      <device-schedule-status [deviceInformation]="deviceInformation$ | async"></device-schedule-status>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col" *ngIf="configuredDevice.mixingStation">
+      <h4>Wireless Devices</h4>
+      <device-mixing-station-overview-card
+        [mixingStationStatus]="mixingStationStatus$ | async"></device-mixing-station-overview-card>
+    </div>
+    <div class="col">
+      <h4>Exceptions</h4>
+      <device-exception-list></device-exception-list>
+    </div>
+  </div>
+
+</div>

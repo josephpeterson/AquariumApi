@@ -1,0 +1,30 @@
+<div class="row">
+  <div class="col">
+    {{task.name}}
+  </div>
+  <div class="col">
+    <device-task-upsert-button [task]="task" *ngIf="hideEdit === null">
+      <fa-icon [icon]="faEdit" class="px-1"></fa-icon>Edit
+    </device-task-upsert-button>
+    <device-task-perform-button *ngIf="hideTest === null" [task]="task">
+      <fa-icon [icon]="faVial" class="px-1"></fa-icon>Perform
+    </device-task-perform-button>
+  </div>
+
+</div>
+<div *ngFor="let action of task.actions">
+  <div class="row">
+    <div class="col-sm-auto">
+      #{{task.actions.indexOf(action)+1}} 
+    </div>
+    <div class="col">
+      <device-task-action-list-item [action]="action"></device-task-action-list-item>
+    </div>
+  </div>
+  <div class="row">
+    <ng-container *ngIf="task.triggerSensorId">
+      until {{getSensorById(task.triggerSensorId,configuredDevice$ | async).name}} is {{task.triggerSensorValue}} or
+    </ng-container>
+    for {{task.maximumRuntime}} seconds.
+  </div>
+</div>

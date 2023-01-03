@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
+    [Obsolete]
     public class DeviceLoginResponse
     {
         public AquariumUser Account { get; set; }

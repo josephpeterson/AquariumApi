@@ -1,0 +1,8 @@
+<div class="generic-list">
+  <ul class="list-group list-group-flush" *ngFor="let scheduledJob of deviceInformation.scheduleStatus.scheduled">
+    <li class="list-group-item">
+      <device-scheduled-job-list-item [scheduledJob]="scheduledJob"
+        [configuredDevice]="deviceInformation.configuredDevice"></device-scheduled-job-list-item>
+    </li>
+  </ul>
+</div>

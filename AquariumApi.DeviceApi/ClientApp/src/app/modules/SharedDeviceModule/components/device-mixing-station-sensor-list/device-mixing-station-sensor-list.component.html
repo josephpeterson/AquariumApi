@@ -1,0 +1,6 @@
+<div class="row">
+
+    <div class="col-auto" *ngFor="let valve of mixingStationStatus.valves">
+        <device-mixing-station-sensor-list-item [valve]="valve" [disabled]="disabled" [testable]="testable" [selectable]="selectable" [selected]="isSelected(valve)" (onClick)="clickValve(valve)"></device-mixing-station-sensor-list-item>
+    </div>
+</div>

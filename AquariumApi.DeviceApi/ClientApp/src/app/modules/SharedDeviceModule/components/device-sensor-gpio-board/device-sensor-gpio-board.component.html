@@ -1,0 +1,13 @@
+<ng-container *ngIf="isBoardSupported() else unsupported">
+	<div class="row" *ngFor="let r of gpioPorts">
+		<div class="col-sm-auto">
+			<span *ngFor="let gpio of r">
+				<device-sensor-gpio-board-pin [matTooltipPosition]="gpioPorts.indexOf(r) == 0 ? 'above':'below'" [boardPin]="gpio"
+					(onClick)="clickGpioPort(gpio)"></device-sensor-gpio-board-pin>
+			</span>
+		</div>
+	</div>
+</ng-container>
+<ng-template #unsupported>
+	Looks like we could not find your gpio port!
+</ng-template>

@@ -1,27 +1,31 @@
-# ClientApp
+# Aquarium Device Front-End
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.3.9.
+This is the device front-end application for the aquarium monitoring application stack. This repository will contain all components/functions within the device application.
 
 ## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Run the local AquariumDeviceApi application.
 
-## Code scaffolding
+Adjust environment.ts to have the dev url specified.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Run `npm run start` for a dev server. Navigate to `http://localhost:5200/`. The app will automatically reload if you change any of the source files.
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
+Run `npm run build-prod` to build the project. The build artifacts will be stored in the `dist/` directory.
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
+
+## Set up Device
+
+Install Raspbian
+Run following commands:
+sudo apt install xrdp
+#Check status 
+sudo systemctl status aquarium-device
+#Watch log
+watch systemctl status aquarium-device
+#Dev resources
+Icons: bootstrap-icons https://icons.getbootstrap.com/

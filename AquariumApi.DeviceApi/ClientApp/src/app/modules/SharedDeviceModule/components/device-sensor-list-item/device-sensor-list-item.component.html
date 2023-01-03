@@ -1,0 +1,28 @@
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <div>{{sensor.name}}
+      </div>
+      <div class="mat-body" *ngIf="small === null">
+        <fa-icon [icon]="faCarBattery"></fa-icon> {{sensor.polarity == DeviceSensorPolarity.Write ? "Write":"Read"}}
+        <small class="text-muted">
+          Type: <b>{{getSensorReadableType((types$ | async),sensor.type)}}</b>
+          Board Pin: <b>{{sensor.pin}}</b></small>
+        <div *ngIf="sensor.alwaysOn">
+          <b>Always On</b>
+        </div>
+      </div>
+      <div>
+        Value: <b>{{getSensorValue(sensor)}}</b>
+      </div>
+    </div>
+    <div class="col-sm">
+      <device-sensor-upsert-button [sensor]="sensor" *ngIf="hideEdit === null">
+        <fa-icon [icon]="faEdit" class="px-1"></fa-icon>Edit
+      </device-sensor-upsert-button>
+      <device-sensor-test-button *ngIf="sensor.polarity && hideTest === null" [sensor]="sensor">
+        <fa-icon [icon]="faVial" class="px-1"></fa-icon>Test
+      </device-sensor-test-button>
+    </div>
+  </div>
+</div>

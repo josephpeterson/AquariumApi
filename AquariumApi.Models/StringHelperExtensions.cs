@@ -11,11 +11,11 @@ namespace AquariumApi.Models
     {
         public static string AggregateParams(this string str, params string[] replacements)
         {
-            var regex = new Regex(@"/ (?<=\{).+? (?=\})/ g");
+            var regex = new Regex(@"\{([^\}]+)\}");
             var paramsToReplace = regex.Matches(str);
-            foreach(Match match in paramsToReplace)
+            for (var i = 0; i < paramsToReplace.Count; i++)
             {
-                str = str.Replace(match.Value, replacements[match.Index]);
+                str = str.Replace(paramsToReplace[i].Value, replacements[i]);
             }
             return str;
         }

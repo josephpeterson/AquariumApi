@@ -1,0 +1,141 @@
+<h1 mat-dialog-title *ngIf="!newDeviceSensor.id">Add Device Sensor</h1>
+<h1 mat-dialog-title *ngIf="newDeviceSensor.id">Edit Device Sensor</h1>
+<div mat-dialog-content>
+	<div class="row">
+		<div class="col">
+			<p class="text-muted">Device sensors can be used to read values from your aquarium, and trigger automated
+				processes. Examples may include pumps, float switches, etc.</p>
+		</div>
+	</div>
+	<ng-container *ngIf="!loading else loadingTemplate">
+		<div *ngIf="error" class="alert alert-danger">
+			<p class="error">{{error}}</p>
+		</div>
+		<ng-container *ngIf="isBoardSupported() else unsupported">
+			<div class="row">
+				<div class="col-sm">
+					<div class="input-group mb-3">
+						<div class="input-group-prepend">
+							<span class="input-group-text" id="basic-addon3">Name</span>
+						</div>
+						<input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3"
+							[(ngModel)]="newDeviceSensor.name">
+					</div>
+				</div>
+				<div class="col-sm">
+
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm">
+					<device-generic-select label="Sensor Type" [deviceSelectType]="'DeviceSensorTypes'"
+						[(inputModel)]="newDeviceSensor.type">
+					</device-generic-select>
+				</div>
+			</div>
+
+			<ng-container *ngIf="newDeviceSensor.type == DeviceSensorTypes.Sensor">
+				<div class="row">
+					<div class="col">
+						<p class="text-muted" *ngIf="configuredDevice.boardType">Select a pin location for the sensor.
+							Based
+							on
+							your
+							selected
+							RaspberryPi configuration, this is your
+							Gpio arrangement. Your device model is current set to <b>{{configuredDevice.boardType}}</b>.
+						</p>
+					</div>
+				</div>
+				<div class="container mb-2">
+					<device-sensor-gpio-board selectable [configuredDevice]="configuredDevice"
+						[(inputModel)]="newDeviceSensor.pin"></device-sensor-gpio-board>
+				</div>
+			</ng-container>
+			<ng-container *ngIf="newDeviceSensor.type == DeviceSensorTypes.MixingStation">
+				<ng-container *ngIf="configuredDevice.mixingStation as mixingStation else noStatus">
+					<p class="font-weight-bold">
+						{{configuredDevice.mixingStation.hostname}}
+					</p>
+					<device-mixing-station-sensor-list [mixingStationStatus]="mixingStationStatus$ | async" selectable
+						[(inputModel)]="newDeviceSensor.pin">
+					</device-mixing-station-sensor-list>
+					<div
+						*ngIf="getMixingStationSensorByPin(newDeviceSensor.pin,mixingStationStatus$ | async) as sensor">
+						This sensor will use Pin: {{sensor.pin}} (Current Value: {{sensor.value}})
+					</div>
+				</ng-container>
+				<ng-template #noStatus>
+					No mixing station assigned.
+				</ng-template>
+			</ng-container>
+
+
+			<div class="row">
+				<mat-radio-group aria-labelledby="example-radio-group-label" [(ngModel)]="newDeviceSensor.polarity">
+					<mat-radio-button [value]="DeviceSensorPolarity.Input" class="ml-2">
+						Read
+					</mat-radio-button>
+					<mat-radio-button [value]="DeviceSensorPolarity.Write" class="ml-2">
+						Write
+					</mat-radio-button>
+				</mat-radio-group>
+
+			</div>
+			<ng-container *ngIf="newDeviceSensor.polarity == DeviceSensorPolarity.Write">
+				<div class="row">
+					<div class="col">
+						<p class="text-muted">Set whether this sensor will start on or off</p>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col">
+						<div class="custom-control custom-switch">
+							<input type="checkbox" class="custom-control-input" id="customSwitches"
+								[(ngModel)]="newDeviceSensor.alwaysOn">
+							<label class="custom-control-label" for="customSwitches">Always On</label>
+						</div>
+					</div>
+
+				</div>
+			</ng-container>
+			<hr>
+		</ng-container>
+		<ng-template #unsupported>
+			<div class="container alert alert-danger mt-2">
+				Unfortunately this device type is not supported. Please go to your aquarium device settings page to
+				select a
+				supported device.
+				<br>
+				<br>
+				Current device type: {{configuredDevice.boardType}}
+			</div>
+			<button class="m-2 btn btn-danger" mat-dialog-close>Close</button>
+		</ng-template>
+	</ng-container>
+
+	<ng-template #loadingTemplate>
+		<div class="shadow p-3 mb-5 bg-white rounded d-flex flex-row text-center">
+			<table style="width:100%;height:100%;">
+				<tr>
+					<td>
+						<mat-progress-spinner class="mr-auto ml-auto align-middle" color="warn" mode="indeterminate">
+						</mat-progress-spinner>
+
+					</td>
+				</tr>
+			</table>
+		</div>
+	</ng-template>
+</div>
+<div mat-dialog-actions>
+	<button *ngIf="newDeviceSensor.id != null" (click)="clickRemoveSensor()" class="m-2 btn btn-danger"
+		[disabled]="disabled">
+		<fa-icon [icon]="faTrash"></fa-icon> Delete
+	</button>
+	<button class="m-2 btn btn-secondary" mat-dialog-close>Cancel</button>
+	<button *ngIf="newDeviceSensor.id" class="m-2 btn btn-success" (click)="clickEditSensor()">Save</button>
+	<button *ngIf="!newDeviceSensor.id" class="m-2 btn btn-success" (click)="clickEditSensor()">{{newDeviceSensor.id
+		== null ? "Create":"Update"}}</button>
+</div>

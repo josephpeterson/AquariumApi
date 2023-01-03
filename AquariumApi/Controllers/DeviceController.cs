@@ -121,27 +121,6 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
-
-        [HttpGet]
-        [Route(AquariumApiEndpoints.DEVICE_DISPATCH_PING)]
-        public IActionResult PingAquariumDevice(int deviceId)
-        {
-            if (!ValidateRequest(deviceId))
-                return Unauthorized();
-
-            try
-            {
-
-                _logger.LogInformation($"GET {AquariumApiEndpoints.DEVICE_DISPATCH_PING.AggregateParams($"{deviceId}")} called");
-                var deviceInformation = _aquariumService.PingDevice(deviceId);
-                return new OkObjectResult(deviceInformation);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET {AquariumApiEndpoints.DEVICE_DISPATCH_PING.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
         [HttpGet]
         [Route(AquariumApiEndpoints.DEVICE_DISPATCH_AUTH_RENEW)]
         public IActionResult AttemptAuthRenew(int deviceId)
@@ -176,86 +155,6 @@ namespace AquariumApi.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_DISPATCH_SNAPSHOT_CONFIGURATION.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-
-       //Retrieve AquariumDeviceApi.log
-        [HttpPost, DisableRequestSizeLimit]
-        [Route(AquariumApiEndpoints.DEVICE_LOG)]
-        public IActionResult GetDeviceLog(int deviceId)
-        {
-            if (!ValidateRequest(deviceId))
-                return Unauthorized();
-
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_LOG.AggregateParams($"{deviceId}")} called");
-                var deviceLog = _aquariumService.GetDeviceLog(deviceId);
-                return new OkObjectResult(deviceLog);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_LOG.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-        
-        [HttpPost, DisableRequestSizeLimit]
-        [Route(AquariumApiEndpoints.DEVICE_LOG_CLEAR)]
-        public IActionResult ClearDeviceLog(int deviceId)
-        {
-            if (!ValidateRequest(deviceId))
-                return Unauthorized();
-
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_LOG_CLEAR.AggregateParams($"{deviceId}")} called");
-                _aquariumService.ClearDeviceLog(deviceId);
-                return new OkResult();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_LOG_CLEAR.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-        
-        //Retrieve Assigned aquarium/schedule information
-        [HttpPost, DisableRequestSizeLimit]
-        [Route(AquariumApiEndpoints.DEVICE_RETRIEVE_DETAILED)]
-        public IActionResult GetDeviceInformation(int deviceId)
-        {
-            if (!ValidateRequest(deviceId))
-                return Unauthorized();
-
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_RETRIEVE_DETAILED.AggregateParams($"{deviceId}")} called");
-                var deviceInformation = _aquariumService.GetDeviceInformation(deviceId);
-                return new OkObjectResult(deviceInformation);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_RETRIEVE_DETAILED.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-
-        //Retrieve Assigned aquarium/schedule information
-        [HttpGet]
-        [Route(AquariumApiEndpoints.DEVICE_UPDATE_CONFIGURATION)]
-        public IActionResult UpdateConfigurationFile(int deviceId)
-        {
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_UPDATE_CONFIGURATION.AggregateParams($"{deviceId}")} called");
-                var deviceInformation = _aquariumService.GetDeviceInformation(deviceId);
-                return new OkObjectResult(deviceInformation);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_UPDATE_CONFIGURATION.AggregateParams($"{deviceId}")}: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }

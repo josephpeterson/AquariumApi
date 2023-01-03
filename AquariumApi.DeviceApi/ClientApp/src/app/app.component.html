@@ -1,18 +1,16 @@
-<nav-bar [loginInformation]="service.loginInformation"></nav-bar>
-
-<div class="container" *ngIf="(!loading)">
-  <notifier-container></notifier-container>
-
-  <ng-container *ngIf="!isLoggedIn() else route">
-    <login-container></login-container>
-  </ng-container>
-  <ng-template #route>
+<ng-container *ngIf="deviceConnection$ | async as deviceState">
+  <device-nav-bar [deviceInformation]="deviceState.deviceConnection"></device-nav-bar>
+  <div class="container" *ngIf="isConnected(deviceState) else notConnected ">
     <router-outlet></router-outlet>
-  </ng-template>
-</div>
-<ng-container *ngIf="loading">
-  <div class="row justify-content-center p-5">
-
-    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
   </div>
+  <ng-template #notConnected>
+    <div *ngIf="isConnecting(deviceState) else hasError">
+      <div class="row justify-content-center p-5">
+        <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+      </div>
+    </div>
+    <ng-template #hasError>
+      <device-unavailable-container></device-unavailable-container>
+    </ng-template>
+  </ng-template>
 </ng-container>

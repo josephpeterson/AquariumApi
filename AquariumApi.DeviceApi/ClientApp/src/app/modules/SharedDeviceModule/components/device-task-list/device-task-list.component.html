@@ -1,0 +1,7 @@
+<div class="generic-list">
+  <ul class="list-group" *ngFor="let t of configuredDevice.tasks">
+    <li class="list-group-item">
+      <device-task-list-item [task]='t'></device-task-list-item>
+    </li>
+  </ul>
+</div>

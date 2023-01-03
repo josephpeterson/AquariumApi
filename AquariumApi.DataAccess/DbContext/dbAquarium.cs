@@ -149,7 +149,6 @@ namespace AquariumApi.DataAccess
             /* Schedule */
             modelBuilder.Entity<DeviceSchedule>(entity =>
             {
-                entity.HasMany(e => e.TaskAssignments).WithOne(e => e.Schedule);
                 entity.HasOne(e => e.Device);
             });
             modelBuilder.Entity<DeviceScheduleTask>(entity =>

@@ -1,8 +1,8 @@
 import { Aquarium } from './Aquarium';
 import { CameraConfiguration } from './CameraConfiguration';
-import { DeviceScheduleAssignment } from './DeviceScheduleAssignment';
-import { DeviceScheduleTask } from './DeviceScheduleTask';
-import { DeviceSensor } from './DeviceSensor';
+import { DeviceSchedule } from '../modules/SharedDeviceModule/models/DeviceSchedule';
+import { DeviceScheduleTask } from '../modules/SharedDeviceModule/models/DeviceScheduleTask';
+import { DeviceSensor } from '../modules/SharedDeviceModule/models/DeviceSensor';
 
 export class AquariumDevice
 {
@@ -18,11 +18,12 @@ export class AquariumDevice
   enabledPhoto: boolean
   enabledPh: boolean
   enabledNitrate: boolean
+  enabledNitrite: boolean
   enabledLighting: boolean
   cameraConfiguration: CameraConfiguration
   
   aquarium: Aquarium
   sensors: DeviceSensor[]
-  scheduleAssignments: DeviceScheduleAssignment[]
+  schedules: DeviceSchedule[]
   tasks: DeviceScheduleTask[]
 }

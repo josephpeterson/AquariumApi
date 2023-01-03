@@ -1,0 +1,5 @@
+<ng-container *ngIf="(configuredDevice$ | async) as device">
+	<button (click)="clickAction(device)" class="float-md-right btn btn-link ml-2" [disabled]="disabled">
+		<ng-content></ng-content>
+	</button>
+</ng-container>

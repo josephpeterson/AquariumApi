@@ -1,0 +1,7 @@
+<div class="generic-list">
+  <ul class="list-group" *ngFor="let s of configuredDevice.schedules">
+    <li class="list-group-item">
+      <device-schedule-list-item [schedule]='s'></device-schedule-list-item>
+    </li>
+  </ul>
+</div>

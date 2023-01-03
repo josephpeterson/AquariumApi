@@ -20,8 +20,7 @@ namespace AquariumApi.DeviceApi
         GpioPinValue GetPinValue(DeviceSensor pin);
         void RegisterDevicePin(DeviceSensor deviceSensor);
         void SetPinValue(DeviceSensor pin, GpioPinValue pinValue);
-        void Setup(ICollection<DeviceSensor> sensors);
-        DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest);
+        void Setup();
     }
     public class GpioService : IGpioService
     {
@@ -29,16 +28,23 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<GpioService> _logger;
         private readonly ISerialService _serialService;
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IDeviceConfigurationService _deviceConfiguration;
         private readonly List<DeviceSensor> Pins = new List<DeviceSensor>();
         private IGpioControllerWrapper Controller;
         public bool ATOSystemRunning { get; private set; }
 
-        public GpioService(IConfiguration config, ILogger<GpioService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
+        public GpioService(IConfiguration config
+            ,ILogger<GpioService> logger
+            ,ISerialService serialService
+            ,IHostingEnvironment hostingEnvironment
+            ,IDeviceConfigurationService deviceConfiguration
+            )
         {
             _config = config;
             _logger = logger;
             _serialService = serialService;
             _hostingEnvironment = hostingEnvironment;
+            _deviceConfiguration = deviceConfiguration;
             CreateController();
         }
         private void PreparePins()
@@ -54,6 +60,9 @@ namespace AquariumApi.DeviceApi
                     {
                         Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
                             OnDeviceSensorTriggered(p,sender,pinValueChangedEventArgs)
+                        );
+                        Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Rising, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
+                            OnDeviceSensorTriggered(p, sender, pinValueChangedEventArgs)
                         );
                         p.Value = Controller.Read(p.Pin);
                     }
@@ -91,10 +100,12 @@ namespace AquariumApi.DeviceApi
                 _logger.LogError(ex.StackTrace);
             }
         }
-        public void Setup(ICollection<DeviceSensor> sensors)
+        public void Setup()
         {
             CleanUp();
-            _logger.LogInformation($"{sensors.Count()} sensors found...");
+            var config = _deviceConfiguration.LoadDeviceConfiguration();
+            var sensors = config.Sensors;
+            _logger.LogInformation($"GpioService setup {sensors.Count()} sensors found...");
             sensors.ToList().ForEach(s =>
             {
                 _logger.LogInformation($"+- (ID: {s.Id}) {s.Name} Pin: {s.Pin} Polarity: {s.Polarity}");
@@ -154,31 +165,10 @@ namespace AquariumApi.DeviceApi
         }
         public void OnDeviceSensorTriggered(DeviceSensor p,object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
         {
-            p.Value = Controller.Read(p.Pin);
+            //p.Value = Controller.Read(p.Pin);
+
+            p.Value = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling ? GpioPinValue.Low : GpioPinValue.High;
             p.OnSensorTriggered(sender, 0);
         }
-        public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)
-        {
-            var sensors = GetAllSensors();
-            var sensor = sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
-            if (sensor == null) throw new DeviceException("Could not locate sensor on this device by that sensor id.");
-
-            var maxTestRuntime = Convert.ToInt32(_config["DeviceSensorTestMaximumRuntime"]);
-            if (testRequest.Runtime > maxTestRuntime) throw new DeviceException($"Runtime exceeds maximum runtime allowed (Maximum allowed: {maxTestRuntime})");
-            maxTestRuntime = testRequest.Runtime;
-
-
-            _logger.LogWarning($"Testing sensor ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity})");
-            testRequest.StartTime = DateTime.UtcNow;
-            SetPinValue(sensor, GpioPinValue.High);
-            Thread.Sleep(TimeSpan.FromSeconds(maxTestRuntime));
-            SetPinValue(sensor, GpioPinValue.Low);
-            testRequest.EndTime = DateTime.UtcNow;
-
-            var value = GetPinValue(sensor);
-            _logger.LogWarning($"Testing sensor completed ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity} Value: {value})");
-            return testRequest;
         }
-    }
-    
 }

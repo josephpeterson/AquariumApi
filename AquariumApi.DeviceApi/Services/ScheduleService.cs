@@ -19,15 +19,17 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<ScheduleService> _logger;
         private readonly DateTimeProvider _dateTimeProvider;
         private IAquariumAuthService _aquariumAuthService;
+        private IMixingStationService _mixingStationService;
         private readonly IAquariumClient _aquariumClient;
 
         public IExceptionService _exceptionService { get; }
 
         private IGpioService _gpioService;
+        private IDeviceConfigurationService _deviceConfiguration;
         private readonly IConfiguration _config;
         private Dictionary<ScheduleTaskTypes, DeviceTaskProcess> _deviceTaskCallbacks = new Dictionary<ScheduleTaskTypes, DeviceTaskProcess>();
-        private List<RunningScheduledJob> RunningJobs = new List<RunningScheduledJob>();
-        private List<ScheduledJob> ScheduledJobsQueue = new List<ScheduledJob>();
+        private ScheduleState ScheduleState = new ScheduleState();
+
         public CancellationTokenSource _cancellationSource = new CancellationTokenSource();
         public bool Running;
 
@@ -36,40 +38,41 @@ namespace AquariumApi.DeviceApi
             ILogger<ScheduleService> logger,
             DateTimeProvider dateTimeProvider,
             IAquariumAuthService aquariumAuthService,
+            IMixingStationService mixingStationService,
             IAquariumClient aquariumClient,
             IExceptionService exceptionService,
+            IDeviceConfigurationService deviceConfigurationService,
             IGpioService gpioService)
         {
             _config = config;
             _logger = logger;
             _dateTimeProvider = dateTimeProvider;
             _aquariumAuthService = aquariumAuthService;
+            _mixingStationService = mixingStationService;
             _aquariumClient = aquariumClient;
             _exceptionService = exceptionService;
             _gpioService = gpioService;
+            _deviceConfiguration = deviceConfigurationService;
         }
         public void Setup()
         {
             CleanUp();
-            var schedules = GetAllSchedules();
-            _logger.LogInformation($"{schedules.Count()} Schedules found");
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            var schedules = deviceConfiguration.Schedules;
+            var tasks = deviceConfiguration.Tasks;
+            var sensors = deviceConfiguration.Sensors;
+            _logger.LogInformation($"Schedule Information:\r\n- {schedules.Count()} Schedules found\r\n- {tasks.Count()} tasks found\r\n- {sensors.Count()} sensors found");
 
             //Register all sensors
-            var aq = _aquariumAuthService.GetAquarium();
-            var sensors = aq.Device.Sensors;
-            _logger.LogInformation($"{sensors.Count()} Device sensors found");
-
-            //Register them in GpioService
-            _gpioService.Setup(sensors);
-            sensors.Where(s => s.Polarity == Polarity.Input).ToList().ForEach(s =>
+            var listeningSensors = sensors.Where(s => s.Polarity == Polarity.Input && s.Type == SensorTypes.Sensor).ToList();
+            _logger.LogInformation($"{listeningSensors.Count()} readable sensors found. Registering input triggers...");
+            listeningSensors.ForEach(s =>
             {
                 _logger.LogInformation($"[ScheduleService] Registering sensor callback for sensor {s.Name} Gpio Pin: {s.Pin}");
                 s.OnSensorTriggered = (sender, value) => {
                     OnDeviceSensorTriggered(s);
                 };
             });
-
-
             if (schedules.Count() == 0)
             {
                 _logger.LogInformation("No schedules are deployed on this device. Will not begin ScheduleService loop");
@@ -84,42 +87,60 @@ namespace AquariumApi.DeviceApi
         {
             try
             {
+                var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+                ScheduleState.Running = true;
                 GenerateScheduledJobsQueue();
-                Running = true;
+                ScheduleState.NextTasks = GetNextTask();
                 await Task.Run(() =>
                 {
 
                     while (!stoppingToken.IsCancellationRequested)
                     {
-                        var pendingJobs = GetNextTask();
-                        if (pendingJobs.Any())
-                        {
-                            pendingJobs.ForEach(scheduledJob =>
-                            {
-                                var eta = (scheduledJob.StartTime - _dateTimeProvider.Now);
+                        if (!ScheduleState.NextTasks.Any())
+                            break;
+                        var nextTaskTime = ScheduleState.NextTasks.First().StartTime;
+                        var eta = (nextTaskTime - _dateTimeProvider.Now);
+                            string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
+                        string str = $"\r\n\tNext task/job scheduled in {time} at {nextTaskTime}";
+                        string str2 = "";
+                        ScheduleState.RunningJobs.ForEach(j => str += $"\n\tStatus:\t{j.ScheduledJob.Status}\tStart Time:\t{j.ScheduledJob.StartTime.Date.ToShortDateString()} {j.ScheduledJob.StartTime.TimeOfDay.ToString("g")}\tTask: {deviceConfiguration.Tasks.First(t => t.Id == j.ScheduledJob.TaskId).Name}");
+                        ScheduleState.Scheduled.ForEach(j => str2 += $"\n\tStatus:\t{j.Status}\tStart Time:\t{j.StartTime.Date.ToShortDateString()} {j.StartTime.TimeOfDay.ToString("g")}\tTask: {deviceConfiguration.Tasks.First(t => t.Id == j.TaskId).Name}");
+                            
 
-                                //readable time
-                                string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
-                                _logger.LogInformation($"Next task/job scheduled in {time} Maximum Runtime: {scheduledJob.MaximumEndTime} Task: {scheduledJob.Task.Name}");
-                                try
-                                {
-                                    GenericPerformTask(scheduledJob);
-                                }
-                                catch(DeviceException ex)
-                                {
-                                    //we probably did not need to run this
-                                    _logger.LogWarning($"GenericPerformTask threw a DeviceException: {ex}");
-                                }
-                                catch(Exception ex)
-                                {
-                                    _logger.LogError($"Error occured during task: {ex.Message}");
-                                    _logger.LogError($"{ex.StackTrace}");
-                                }
-                                ScheduledJobsQueue.Remove(scheduledJob);
-                            });
-                            TopOffScheduledJobsQueue();
-                            PrintScheduleStatus();
-                        }
+                        ScheduleState.NextTasks.Select(t => deviceConfiguration.Tasks.First(tt => tt.Id == t.TaskId))
+                        .ToList()
+                        .ForEach(task =>
+                        {
+                            str += $"\r\n\tTask: {task.Name} Actions: {task.Actions.Count()} Maximum Runtime: {task.MaximumRuntime}";
+                        });
+
+                        _logger.LogInformation($"\n------------------------------------\n\tRunning Jobs Queue: {ScheduleState.RunningJobs.Count()}{str}" +
+                            $"\n------------------------------------\n\tScheduled Jobs Queue: {ScheduleState.Scheduled.Count()}{str2}" +
+                            $"\n-------------------------------------------------------------------");
+
+                        if (eta.TotalSeconds > 30)
+                            Thread.Sleep(eta);
+
+                        ScheduleState.NextTasks.ForEach(scheduledJob => 
+                        {
+                            try
+                            {
+                                GenericPerformTask(scheduledJob);
+                            }
+                            catch(DeviceException ex)
+                            {
+                                //we probably did not need to run this
+                                _logger.LogWarning($"GenericPerformTask threw a DeviceException: {ex}");
+                            }
+                            catch(Exception ex)
+                            {
+                                _logger.LogError($"Error occured during task: {ex.Message}");
+                                _logger.LogError($"{ex.StackTrace}");
+                            }
+                            ScheduleState.Scheduled.Remove(scheduledJob);
+                        });
+                        GenerateScheduledJobsQueue();
+                        ScheduleState.NextTasks = GetNextTask();
                     }
                 }, stoppingToken);
             }
@@ -133,74 +154,51 @@ namespace AquariumApi.DeviceApi
         }
         private void GenerateScheduledJobsQueue()
         {
+            ScheduleState.Scheduled.Clear();
             _logger.LogInformation($"Generating scheduled jobs queue...");
+            var schedules = _deviceConfiguration.LoadDeviceConfiguration()?.Schedules;
             var length = _dateTimeProvider.Now + TimeSpan.FromDays(7);
             var scheduledJobs = ExpandTasks(_dateTimeProvider.Now, length);
             _logger.LogInformation($"Queue properties:\n-- Timespan: {length}\n-- Schedules: {GetAllSchedules().Count()}\n-- Scheduled Jobs in queue: {scheduledJobs.Count()}");
             _logger.LogInformation($"Scheduled jobs queue ready: {scheduledJobs.Count()} scheduled jobs in queue.");
-            ScheduledJobsQueue = scheduledJobs;
-        }
-        private void TopOffScheduledJobsQueue()
-        {
-            _logger.LogInformation("[ScheduleService] Topping off scheduled jobs queue...");
-            if (!ScheduledJobsQueue.Any())
-            {
-                GenerateScheduledJobsQueue();
-                return;
-            }
-
-            var finalTaskTime = ScheduledJobsQueue.OrderByDescending(s => s.StartTime).First().StartTime.AddMilliseconds(1);
-            var length = _dateTimeProvider.Now + TimeSpan.FromDays(7);
-            length = length.Date + finalTaskTime.TimeOfDay;
-            var scheduledJobs = ExpandTasks(finalTaskTime, length);
-            _logger.LogInformation($"[ScheduleService] Adding {scheduledJobs.Count()} scheduled jobs to the queue!");
-            ScheduledJobsQueue.AddRange(scheduledJobs);
-        }
-        public List<DeviceSchedule> GetAllSchedules()
-        {
-            var aq = _aquariumAuthService.GetAquarium();
-            if(aq == null || aq.Device == null)
-                return new List<DeviceSchedule>();
-            var sa = aq.Device.Schedules;
-            if (sa == null)
-                return new List<DeviceSchedule>();
-            return sa.ToList();
+            ScheduleState.Scheduled = scheduledJobs;
         }
         public List<ScheduledJob> GetNextTask()
         {
-
-            return GetAllScheduledTasks()
-                .Where(sj => sj.Status == JobStatus.Ready && sj.StartTime <= _dateTimeProvider.Now)
-                .OrderBy(sj => sj.StartTime).ToList();
+            var scheduledJobs = ScheduleState.Scheduled
+                .Where(x => x.StartTime - _dateTimeProvider.Now > TimeSpan.FromSeconds(30))
+                .OrderBy(x => x.StartTime);
+            if (!scheduledJobs.Any())
+                return scheduledJobs.ToList();
+            var nextTasks = ScheduleState.Scheduled.Where(x => x.StartTime == scheduledJobs.First().StartTime);
+            return nextTasks.ToList();
         }
-
-        public List<ScheduledJob> GetAllScheduledTasks()
-        {
-            return RunningJobs.Select(rj => rj.ScheduledJob).Concat(ScheduledJobsQueue)
-                .OrderBy(sj => sj.StartTime)
-                .ToList();
-        }
-        public List<ScheduledJob> GetAllRunningJobs()
-        {
-            return RunningJobs.Select(running => running.ScheduledJob).ToList();
-        }
-
         /* Tasks */
         public RunningScheduledJob GenericPerformTask(ScheduledJob job)
         {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            var sensors = deviceConfiguration.Sensors;
+            var tasks = deviceConfiguration.Tasks;
+            var task = tasks.First(t => t.Id == job.TaskId);
             var aq = _aquariumAuthService.GetAquarium();
-            var task = job.Task ?? aq.Device.Tasks.First(s => s.Id == job.TaskId);
-            var targetSensor = aq.Device.Sensors.First(s => s.Id == task.TargetSensorId);
-            DeviceSensor targetSensorValue = aq.Device.Sensors.First(s => s.Id == task.TargetSensorId);
-            DeviceSensor triggerSensor = null;
 
-            //Cleanse
-            if (!task.MaximumRuntime.HasValue)
-                task.MaximumRuntime = 30;
 
-            //preflight job
-            var maxRuntime = TimeSpan.FromSeconds(task.MaximumRuntime.Value); //maybe switch this to job.MaximumEndTime
-            _logger.LogInformation($"[ScheduleService] Beginning new schedule job for maximum runtime: {maxRuntime}...");
+            //Check trigger sensor
+            if (task.TriggerSensorId.HasValue)
+            {
+                var triggerSensor = sensors.First(s => s.Id == task.TriggerSensorId);
+                var triggerSensorValue = _gpioService.GetPinValue(triggerSensor);
+                if (triggerSensorValue == task.TriggerSensorValue)
+                {
+                    _logger.LogInformation($"Trigger sensor is already reading the specified trigger value! Trigger sensor value: {triggerSensorValue}");
+                    throw new DeviceException($"Trigger sensor is already reading the specified trigger value! Trigger sensor value: {triggerSensorValue}");
+                }
+            }
+
+
+
+            var maxRuntime = TimeSpan.FromSeconds(task.MaximumRuntime); //maybe switch this to job.MaximumEndTime
+            _logger.LogInformation($"[ScheduleService] Beginning new schedule job for maximum runtime: {maxRuntime}");
 
 
             CancellationTokenSource cancellationSouce = new CancellationTokenSource();
@@ -211,25 +209,27 @@ namespace AquariumApi.DeviceApi
             job.Task = task;
             job.TaskId = task.Id.Value;
             job.UpdatedAt = _dateTimeProvider.Now;
-
-
-            //Check trigger sensor
-            if (task.TriggerSensorId.HasValue)
-            {
-                triggerSensor = aq.Device.Sensors.First(s => s.Id == task.TriggerSensorId);
-                var triggerSensorValue = _gpioService.GetPinValue(triggerSensor);
-                if (triggerSensorValue == task.TriggerSensorValue)
-                {
-                    _logger.LogInformation($"Trigger sensor is already reading the specified trigger value! Trigger sensor value: {triggerSensorValue}");
-                    throw new DeviceException($"Trigger sensor is already reading the specified trigger value! Trigger sensor value: {triggerSensorValue}");
-                }
-            }
-
-            //job.StartTime = DateTime.Now;
             job.Status = JobStatus.Running;
             job.UpdatedAt = _dateTimeProvider.Now;
-            _ = DispatchJobStatus(job);
-            _gpioService.SetPinValue(targetSensor, GpioPinValue.High);
+            //_ = DispatchJobStatus(job);
+            _logger.LogInformation($"[ScheduleService] Task end time: {job.MaximumEndTime}");
+
+
+            //Load wireless devices (Mixing stations)
+            var mixingStationStatus = _mixingStationService.PingByHostname(deviceConfiguration.MixingStation.Hostname).Result;
+
+            //Set all sensors
+            task.Actions.ForEach(action =>
+            {
+                var targetSensor = sensors.First(s => s.Id == action.TargetSensorId);
+                _logger.LogInformation($"Setting device sensor {targetSensor.Name} to Value: {action.TargetSensorValue}");
+
+                if(targetSensor.Type == SensorTypes.Sensor)
+                    _gpioService.SetPinValue(targetSensor, action.TargetSensorValue);
+                else if(targetSensor.Type == SensorTypes.MixingStation)
+                    _mixingStationService.TestMixingStationValve(mixingStationStatus.Valves.First(v => v.Pin == targetSensor.Pin).Id);
+                    
+            });
 
             var newRunningTask = Task.Run(() =>
             {
@@ -254,25 +254,23 @@ namespace AquariumApi.DeviceApi
                 RunningTask = newRunningTask,
                 CancellationSource = cancellationSouce,
             };
-            RunningJobs.Add(running);
+            ScheduleState.RunningJobs.Add(running);
             return running;
         }
-
-        private void PrintScheduleStatus()
+        public RunningScheduledJob GenericPerformTask(DeviceScheduleTask task)
         {
-            string str = "";
-            string str2 = "";
-            RunningJobs.ForEach(j => str += $"\n---- Status: {j.ScheduledJob.Status} Start Time: {j.ScheduledJob.StartTime} Task: {j.ScheduledJob.Task.Name}");
-            ScheduledJobsQueue.ForEach(j => str2 += $"\n---- Status: {j.Status} Start Time: {j.StartTime} Task: {j.Task.Name}");
-            _logger.LogInformation($"\n------------------------------------\n---- Running Jobs Queue: {RunningJobs.Count()}{str}" +
-                $"\n------------------------------------\n---- Scheduled Jobs Queue: {ScheduledJobsQueue.Count()}{str2} \n------------------------------------" +
-                $"\n-------------------------------------------------------------------");
+            return GenericPerformTask(new ScheduledJob()
+            {
+                TaskId = task.Id.Value,
+                StartTime = _dateTimeProvider.Now,
+                MaximumEndTime = _dateTimeProvider.Now.AddSeconds(task.MaximumRuntime)
+            });
         }
 
         public void CleanUp()
         {
             StopAllScheduledJobs();
-            ScheduledJobsQueue.Clear();
+            ScheduleState.Scheduled.Clear();
             Running = false;
             if(!_cancellationSource.IsCancellationRequested)
             { 
@@ -284,7 +282,8 @@ namespace AquariumApi.DeviceApi
         {
             //check if any running jobs contain this sensor
             var currentValue = _gpioService.GetPinValue(sensor);
-            RunningJobs.Where(j => j.ScheduledJob.Task.TriggerSensorId == sensor.Id && j.ScheduledJob.Task.TriggerSensorValue == currentValue && j.ScheduledJob.Status == JobStatus.Running)
+            //_logger.LogInformation($"[ScheduleService] OnDeviceSensorTriggered: Device Sensor triggered {sensor.Name} (ID: {sensor.Id}) was triggered to value {currentValue}");
+            ScheduleState.RunningJobs.Where(j => j.ScheduledJob.Task.TriggerSensorId == sensor.Id && j.ScheduledJob.Task.TriggerSensorValue == currentValue && j.ScheduledJob.Status == JobStatus.Running)
                 .ToList()
                 .ForEach(job =>
                 {
@@ -292,122 +291,20 @@ namespace AquariumApi.DeviceApi
                     StopScheduledJob(job.ScheduledJob, JobEndReason.Normally);
                 });
         }
-        private async Task<ScheduledJob> DispatchJobStatus(ScheduledJob job)
+        #region Schedule State
+        public ScheduleState GetScheduleStatus()
         {
-            try
-            {
-                var s = await _aquariumClient.DispatchScheduledJob(job);
-                job.Id = s.Id;
-
-
-                if(job.Status == JobStatus.Completed)
-                {
-                    if (job.Task.TaskTypeId == ScheduleTaskTypes.StartATO)
-                    {
-                        await _aquariumClient.DispatchWaterATO(new ATOStatus()
-                        {
-                            StartTime = job.StartTime,
-                            EndTime = job.EndTime.Value,
-                            MlPerSec = 5,
-                            ScheduleJobId = job.Id.Value
-                        });
-                    }
-                    else if (job.Task.TaskTypeId == ScheduleTaskTypes.WaterChangeReplentish)
-                    {
-                        var previousJob = job;
-                        while (previousJob.PreviousJob != null)
-                            previousJob = previousJob.PreviousJob;
-                        await _aquariumClient.DispatchWaterChange(new WaterChange()
-                        {
-                            StartTime = previousJob.StartTime,
-                            EndTime = job.EndTime.Value,
-                            ScheduleJobId = job.Id.Value
-                        });
-                    }
-                }
-                
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Unable to dispatch scheduled job status to server");
-                _logger.LogError(e.Message);
-                _logger.LogError(e.StackTrace);
-                await _exceptionService.Throw(e);
-            }
-            return job;
+            return ScheduleState;
         }
-        public List<ScheduledJob> ExpandTasks(DateTime startDate,DateTime endDate)
+
+        public ScheduledJob StopScheduledJob(ScheduledJob scheduledJob, JobEndReason jobEndReason)
         {
-            var length = endDate - startDate;
-            var aq = _aquariumAuthService.GetAquarium();
-            var allScheduledJobs = new List<ScheduledJob>();
-
-            //get all task assignments that start by the time trigger
-            var taskAssignment =  GetAllSchedules().SelectMany(s => s.TaskAssignments)
-                .Where(ta => ta.TriggerTypeId == TriggerTypes.Time)
-                .ToList();
-
-
-            for(var k=0;k<length.TotalDays;k++)
-                taskAssignment.ForEach(ta =>
-            {
-                var tod = ta.StartTime.TimeOfDay;
-                if (k == 0 && startDate.TimeOfDay >= tod)
-                    return;
-                var startTime = startDate.Date + tod;
-                //if (startTime < startDate)
-                //    startTime = startTime.AddDays(1);
-                startTime = startTime.AddDays(k);
-
-                var task = aq.Device.Tasks.First(t => t.Id == ta.TaskId);
-
-                if (!ta.RunsOnDate(startTime))
-                    return;
-
-                var scheduledJob = new ScheduledJob()
-                {
-                    TaskId = task.Id.Value,
-                    Task = task,
-                    StartTime = startTime
-                };
-                if (task.MaximumRuntime.HasValue)
-                    scheduledJob.MaximumEndTime = startTime + TimeSpan.FromSeconds(task.MaximumRuntime.Value);
-                allScheduledJobs.Add(scheduledJob);
-
-                //Check if this task assignment repeats
-                if (ta.Repeat)
-                {
-                    var lengthInMinutes = TimeSpan.FromDays(1).TotalMinutes;
-
-                    lengthInMinutes = ta.RepeatEndTime.TimeOfDay.Subtract(ta.StartTime.TimeOfDay).TotalMinutes;
-
-                    var mod = lengthInMinutes % ta.RepeatInterval;
-                    for (var i = 1; i <= ((lengthInMinutes - mod) / ta.RepeatInterval); i++)
-                    {
-                        allScheduledJobs.Add(new ScheduledJob()
-                        {
-                            TaskId = scheduledJob.TaskId,
-                            Task = scheduledJob.Task,
-                            StartTime = scheduledJob.StartTime.AddMinutes(i * ta.RepeatInterval.Value),
-                            //ScheduleId = Id
-                        });
-                    }
-                }
-            });
-            return allScheduledJobs.OrderBy(t => t.StartTime).ToList();
-        }
-        public class RunningScheduledJob
-        {
-            public ScheduledJob ScheduledJob { get; set; }
-            public Task RunningTask { get; set; }
-            public CancellationTokenSource CancellationSource { get; set; }
-        }
-        public ScheduledJob StopScheduledJob(ScheduledJob scheduledJob,JobEndReason jobEndReason)
-        {
-            var runningJob = RunningJobs.First(j => j.ScheduledJob.Id == scheduledJob.Id);
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            var sensors = deviceConfiguration.Sensors;
+            var task = deviceConfiguration.Tasks.First(t => t.Id == scheduledJob.TaskId);
+            var runningJob = ScheduleState.RunningJobs.First(j => j.ScheduledJob.Id == scheduledJob.Id);
             var job = runningJob.ScheduledJob;
             var aq = _aquariumAuthService.GetAquarium();
-            var targetSensor = aq.Device.Sensors.First(s => s.Id == job.Task.TargetSensorId);
 
             runningJob.CancellationSource.Cancel();
 
@@ -415,15 +312,26 @@ namespace AquariumApi.DeviceApi
             job.Status = JobStatus.Completed;
             job.EndReason = jobEndReason;
             job.UpdatedAt = _dateTimeProvider.Now;
-            _gpioService.SetPinValue(targetSensor, GpioPinValue.Low);
-            RunningJobs.Remove(runningJob);
-            _ = DispatchJobStatus(job);
+            var mixingStationStatus = _mixingStationService.PingByHostname(deviceConfiguration.MixingStation.Hostname).Result;
+            task.Actions.ForEach(a =>
+            {
+                var targetSensor = sensors.First(x => x.Id == a.TargetSensorId);
+                _logger.LogInformation($"Resetting device sensor {targetSensor.Name} to Value: {GpioPinValue.Low}");
+                if(targetSensor.Type == SensorTypes.Sensor)
+                _gpioService.SetPinValue(targetSensor, GpioPinValue.Low);
+                else if(targetSensor.Type == SensorTypes.MixingStation)
+                    _mixingStationService.TestMixingStationValve(mixingStationStatus.Valves.First(v => v.Pin == targetSensor.Pin).Id);
+            });
+
+            ScheduleState.RunningJobs.Remove(runningJob);
+            //_ = DispatchJobStatus(job);
             _logger.LogInformation($"[ScheduleService] Scheduled job {job.Id} stopped.");
 
-            if(jobEndReason == JobEndReason.Normally || jobEndReason ==  JobEndReason.MaximumRuntimeReached) //maybe move this out to where this method gets called
+            if (jobEndReason == JobEndReason.Normally || jobEndReason == JobEndReason.MaximumRuntimeReached) //maybe move this out to where this method gets called
             {
                 //find continuing task
-                var taskAssignments = GetAllSchedules().SelectMany(s => s.TaskAssignments)
+                /*
+                var taskAssignments = GetAllSchedules().SelectMany(s => s.Tasks)
                     .Where(ta => ta.TriggerTypeId == TriggerTypes.TaskDependent && ta.TriggerTaskId == job.TaskId);
                 if (taskAssignments.Any())
                 {
@@ -449,20 +357,281 @@ namespace AquariumApi.DeviceApi
                     });
 
                 }
+                */
             }
             return job;
         }
         public List<ScheduledJob> StopAllScheduledJobs()
         {
-            return RunningJobs.Select(rj => StopScheduledJob(rj.ScheduledJob, JobEndReason.ForceStop)).ToList();
+            return ScheduleState.RunningJobs.Select(rj => StopScheduledJob(rj.ScheduledJob, JobEndReason.ForceStop)).ToList();
         }
 
-
+        #endregion
         public delegate void DeviceTaskProcess(DeviceScheduleTask task);
         public void RegisterDeviceTask(ScheduleTaskTypes taskType, DeviceTaskProcess callback)
         {
             _deviceTaskCallbacks[taskType] = callback;
             _logger.LogInformation($"Registered callback for task id: {taskType}");
         }
+        #region Schedule CRUD
+        public List<DeviceSchedule> GetAllSchedules()
+        {
+            var schedules = _deviceConfiguration.LoadDeviceConfiguration()?.Schedules;
+            return schedules;
+        }
+        public List<DeviceSchedule> UpsertDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            if (!deviceSchedule.Id.HasValue)
+            {
+                var r = new Random();
+                int? v = null;
+                while (v == null || deviceConfiguration.Schedules.Any(tt => tt.Id == v))
+                    v = r.Next(1000, 9999);
+                deviceSchedule.Id = v;
+            }
+
+
+            //Validate
+            if (string.IsNullOrEmpty(deviceSchedule.Name))
+                throw new DeviceException($"Schedule must contain a valid name.");
+            if (!deviceSchedule.Tasks.Any(t => deviceConfiguration.Tasks.Any(s => s.Id == t.Id)))
+                throw new DeviceException($"Schedules must contain valid tasks.");
+            if (!deviceSchedule.Tasks.Any())
+                throw new DeviceException($"Schedules must at least one task.");
+            if (string.IsNullOrEmpty(deviceSchedule.DateConditions) 
+                || deviceSchedule.DateConditions.Length != 7 
+                || deviceSchedule.DateConditions.Replace("0","").Replace("1", "").Length > 0)
+                throw new DeviceException($"Schedule date conditions are invalid.");
+
+            var schedules = deviceConfiguration.Schedules.Where(t => t.Id != deviceSchedule.Id && t.Id.HasValue).ToList();
+            schedules.Add(deviceSchedule);
+            deviceConfiguration.Schedules = schedules.OrderBy(s => s.Name).ToList();
+
+            _logger.LogInformation($"Saving {schedules.Count()} to device...");
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+
+            Setup();
+            return schedules;
+        }
+        public List<DeviceSchedule> RemoveDeviceSchedule(DeviceSchedule deviceSchedule)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            deviceConfiguration.Schedules = deviceConfiguration.Schedules.Where(t => t.Id != deviceSchedule.Id).ToList();
+            _logger.LogInformation($"Saving {deviceConfiguration.Schedules.Count()} tasks to device...");
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+            Setup();
+            return deviceConfiguration.Schedules;
+        }
+        #endregion
+        #region Task CRUD
+        public List<DeviceScheduleTask> GetAllTasks()
+        {
+            var tasks = _deviceConfiguration.LoadDeviceConfiguration()?.Tasks;
+            return tasks;
+        }
+        public List<DeviceScheduleTask> UpsertDeviceTask(DeviceScheduleTask deviceTask)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            if (!deviceTask.Id.HasValue)
+            {
+                var r = new Random();
+                int? v = null;
+                while (v == null || deviceConfiguration.Tasks.Any(tt => tt.Id == v))
+                    v = r.Next(1000, 9999);
+                deviceTask.Id = v;
+            }
+
+            //Validate
+            if (string.IsNullOrEmpty(deviceTask.Name))
+                throw new DeviceException($"Tasks must contain a name.");
+            if (deviceTask.MaximumRuntime <= 0)
+                throw new DeviceException($"Task must have a maximum runtime greater than 0.");
+            if(deviceTask.Actions.Select(a => a.TargetSensorId).Any(targetSensorId => !deviceConfiguration.Sensors.Any(s => s.Id == targetSensorId)))
+                throw new DeviceException($"Task actions must contain a valid target sensor.");
+            if (deviceTask.TriggerSensorId != null && !deviceConfiguration.Sensors.Any(s => s.Id == deviceTask.TriggerSensorId))
+                throw new DeviceException($"Tasks must contain a valid trigger sensor.");
+            if (deviceTask.TriggerSensorId != null && deviceTask.TriggerSensorValue == null)
+                throw new DeviceException($"Tasks must contain a valid trigger sensor and value combination.");
+            if (!deviceTask.Actions.Any())
+                throw new DeviceException($"Tasks must contain at least one action.");
+
+            var tasks = deviceConfiguration.Tasks.Where(t => t.Id != deviceTask.Id && t.Id.HasValue).ToList();
+            tasks.Add(deviceTask);
+            deviceConfiguration.Tasks = tasks.OrderBy(s => s.Name).ToList();
+            _logger.LogInformation($"Saving {tasks.Count()} tasks to device...");
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+            Setup();
+            return tasks;
+        }
+        public List<DeviceScheduleTask> RemoveDeviceTask(DeviceScheduleTask deviceTask)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+
+            //Validate
+            if (GetAllSchedules().SelectMany(s => s.Tasks).Any(t => t.Id == deviceTask.Id))
+                throw new DeviceException("Device sensor is being used within a schedule.");
+
+            deviceConfiguration.Tasks = deviceConfiguration.Tasks.Where(t => t.Id != deviceTask.Id).ToList();
+            _logger.LogInformation($"Saving {deviceConfiguration.Tasks.Count()} tasks to device...");
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+            Setup();
+            return deviceConfiguration.Tasks;
+        }
+        #endregion
+        #region Device Sensor CRUD
+        public List<DeviceSensor> GetDeviceSensorValues()
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            var sensors = deviceConfiguration.Sensors;
+            var onboardSensors = _gpioService.GetAllSensors();
+            onboardSensors.ForEach(s => sensors.First(ss => ss.Id == s.Id).Value = s.Value);
+
+            //Get wireless sensor values
+            var mixingStation = _mixingStationService.PingByHostname(deviceConfiguration.MixingStation.Hostname).Result;
+            sensors.Where(s => s.Type == SensorTypes.MixingStation).ToList().ForEach(s =>
+            {
+                s.Value = mixingStation.Valves.First(v => v.Pin == s.Pin).Value;
+            });
+
+            return sensors;
+        }
+
+        public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)
+        {
+            var sensors = _gpioService.GetAllSensors();
+            var sensor = sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
+            if (sensor == null) throw new DeviceException($"Could not locate sensor on this device by that sensor id ({testRequest.SensorId}).");
+
+            var maxTestRuntime = Convert.ToInt32(_config["DeviceSensorTestMaximumRuntime"]);
+            if (testRequest.Runtime > maxTestRuntime) throw new DeviceException($"Runtime exceeds maximum runtime allowed (Maximum allowed: {maxTestRuntime})");
+            maxTestRuntime = testRequest.Runtime;
+
+
+            _logger.LogWarning($"Testing sensor ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity})");
+            testRequest.StartTime = DateTime.UtcNow;
+            _gpioService.SetPinValue(sensor, GpioPinValue.High);
+            Thread.Sleep(TimeSpan.FromSeconds(maxTestRuntime));
+            _gpioService.SetPinValue(sensor, GpioPinValue.Low);
+            testRequest.EndTime = DateTime.UtcNow;
+
+            var value = _gpioService.GetPinValue(sensor);
+            _logger.LogWarning($"Testing sensor completed ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity} Value: {value})");
+            return testRequest;
+        }
+        public List<DeviceSensor> UpsertDeviceSensor(DeviceSensor deviceSensor)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            if (!deviceSensor.Id.HasValue)
+            {
+                var r = new Random();
+                int? v = null;
+                while (v == null || deviceConfiguration.Sensors.Any(tt => tt.Id == v))
+                    v = r.Next(1000, 9999);
+                deviceSensor.Id = v;
+            }
+
+            var sensors = deviceConfiguration.Sensors.Where(t => t.Id != deviceSensor.Id && t.Id.HasValue).ToList();
+            sensors.Add(deviceSensor);
+            deviceConfiguration.Sensors = sensors.OrderBy(s => s.Name).ToList();
+            _logger.LogInformation($"Saving {sensors.Count()} device sensors to device...");
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+            Setup();
+            return deviceConfiguration.Sensors;
+        }
+        public List<DeviceSensor> DeleteDeviceSensor(DeviceSensor deviceSensor)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+
+            //Validate
+            if (deviceConfiguration.Tasks.SelectMany(t => t.Actions).Any(a => a.TargetSensorId == deviceSensor.Id))
+                throw new DeviceException("Device sensor is being used in a task action.");
+            if (deviceConfiguration.Tasks.Any(t => t.TriggerSensorId == deviceSensor.Id))
+                throw new DeviceException("Device sensor is being used in a task.");
+
+            deviceConfiguration.Sensors = deviceConfiguration.Sensors.Where(t => t.Id != deviceSensor.Id).ToList();
+            _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
+            Setup();
+            return _gpioService.GetAllSensors();
+        }
+        #endregion
+        #region Private Methods
+        private List<ScheduledJob> ExpandTasks(DateTime startDate, DateTime endDate)
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            var schedules = deviceConfiguration.Schedules;
+            var allScheduledJobs = new List<ScheduledJob>();
+            var startTime = startDate.TimeOfDay;
+            var days = (endDate - startDate).TotalDays;
+            for (var i = 0; i < days; i++)
+                schedules.ForEach(schedule =>
+                {
+                    var scheduleTime = schedule.StartTime.ToLocalTime().TimeOfDay;
+                    var scheduleDate = _dateTimeProvider.Now.Date.AddDays(i) + schedule.StartTime.ToLocalTime().TimeOfDay;
+                    if (_dateTimeProvider.Now- scheduleDate > TimeSpan.FromSeconds(30))
+                        return;
+                    var time = startDate.Date.AddDays(i);
+                    time += schedule.StartTime.ToLocalTime().TimeOfDay;
+                    var offset = 0;
+                    schedule.Tasks.ToList().ForEach(t =>
+                    {
+                        var task = deviceConfiguration.Tasks.First(tt => tt.Id == t.Id);
+                        var scheduledJob = new ScheduledJob()
+                        {
+                            TaskId = task.Id.Value,
+                            StartTime = time.AddMinutes(offset)
+                        };
+                        offset += task.MaximumRuntime;
+                        allScheduledJobs.Add(scheduledJob);
+                    });
+                });
+            return allScheduledJobs.OrderBy(s => s.StartTime).ToList();
+        }
+        private async Task<ScheduledJob> DispatchJobStatus(ScheduledJob job)
+        {
+            try
+            {
+                var s = await _aquariumClient.DispatchScheduledJob(job);
+                job.Id = s.Id;
+
+
+                if (job.Status == JobStatus.Completed)
+                {
+                    if (job.Task.TaskTypeId == ScheduleTaskTypes.StartATO)
+                    {
+                        await _aquariumClient.DispatchWaterATO(new ATOStatus()
+                        {
+                            StartTime = job.StartTime,
+                            EndTime = job.EndTime.Value,
+                            MlPerSec = 5,
+                            ScheduleJobId = job.Id.Value
+                        });
+                    }
+                    else if (job.Task.TaskTypeId == ScheduleTaskTypes.WaterChangeReplentish)
+                    {
+                        var previousJob = job;
+                        while (previousJob.PreviousJob != null)
+                            previousJob = previousJob.PreviousJob;
+                        await _aquariumClient.DispatchWaterChange(new WaterChange()
+                        {
+                            StartTime = previousJob.StartTime,
+                            EndTime = job.EndTime.Value,
+                            ScheduleJobId = job.Id.Value
+                        });
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Unable to dispatch scheduled job status to server");
+                _logger.LogError(e.Message);
+                _logger.LogError(e.StackTrace);
+                await _exceptionService.Throw(e);
+            }
+            return job;
+        }
+
+        #endregion
     }
 }

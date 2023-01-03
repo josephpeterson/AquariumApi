@@ -179,6 +179,7 @@ namespace AquariumApi
             services.AddTransient<IIntelligenceService, IntelligenceService>();
             services.AddTransient<INotificationService, NotificationService>();
             services.AddSingleton<IConfiguration>(Configuration);
+            services.AddTransient<IAquariumDeviceInteractionService,AquariumDeviceInteractionService>();
         }
     }
 }

@@ -5,7 +5,7 @@ namespace AquariumApi.Models
 {
     public class DeviceSensor
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
         public int DeviceId { get; set; }
         public string Name { get; set; }
         public SensorTypes Type { get; set; }
@@ -28,10 +28,8 @@ namespace AquariumApi.Models
     public enum SensorTypes
     {
         Other = 0,
-        FloatSwitch = 100,
-        ATOPumpRelay = 200,
-        WaterChangePumpRelay = 201,
-        Solenoid = 300
+        Sensor = 100,
+        MixingStation = 200
     }
     public enum Polarity
     {

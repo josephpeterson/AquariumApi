@@ -1,0 +1,58 @@
+<h1 mat-dialog-title>Login</h1>
+<div mat-dialog-content>
+    <p *ngIf="step == 1">Connecting your aquarium account allows your device to interact with other aquariums. Do not
+        have an
+        account?
+        Sign up today at [Aquarium Monitor].</p>
+    <p *ngIf="step == 2">Welcome <b>{{account.username}}</b>, we have found your account. Please select an aquarium to
+        link that
+        this device will monitor. Each
+        aquarium can only have one device assigned.</p>
+    <div class="alert alert-danger" role="alert" *ngIf="error">
+        {{error}}
+    </div>
+    <div class="alert alert-warning" role="alert" *ngIf="selectedAquarium?.device">
+        This aquarium already has a device connected to it. If you choose this aquarium the previous device will no
+        longer be connected.
+    </div>
+    <ng-container *ngIf="step !== 2 else step2Container">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1"><i class="bi bi-people"></i></span>
+            </div>
+            <input type="text" matInput cdkFocusInitial [(ngModel)]="email" autoFocus [disabled]="loading"
+                class="form-control" placeholder="Username / Email Address" aria-label="Username"
+                aria-describedby="basic-addon1">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1"><i class="bi bi-people"></i></span>
+            </div>
+            <input type="password" matInput [(ngModel)]="password" [disabled]="loading" class="form-control"
+                placeholder="Password" aria-label="Username" aria-describedby="basic-addon1">
+        </div>
+    </ng-container>
+    <ng-template #step2Container>
+        <ul class="list-group list-group-flush" *ngFor="let aq of availableAquariums">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <button class="btn aquarium-list-button" (click)="clickSelectAquarium(aq)" [disabled]="loading">
+                    <i class="bi bi-circle-fill mr-2 active" *ngIf="selectedAquarium == aq"></i>
+                    <i class="bi bi-circle mr-2" *ngIf="selectedAquarium != aq"></i>
+                    {{aq.name}}
+                </button>
+                <span class="badge badge-warning badge-pill" *ngIf="aq.device">
+                    <i class="bi bi-hdd mr-2"></i>Device
+                </span>
+            </li>
+
+        </ul>
+    </ng-template>
+</div>
+<div mat-dialog-actions>
+    <button mat-button mat-dialog-close [disabled]="loading">Cancel</button>
+    <button mat-button [disabled]="loading" (click)="clickLogin()">{{step == 1 ? 'Login':'Complete'}}
+        <div class="spinner-border spinner-border-sm" role="status" *ngIf="loading">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </button>
+</div>

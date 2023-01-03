@@ -1,0 +1,27 @@
+<div class="card w-100 m-3">
+    <div class="card-body">
+        <div>
+            <b>{{mixingStationStatus.hostname ? mixingStationStatus.hostname:'Unknown'}}</b>
+        </div>
+        <div class="row">
+            <div class="col">
+                Status: {{mixingStationStatus.sessionId == -1 ? 'Ready':'Busy'}}
+                <device-mixing-station-stop-button *ngIf="mixingStationStatus.sessionId != -1">
+                    Stop
+                </device-mixing-station-stop-button>
+            </div>
+            <div class="col">
+                Valves: {{mixingStationStatus.valves.length}}
+            </div>
+            <div class="col" *ngIf="hideConnect === null">
+                <button class="btn btn-outline-primary" type="button" (click)="clickConnect()"
+                    [disabled]="disabled">Connect</button>
+            </div>
+
+        </div>
+        <div class="row">
+            <device-mixing-station-sensor-list [mixingStationStatus]="mixingStationStatus" testable>
+            </device-mixing-station-sensor-list>
+        </div>
+    </div>
+</div>

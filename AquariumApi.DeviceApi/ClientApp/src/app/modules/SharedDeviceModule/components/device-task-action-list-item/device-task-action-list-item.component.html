@@ -1,0 +1,21 @@
+<ng-container *ngIf="editable != null else content">
+  Set
+  <device-generic-object-select [(inputModel)]="action.targetSensorId" [disabled]="disabled"
+    [availableObjects]="getWriteableSensors((configuredDevice$ | async))">
+  </device-generic-object-select>
+  To
+  <device-generic-select label="Sensor Value" [deviceSelectType]="'DeviceSensorValues'" [disabled]="disabled"
+    [(inputModel)]="action.targetSensorValue">
+  </device-generic-select>
+</ng-container>
+<ng-template #content>
+  <div class="row" *ngIf="configuredDevice$ | async as configuredDevice">
+    <div class="col">
+      Set
+      {{getSensorById(action.targetSensorId,configuredDevice).name}}
+      to
+      {{action.targetSensorValue}}
+    </div>
+
+  </div>
+</ng-template>
