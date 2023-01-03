@@ -14,7 +14,6 @@ import { connectToDevice, connectToMixingStation } from '../../store/device.acti
 export class DeviceMixingStationConfigurationComponent implements OnInit {
   @Input() mixingStation: AquariumMixingStation;
   @Input() public mixingStationStatus;
-  public configuredDevice$ = this.store.select(selectConfiguredDevice);
   public mixingStationConnecting: number = 0;
 
   constructor(public service: AquariumDeviceService,

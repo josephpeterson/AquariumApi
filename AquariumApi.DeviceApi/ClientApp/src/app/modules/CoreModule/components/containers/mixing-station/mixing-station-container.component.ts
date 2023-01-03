@@ -21,11 +21,5 @@ export class MixingStationContainerComponent implements OnInit {
   ngOnInit(): void {
     this.store.dispatch(connectToMixingStation());
   }
-
-  public hasNoMixingStation(status: DeviceConnectionStatus, mixingStation: AquariumMixingStationStatus) {
-    return status == DeviceConnectionStatus.Failed
-  }
-  public isLoading(status: DeviceConnectionStatus) {
-    return status == DeviceConnectionStatus.Connecting
-  }
+  DeviceConnectionStatus = DeviceConnectionStatus
 }

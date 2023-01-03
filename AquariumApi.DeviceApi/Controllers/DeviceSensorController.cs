@@ -22,6 +22,10 @@ namespace AquariumApi.DeviceApi.Controllers
             _logger = logger;
             _scheduleService = scheduleService;
         }
+        /// <summary>
+        /// Retrieve real time sensors with values
+        /// </summary>
+        /// <returns></returns>
         [HttpPost(DeviceOutboundEndpoints.SENSOR_RETRIEVE)]
         public IActionResult GetDeviceSensorValues()
         {
@@ -37,6 +41,11 @@ namespace AquariumApi.DeviceApi.Controllers
                 return BadRequest();
             }
         }
+        /// <summary>
+        /// Handle update/creation of device sensors
+        /// </summary>
+        /// <param name="sensor"></param>
+        /// <returns></returns>
         [HttpPut(DeviceOutboundEndpoints.SENSOR_UPDATE)]
         public IActionResult UpsertDeviceSensor([FromBody] DeviceSensor sensor)
         {
@@ -52,6 +61,11 @@ namespace AquariumApi.DeviceApi.Controllers
                 return BadRequest();
             }
         }
+        /// <summary>
+        /// Handle removal of device sensors
+        /// </summary>
+        /// <param name="sensor"></param>
+        /// <returns></returns>
         [HttpPost(DeviceOutboundEndpoints.SENSOR_DELETE)]
         public IActionResult DeleteDeviceSensor([FromBody] DeviceSensor sensor)
         {
@@ -67,7 +81,11 @@ namespace AquariumApi.DeviceApi.Controllers
                 return BadRequest();
             }
         }
-        //Test Device Sensor (this has the correct excception handling mechanism)
+        /// <summary>
+        /// Handle test device sensors
+        /// </summary>
+        /// <param name="testRequest"></param>
+        /// <returns></returns>
         [HttpPost(DeviceOutboundEndpoints.SENSOR_TEST)]
         public IActionResult TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
         {

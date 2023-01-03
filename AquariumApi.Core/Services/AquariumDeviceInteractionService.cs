@@ -16,12 +16,22 @@ namespace AquariumApi.Core
 {
     public interface IAquariumDeviceInteractionService
     {
-        Task<List<DeviceSensor>> ApplyDeviceSensors(int aquariumId, List<DeviceSensor> deviceSensors);
+        //DeviceSensorController
+        Task<List<DeviceSensor>> GetDeviceSensorValues(int aquariumId);
+        Task<List<DeviceSensor>> UpsertDeviceSensor(int aquariumId, DeviceSensor deviceSensor);
+        Task<List<DeviceSensor>> DeleteDeviceSensor(int aquariumId, DeviceSensor deviceSensor);
+        Task<DeviceSensorTestRequest> TestDeviceSensor(int aquariumId,DeviceSensorTestRequest testRequest);
+
+
         void ClearDeviceLog(int aquariumId);
         DeviceInformation GetDeviceInformation(int deviceId);
         string GetDeviceLog(int aquariumId);
         List<KeyValuePair<string, string>> GetSelectOptionsBySelectType(int aquariumId, string selectType);
-        Task<DeviceSensorTestRequest> TestDeviceSensor(int aquariumId,DeviceSensorTestRequest testRequest);
+        Task<ScheduleState> StartDeviceSchedule(int aquariumId);
+        Task<ScheduleState> StopDeviceSchedule(int aquariumId);
+        Task<RunningScheduledJob> PerformDeviceTask(int aquariumId,DeviceScheduleTask deviceScheduleTask);
+        Task<ScheduledJob> StopScheduledJob(int aquariumId, ScheduledJob scheduledJob);
+        Task<AquariumMixingStationStatus> GetMixingStationStatus(int aquariumId);
     }
     public class AquariumDeviceInteractionService : IAquariumDeviceInteractionService
     {
@@ -59,16 +69,62 @@ namespace AquariumApi.Core
             Configure(aquariumId);
             _deviceClient.ClearDeviceLog();
         }
-        public async Task<DeviceSensorTestRequest> TestDeviceSensor(int aquariumId,DeviceSensorTestRequest testRequest)
+        public async Task<List<DeviceSensor>> GetDeviceSensorValues(int aquariumId)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.GetDeviceSensorValues();
+            return res;
+        }
+        public async Task<List<DeviceSensor>> UpsertDeviceSensor(int aquariumId, DeviceSensor deviceSensor)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.UpsertDeviceSensor(deviceSensor);
+            return res;
+        }
+        public async Task<List<DeviceSensor>> DeleteDeviceSensor(int aquariumId, DeviceSensor deviceSensor)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.DeleteDeviceSensor(deviceSensor);
+            return res;
+        }
+        public async Task<DeviceSensorTestRequest> TestDeviceSensor(int aquariumId, DeviceSensorTestRequest testRequest)
         {
             Configure(aquariumId);
             var res = await _deviceClient.TestDeviceSensor(testRequest);
             return res;
         }
-        public async Task<List<DeviceSensor>> ApplyDeviceSensors(int aquariumId, List<DeviceSensor> deviceSensors)
+
+        public async Task<ScheduleState> StartDeviceSchedule(int aquariumId)
         {
             Configure(aquariumId);
-            var res = await _deviceClient.ApplyDeviceSensors(deviceSensors);
+            var res = await _deviceClient.StartDeviceSchedule();
+            return res;
+        }
+
+        public async Task<ScheduleState> StopDeviceSchedule(int aquariumId)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.StopDeviceSchedule();
+            return res;
+        }
+
+        public async Task<RunningScheduledJob> PerformDeviceTask(int aquariumId, DeviceScheduleTask deviceScheduleTask)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.PerformDeviceTask(deviceScheduleTask);
+            return res;
+        }
+
+        public async Task<ScheduledJob> StopScheduledJob(int aquariumId, ScheduledJob scheduledJob)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.StopScheduledJob(scheduledJob);
+            return res;
+        }
+        public async Task<AquariumMixingStationStatus> GetMixingStationStatus(int aquariumId)
+        {
+            Configure(aquariumId);
+            var res = await _deviceClient.GetMixingStationStatus();
             return res;
         }
     }

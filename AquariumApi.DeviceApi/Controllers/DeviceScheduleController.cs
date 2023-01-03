@@ -139,64 +139,100 @@ namespace AquariumApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
-        /// <summary>
-        /// Retrieve all registered ScheduleTaskTypes
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet(DeviceOutboundEndpoints.SCHEDULE_RETRIEVE_TASK_TYPES)]
-        public IActionResult GetScheduleTypes()
+        [HttpGet(DeviceOutboundEndpoints.SCHEDULE_START)]
+        public IActionResult Start()
         {
             try
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_RETRIEVE_TASK_TYPES} called");
-                var enumVals = new List<object>();
-
-                foreach (var item in Enum.GetValues(typeof(ScheduleTaskTypes)))
+                _logger.LogInformation($"GET /v1/Schedule/Start called");
+                _scheduleService.StopAsync(_scheduleService._cancellationSource.Token).Wait();
+                _scheduleService.StartAsync(new System.Threading.CancellationToken()).Wait();
+                return new OkResult();
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_START} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_START} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
                 {
-
-                    enumVals.Add(new
-                    {
-                        id = (int)item,
-                        name = item.ToString()
-                    });
-                }
-
-                return new OkObjectResult(enumVals);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_RETRIEVE_TASK_TYPES} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return NotFound();
+                    Source = ex
+                });
             }
         }
-        /// <summary>
-        /// This endpoint returns scheduled jobs from the database (tasks that have been queued or sent for a run)
-        /// </summary>
-        /// <returns>
-        /// List of ScheduledJobs that fit within the provided pagination sliver
-        /// </returns>
-        /// 
-        /*
-        [HttpPost]
-        [Route(AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS)]
-        public IActionResult GetAllScheduledJobs(int deviceId,[FromBody] PaginationSliver pagination)
+        [HttpGet(DeviceOutboundEndpoints.SCHEDULE_STOP)]
+        public ActionResult<IEnumerable<string>> Stop()
         {
-            if (!ValidateRequest(deviceId))
-                return Unauthorized();
-
             try
             {
-                _logger.LogInformation($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS.AggregateParams($"{deviceId}")} called");
-                List <ScheduledJob> scheduledJobs = _aquariumService.GetDeviceScheduledJobs(deviceId,pagination);
-                return new OkObjectResult(scheduledJobs);
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_STOP} called");
+                _scheduleService.StopAsync(_scheduleService._cancellationSource.Token).Wait();
+                return new OkResult();
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_STOP} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {AquariumApiEndpoints.SCHEDULE_RETRIEVE_SCHEDULED_JOBS.AggregateParams($"{deviceId}")} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_STOP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
-        */
+        [HttpPost(DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM)]
+        public IActionResult PerformTask([FromBody] DeviceScheduleTask deviceScheduleTask)
+        {
+            try
+            {
+                var runningScheduledJob = _scheduleService.GenericPerformTask(deviceScheduleTask);
+                return new OkObjectResult(runningScheduledJob.ScheduledJob);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
+        [HttpPost(DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP)]
+        public IActionResult StopScheduledJob([FromBody] ScheduledJob scheduledJob)
+        {
+            try
+            {
+                var stoppedJob = _scheduleService.StopScheduledJob(scheduledJob,JobEndReason.ForceStop);
+                return new OkObjectResult(stoppedJob);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
     }
 }

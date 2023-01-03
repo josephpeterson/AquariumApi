@@ -2,7 +2,7 @@
     <div class="col-lg">
         <h4>Mixing Station</h4>
         <device-mixing-station-create
-            *ngIf="hasNoMixingStation(mixingStationConnectionStatus$ | async,mixingStation$ | async) else mixingStationContainer">
+            *ngIf="(mixingStationConnectionStatus$ | async) == DeviceConnectionStatus.Failed else mixingStationContainer">
         </device-mixing-station-create>
 
         <ng-template #mixingStationContainer>
@@ -11,7 +11,7 @@
                 </device-mixing-station-configuration>
             </ng-container>
             <ng-template #loadingContainer>
-                <device-loading-spinner *ngIf="isLoading(mixingStationConnectionStatus$ | async)">
+                <device-loading-spinner *ngIf="(mixingStationConnectionStatus$ | async) == DeviceConnectionStatus.Connecting">
                 </device-loading-spinner>
             </ng-template>
             <device-mixing-station-disconnect-button>Disconnect</device-mixing-station-disconnect-button>

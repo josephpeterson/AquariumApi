@@ -57,8 +57,6 @@ namespace AquariumApi.Core
         DeviceScheduleTask CreateDeviceTask(int deviceId, DeviceScheduleTask deviceTask);
         void DeleteDeviceTask(int deviceId, int taskId);
         Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
-        ScheduledJob StopScheduledJob(int deviceId, ScheduledJob scheduledJob);
-        List<ScheduledJob> GetScheduledJobsOnDevice(int deviceId);
         void AttemptAuthRenewDevice(int deviceId);
         void DeleteWaterATOs(List<int> waterATOIds);
         #endregion
@@ -199,24 +197,6 @@ namespace AquariumApi.Core
             var runningJob = _deviceClient.PerformScheduleTask(scheduledJob);
             return runningJob;
         }
-        public ScheduledJob StopScheduledJob(int deviceId, ScheduledJob scheduledJob)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            try
-            {
-                _deviceClient.Configure(device);
-                var stoppedJob = _deviceClient.StopScheduledJob(scheduledJob);
-                stoppedJob.DeviceId = deviceId;
-                _aquariumDao.UpsertDeviceScheduledJob(stoppedJob);
-                return stoppedJob;
-            }
-            catch(Exception e)
-            {
-                scheduledJob.EndReason = JobEndReason.Error;
-                scheduledJob.DeviceId = deviceId;
-                return _aquariumDao.UpsertDeviceScheduledJob(scheduledJob);
-            }
-        }
 
         public ScheduleState GetDeviceScheduleStatus(int deviceId)
         {
@@ -232,13 +212,6 @@ namespace AquariumApi.Core
         public ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob)
         {
             return _aquariumDao.UpsertDeviceScheduledJob(scheduledJob);
-        }
-        //This will returned the scheduled jobs actually deployed on the device, as well as the ones currently running
-        public List<ScheduledJob> GetScheduledJobsOnDevice(int deviceId)
-        {
-                var d = _aquariumDao.GetAquariumDeviceById(deviceId);
-                _deviceClient.Configure(d);
-                return _deviceClient.GetAllScheduledJobs();
         }
 
         #endregion

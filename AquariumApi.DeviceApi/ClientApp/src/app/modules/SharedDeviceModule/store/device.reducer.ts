@@ -34,14 +34,16 @@ export const deviceReducer = createReducer(
         deviceConnectionStatus: DeviceConnectionStatus.Connected
     })),
     on(deviceGetSensorValuesSuccess, (state, { content }) => {
-        console.log(content,state.mixingStationConnection.valves);
-        var mixingStationSensors = state.mixingStationConnection.valves.map(v => ({ ...v, value: content.filter(s => s.pin === v.pin && s.type == DeviceSensorTypes.MixingStation)[0]?.value }))
+        var mixingStationConnection = null;
+        if (state.mixingStationConnection) {
+            mixingStationConnection = {
+                ...state.mixingStationConnection,
+                valves: state.mixingStationConnection.valves.map(v => ({ ...v, value: content.filter(s => s.pin === v.pin && s.type == DeviceSensorTypes.MixingStation)[0]?.value }))
+            }
+        }
         return {
             ...state,
-            mixingStationConnection: {
-                ...state.mixingStationConnection,
-                valves: mixingStationSensors
-            },
+            mixingStationConnection: mixingStationConnection,
             deviceConnection: {
                 ...state.deviceConnection,
                 configuredDevice: {
