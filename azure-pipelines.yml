@@ -16,11 +16,8 @@ variables:
 
 steps:
 - task: DotNetCoreCLI@2
-  displayName: dotnet restore
   inputs:
-    command: restore
-    feedsToUse: select
-    vstsFeed: IT
+    command: 'build'
 
 - script: dotnet build --configuration $(BuildConfiguration)
   displayName: dotnet build
