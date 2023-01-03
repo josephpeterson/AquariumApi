@@ -16,6 +16,7 @@ AquariumApi.DeviceApi/Properties/PublishProfiles/*
 AquariumApi.DeviceApi/wwwroot/*
 AquariumApi.DeviceApi/ClientApp/node_modules/*
 AquariumApi.DeviceApi/ClientApp/dist/*
+AquariumApi.DeviceApi/ClientApp/.angular/*
 AquariumApi.DeviceApi/ClientApp/wwwroot/*
 AquariumApi.DeviceApi/aquarium_schedules.json
 AquariumApi.DeviceApi/login.json

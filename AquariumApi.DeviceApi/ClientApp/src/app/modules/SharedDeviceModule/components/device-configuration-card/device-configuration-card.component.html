@@ -1,0 +1,19 @@
+<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon3">Board Type:</span>
+    </div>
+    <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3" [(ngModel)]="configuredDevice.boardType">
+</div>
+<div class="input-group mb-3">
+    <div class="input-group-prepend">
+        <span class="input-group-text" id="basic-addon3">Allow Remote Connections:</span>
+    </div>
+    <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3">
+</div>
+<div class="row mb-3">
+    <div class="col">
+        <button matButton class="btn btn-danger" [disabled]="loading" (click)="clickFactoryReset()">Factory Reset...</button>
+    </div>
+</div>
+<button matButton class="btn btn-secondary" [disabled]="!hasChanges() || loading" (click)="clickSaveChanges()">Save Changes</button>
+<button matButton class="btn btn-secondary" *ngIf="hasChanges()" (click)="clickUndoChanges()" [disabled]="loading">Undo Changes</button>

@@ -1,14 +1,21 @@
 ﻿using AquariumApi.Models;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AquariumApi.Models
 {
     public class ScheduleState {
-        public bool Running;
-        public ScheduledJob NextTask;
-        public List<DeviceSchedule> Schedules;
-        public int TaskCount;
-        public List<ScheduledJob> ScheduledTasks;
+        public bool Running { get; set; }
+        public List<ScheduledJob> NextTasks { get; set; }
+        public List<ScheduledJob> Scheduled { get; set; } = new List<ScheduledJob>();
+        public List<RunningScheduledJob> RunningJobs { get; set; } = new List<RunningScheduledJob>();
+    }
+    public class RunningScheduledJob
+    {
+        public ScheduledJob ScheduledJob { get; set; }
+        public Task RunningTask { get; set; }
+        public CancellationTokenSource CancellationSource { get; set; }
     }
 }
 

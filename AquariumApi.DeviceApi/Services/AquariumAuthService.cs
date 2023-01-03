@@ -22,31 +22,32 @@ namespace AquariumApi.DeviceApi
     public interface IAquariumAuthService
     {
         void Setup(Action setupCallback, Action cleanUpCallback);
-        DeviceLoginResponse GetToken();
+        bool IsLoggedIn();
         Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest);
         Task RenewAuthenticationToken();
         void Logout();
-        void ApplyAquariumDeviceFromService(Aquarium assignedAquarium);
         Aquarium GetAquarium();
         AquariumUser GetAccount();
-        
-        [System.Obsolete]
-        void RequestAquariumDeviceFromService();
     }
     public class AquariumAuthService : IAquariumAuthService
     {
         private IConfiguration _config;
         private ILogger<AquariumAuthService> _logger;
+        private readonly IDeviceConfigurationService _deviceConfiguration;
         private DeviceLoginResponse _token;
         private Action _bootstrapSetup;
         private Action _bootstrapCleanup;
 
         public CancellationTokenSource RenewTokenTick { get; private set; }
 
-        public AquariumAuthService(IConfiguration config, ILogger<AquariumAuthService> logger)
+        public AquariumAuthService(IConfiguration config
+            , ILogger<AquariumAuthService> logger
+            , IDeviceConfigurationService deviceConfigurationService
+            )
         {
             _config = config;
             _logger = logger;
+            _deviceConfiguration = deviceConfigurationService;
         }
         private void SaveTokenToCache(DeviceLoginResponse deviceLoginResponse)
         {
@@ -60,11 +61,9 @@ namespace AquariumApi.DeviceApi
             _token = JsonConvert.DeserializeObject<DeviceLoginResponse>(File.ReadAllText("login.json"));
             return _token;
         }
-        public DeviceLoginResponse GetToken()
+        public bool IsLoggedIn()
         {
-            if (_token != null)
-                return _token;
-            return LoadTokenFromCache();
+            return string.IsNullOrEmpty(_deviceConfiguration.LoadAccountInformation()?.Token);
         }
 
 
@@ -159,7 +158,7 @@ namespace AquariumApi.DeviceApi
                 }
                 var res = await result.Content.ReadAsStringAsync();
                 var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
-                SaveTokenToCache(response);
+                _deviceConfiguration.SaveAccountInformation(response);
 
                 if (loginRequest.AquariumId.HasValue)
                     _bootstrapSetup();
@@ -173,7 +172,7 @@ namespace AquariumApi.DeviceApi
         public void Logout()
         {
             _token = null;
-            File.Delete("login.json");
+            _deviceConfiguration.SaveAccountInformation(null);
             _bootstrapCleanup();
         }
 
@@ -181,31 +180,6 @@ namespace AquariumApi.DeviceApi
         {
             _bootstrapSetup = setupCallback;
             _bootstrapCleanup = cleanUpCallback;
-        }
-
-        public void ApplyAquariumDeviceFromService(Aquarium assignedAquarium)
-        {
-            _token.Aquarium = assignedAquarium;
-            SaveTokenToCache(_token);
-            _bootstrapSetup();
-        }
-        public void RequestAquariumDeviceFromService()
-        {
-            var path = DeviceInboundEndpoints.RECEIVE_PING;
-
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
-                client.Timeout = TimeSpan.FromMinutes(5);
-
-                var result = client.GetAsync(path).Result;
-                if (!result.IsSuccessStatusCode)
-                    throw new Exception(result.ReasonPhrase);
-                var res = result.Content.ReadAsStringAsync().Result;
-                var response = JsonConvert.DeserializeObject<Aquarium>(res);
-                ApplyAquariumDeviceFromService(response);
-            }
         }
         public Aquarium GetAquarium()
         {

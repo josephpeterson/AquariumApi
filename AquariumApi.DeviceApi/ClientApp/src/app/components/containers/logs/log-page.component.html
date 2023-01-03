@@ -1,8 +1,0 @@
-<h4 class="d-flex p-3">Application Logs</h4>
-<ng-container *ngIf="(!loading) else loadingContainer">
-    <application-log-view [log]="deviceLog$ | async"></application-log-view>
-    <button class="btn btn-primary m-2" (click)="clickGetApplicationLog()" [disabled]="loading">Retrieve</button>
-</ng-container>
-<ng-template #loadingContainer>
-    <loading-spinner></loading-spinner>
-</ng-template>

@@ -12,19 +12,13 @@ namespace AquariumApi.Models
     {
         public int? Id { get; set; } = null;
         public string Name { get; set; }
-        public int DeviceId { get; set; }
-        public ScheduleTaskTypes TaskTypeId { get; set; }
-        public int TargetSensorId { get; set; }
-        public GpioPinValue TargetSensorValue { get; set; }
+        public List<DeviceAction> Actions { get; set; } = new List<DeviceAction>();
         public int? TriggerSensorId { get; set; }
-        public GpioPinValue TriggerSensorValue { get; set; }
-        public int? MaximumRuntime { get; set; }
+        public GpioPinValue? TriggerSensorValue { get; set; }
+        public int MaximumRuntime { get; set; }
 
-        [ForeignKey("DeviceId")]
-        public virtual AquariumDevice Device { get; set; }
-        [ForeignKey("TargetSensorId")]
-        public virtual DeviceSensor TargetSensor { get; set; }
         [ForeignKey("TriggerSensorId")]
         public virtual DeviceSensor TriggerSensor { get; set; }
-    }   
+        public ScheduleTaskTypes TaskTypeId { get; set; }
+    }
 }

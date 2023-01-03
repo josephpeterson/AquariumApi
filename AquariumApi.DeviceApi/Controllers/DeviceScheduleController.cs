@@ -23,29 +23,57 @@ namespace AquariumApi.Controllers
             _logger = logger;
             _scheduleService = scheduleService;
         }
-        
+
+        [HttpGet(DeviceOutboundEndpoints.SCHEDULE_STATUS)]
+        public IActionResult GetDeviceScheduleStatus()
+        {
+            try
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_STATUS} called");
+                var scheduleStatus = _scheduleService.GetScheduleStatus();
+                return new OkObjectResult(scheduleStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_STATUS}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
+            }
+        }
         /// <summary>
         /// Update the current list of device schedules on the device.
         /// </summary>
         /// <param name="deviceSchedules">List of DeviceSchedule objects</param>
         /// <returns>DeviceSchedule list</returns>
-        [HttpPost]
-        [Route(DeviceOutboundEndpoints.SCHEDULE_UPDATE)]
-        public IActionResult ApplySchedules([FromBody] List<DeviceSchedule> deviceSchedules)
+        [HttpPost(DeviceOutboundEndpoints.SCHEDULE_UPSERT)]
+        public IActionResult UpsertSchedule([FromBody] DeviceSchedule deviceSchedule)
         {
             try
             {
-                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SCHEDULE_UPDATE} called");
-                deviceSchedules = _scheduleService.ApplyDeviceSchedules(deviceSchedules);
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SCHEDULE_UPSERT} called");
+                var deviceSchedules = _scheduleService.UpsertDeviceSchedule(deviceSchedule);
                 return new OkObjectResult(deviceSchedules);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceOutboundEndpoints.SCHEDULE_UPDATE}: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SCHEDULE_UPSERT}: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest(ex.Message);
             }
         }
-
+        [HttpPost(DeviceOutboundEndpoints.SCHEDULE_DELETE)]
+        public IActionResult DeleteSchedule([FromBody] DeviceSchedule deviceSchedule)
+        {
+            try
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SCHEDULE_DELETE} called");
+                var deviceSchedules = _scheduleService.RemoveDeviceSchedule(deviceSchedule);
+                return new OkObjectResult(deviceSchedules);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SCHEDULE_DELETE}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
+            }
+        }
         /// <summary>
         /// Retrieve current list of set schedules.
         /// </summary>
@@ -65,6 +93,53 @@ namespace AquariumApi.Controllers
                 return NotFound();
             }
         }
+        [HttpGet(DeviceOutboundEndpoints.TASK_RETRIEVE)]
+        public IActionResult GetAllTasks()
+        {
+            try
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.TASK_RETRIEVE} called");
+                var deviceTasks = _scheduleService.GetAllTasks();
+                return new OkObjectResult(deviceTasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.TASK_RETRIEVE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                return NotFound();
+            }
+        }
+        [HttpPost]
+        [Route(DeviceOutboundEndpoints.TASK_UPSERT)]
+        public IActionResult UpsertTask([FromBody] DeviceScheduleTask deviceTask)
+        {
+            try
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.TASK_UPSERT} called");
+                var tasks = _scheduleService.UpsertDeviceTask(deviceTask);
+                return new OkObjectResult(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.TASK_UPSERT}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost(DeviceOutboundEndpoints.TASK_DELETE)]
+        public IActionResult DeleteTask([FromBody] DeviceScheduleTask deviceTask)
+        {
+            try
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.TASK_DELETE} called");
+                var tasks = _scheduleService.RemoveDeviceTask(deviceTask);
+                return new OkObjectResult(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.TASK_DELETE}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest(ex.Message);
+            }
+        }
+
         /// <summary>
         /// Retrieve all registered ScheduleTaskTypes
         /// </summary>

@@ -10,40 +10,40 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace AquariumApi.Controllers
+namespace AquariumApi.DeviceApi.Controllers
 {
     public class DeviceSensorController : Controller
     {
         public readonly ILogger<DeviceSensorController> _logger;
-        private readonly IGpioService _gpioService;
+        private readonly ScheduleService _scheduleService;
         public DeviceSensorController(ILogger<DeviceSensorController> logger,
-            IGpioService gpioService)
+            ScheduleService scheduleService)
         {
             _logger = logger;
-            _gpioService = gpioService;
+            _scheduleService = scheduleService;
         }
-        [HttpGet(DeviceOutboundEndpoints.SENSOR_RETRIEVE)]
-        public IActionResult GetSensors()
+        [HttpPost(DeviceOutboundEndpoints.SENSOR_RETRIEVE)]
+        public IActionResult GetDeviceSensorValues()
         {
             try
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SENSOR_RETRIEVE} called");
-                var deviceSensors = _gpioService.GetAllSensors();
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SENSOR_RETRIEVE} called");
+                var deviceSensors = _scheduleService.GetDeviceSensorValues();
                 return new OkObjectResult(deviceSensors);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.SENSOR_RETRIEVE}: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SENSOR_RETRIEVE}: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest();
             }
         }
-        [HttpPost(DeviceOutboundEndpoints.SENSOR_UPDATE)]
-        public IActionResult ApplyDeviceSensors([FromBody] List<DeviceSensor> sensors)
+        [HttpPut(DeviceOutboundEndpoints.SENSOR_UPDATE)]
+        public IActionResult UpsertDeviceSensor([FromBody] DeviceSensor sensor)
         {
             try
             {
                 _logger.LogInformation($"POST {DeviceOutboundEndpoints.SENSOR_UPDATE} called");
-                var deviceSensors = _gpioService.ApplyDeviceSensors(sensors);
+                var deviceSensors = _scheduleService.UpsertDeviceSensor(sensor);
                 return new OkObjectResult(deviceSensors);
             }
             catch (Exception ex)
@@ -52,28 +52,45 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
-        //Test Device Sensor (this has the correct excception handling mechanism)
-        [HttpPost]
-        [Route(DeviceOutboundEndpoints.SENSOR_TEST)]
-        public async Task<IActionResult> TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
+        [HttpPost(DeviceOutboundEndpoints.SENSOR_DELETE)]
+        public IActionResult DeleteDeviceSensor([FromBody] DeviceSensor sensor)
         {
             try
             {
-                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SENSOR_TEST} called");
-                var finishedRequest = _gpioService.TestDeviceSensor(testRequest);
-                return new OkObjectResult(finishedRequest);
-            }
-            //Friendly exceptions
-            catch (BaseException ex)
-            {
-                _logger.LogInformation($"Handled Exception: {ex.Message} {ex.Source}");
-                return BadRequest(ex);
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SENSOR_DELETE} called");
+                var deviceSensors = _scheduleService.DeleteDeviceSensor(sensor);
+                return new OkObjectResult(deviceSensors);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceOutboundEndpoints.SENSOR_TEST}: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SENSOR_DELETE}: { ex.Message } Details: { ex.ToString() }");
+                return BadRequest();
+            }
+        }
+        //Test Device Sensor (this has the correct excception handling mechanism)
+        [HttpPost(DeviceOutboundEndpoints.SENSOR_TEST)]
+        public IActionResult TestDeviceSensor([FromBody] DeviceSensorTestRequest testRequest)
+        {
+            try
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SENSOR_TEST} called");
+                var finishedRequest = _scheduleService.TestDeviceSensor(testRequest);
+                return new OkObjectResult(finishedRequest);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SENSOR_TEST} endpoint caught exception: {ex.Message}");
+                var e = new DeviceException(ex.Message);
+                return BadRequest(e);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SENSOR_TEST} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
-                return BadRequest(new AquariumServiceException("Unknown error occured"));
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
 

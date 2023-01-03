@@ -1,6 +1,7 @@
+/*
 import { NotifierOptions } from 'angular-notifier';
 
-let DeviceNotifierConfig: NotifierOptions = {
+const DeviceNotifierConfig: NotifierOptions = {
     position: {
         horizontal: {
             position: 'right',
@@ -42,3 +43,4 @@ let DeviceNotifierConfig: NotifierOptions = {
 
 }
 export { DeviceNotifierConfig };
+*/

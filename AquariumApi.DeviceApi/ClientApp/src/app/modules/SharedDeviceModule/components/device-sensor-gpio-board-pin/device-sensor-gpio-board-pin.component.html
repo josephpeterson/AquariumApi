@@ -1,0 +1,5 @@
+<span class="gpioPort" (click)="clickAction()"
+	[class.ground]="boardPin.boardPinType == GpioPinTypes.Ground" [class.selected]="boardPin.selected"
+	[class.pwr5V]="boardPin.boardPinType == GpioPinTypes.pwr5V" [class.pwr3V]="boardPin.boardPinType == GpioPinTypes.pwr3V"
+	[class.used]="boardPin.used" [class.disabled]="boardPin.disabled" #tooltip="matTooltip" [matTooltip]="getGpioToolTip(boardPin)" [matTooltipPosition]="matTooltipPosition">
+</span>

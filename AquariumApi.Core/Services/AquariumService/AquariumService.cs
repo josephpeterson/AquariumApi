@@ -174,11 +174,12 @@ namespace AquariumApi.Core
             Aquarium aquarium = _aquariumDao.GetAquariumById(aquariumId);
             var deviceId = aquarium.Device.Id;
 
-            AquariumSnapshot snapshot = _deviceClient.TakeSnapshot(deviceId); //todo tell device to take with image
+            _deviceClient.Configure(aquarium.Device);
+            AquariumSnapshot snapshot = _deviceClient.TakeSnapshot(); //todo tell device to take with image
 
             if (takePhoto)
             {
-                var photoData = _deviceClient.TakePhoto(deviceId);
+                var photoData = _deviceClient.TakePhoto();
                 var photo = _photoManager.StorePhoto(photoData).Result;
                 snapshot.PhotoId = photo.Id;
             }
@@ -386,10 +387,6 @@ namespace AquariumApi.Core
                 case "DeviceSensorTypes":
                     options = new List<KeyValuePair<string, int>>()
                     {
-                        new KeyValuePair<string, int>("Float Switch",(int)SensorTypes.FloatSwitch),
-                        new KeyValuePair<string, int>("Solenoid Relay",(int)SensorTypes.Solenoid),
-                        new KeyValuePair<string, int>("Water Change Pump Relay",(int)SensorTypes.WaterChangePumpRelay),
-                        new KeyValuePair<string, int>("ATO Pump Relay",(int)SensorTypes.ATOPumpRelay),
                         new KeyValuePair<string, int>("Other",(int)SensorTypes.Other),
                     };
                     break;

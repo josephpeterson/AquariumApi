@@ -1,0 +1,23 @@
+<div *ngIf="connectingStation === null else connectingContainer">
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h5>Connect a Mixing Station</h5>
+        <p>
+            This device does not have a mixing station configured. Connecting a mixing station allows you to control
+            water changes on your aquarium. You may search for a mixing
+            station on your local network below. </p>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <device-mixing-station-search></device-mixing-station-search>
+        </div>
+        <div class="col">
+
+        </div>
+    </div>
+
+</div>
+<ng-template #connectingContainer>
+    Connecting to mixing station with hostname <b>{{connectingStation.hostname}}</b>...
+    <device-loading-spinner></device-loading-spinner>
+</ng-template>

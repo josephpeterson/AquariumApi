@@ -25,13 +25,6 @@ namespace AquariumApi.Core
         AquariumDevice UpdateAquariumDevice(int userId, AquariumDevice aquariumDevice);
         #endregion
 
-        #region Device Common
-        DeviceInformation PingDevice(int deviceId);
-        string GetDeviceLog(int deviceId);
-        void ClearDeviceLog(int deviceId);
-        DeviceInformation GetDeviceInformation(int deviceId);
-        #endregion
-
         #region Device Schedules
         List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id);
         void DeleteDeviceSchedule(int deviceId,int scheduleId);
@@ -110,36 +103,13 @@ namespace AquariumApi.Core
         }
         #endregion
         #region Device Common
-        public DeviceInformation PingDevice(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.PingDevice();
-        }
         public void AttemptAuthRenewDevice(int deviceId)
         {
             var device = _aquariumDao.GetAquariumDeviceById(deviceId);
             _deviceClient.Configure(device);
             _deviceClient.RenewDevice();
         }
-        public string GetDeviceLog(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.GetDeviceLog();
-        }
-        public void ClearDeviceLog(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            _deviceClient.ClearDeviceLog();
-        }
-        public DeviceInformation GetDeviceInformation(int deviceId)
-        {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            _deviceClient.Configure(device);
-            return _deviceClient.PingDevice();
-        }
+        
         #endregion
         #region Device Schedules
         /* Device Schedule */
@@ -166,10 +136,8 @@ namespace AquariumApi.Core
             //cleanse data
             deviceSchedule.DeviceId = deviceId;
             deviceSchedule.Device = null;
-            deviceSchedule.TaskAssignments.ToList().ForEach(t =>
+            deviceSchedule.Tasks.ToList().ForEach(t =>
             {
-                t.Task = null;
-                t.TriggerTask = null;
                 t.TriggerSensor = null;
             });
 
@@ -376,7 +344,6 @@ namespace AquariumApi.Core
         #region Device Tasks
         public DeviceScheduleTask CreateDeviceTask(int deviceId, DeviceScheduleTask deviceTask)
         {
-            deviceTask.DeviceId = deviceId;
             if(deviceTask.Id.HasValue)
                 deviceTask = _aquariumDao.UpdateDeviceTask(deviceTask);
             else

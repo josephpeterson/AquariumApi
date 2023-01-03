@@ -1,0 +1,59 @@
+<div class="card m-2">
+  <div class="card-body">
+    <div class="row">
+      <div class="col">
+        <p class="text-muted">
+          This information pertains to what the Pi is currently running. Schedules running on the Pi and within the
+          application may become out of sync.
+        </p>
+        <div *ngIf="deviceInformation.scheduleStatus as scheduleState" class="row">
+          <div class="col">
+            <h3 class="mb-0">General</h3>
+            <small class="text-muted">
+              Status: <b>{{scheduleState.running ? "Running":"Stopped"}}</b>
+              <br>
+              Total Schedules: <b>{{deviceInformation.configuredDevice.schedules.length}}</b>
+              <br>
+              Pending Tasks: <b>{{scheduleState.scheduled.length}}</b>
+              <br>
+              Total Actions: <b>{{getActionCount()}}</b>
+            </small>
+
+          </div>
+          <div class="col">
+            <h3 class="mb-0" *ngIf="scheduleState.nextTasks.length">Next Task</h3>
+            <small class="text-muted">
+              Next Task ETA: <b>{{readableDuration(scheduleState.nextTasks[0],scheduleState.nextTasks[0].startTime)}}</b>
+              <div *ngFor="let nextTask of scheduleState.nextTasks">
+                Task: <b>{{getTaskById(nextTask.taskId).name}}</b>
+              </div>
+            </small>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <h3 class="mb-0" *ngIf="deviceInformation.scheduleStatus.runningJobs.length">
+              Running</h3>
+            <div *ngFor="let runningJob of deviceInformation.scheduleStatus.runningJobs">
+              <small class="text-muted">
+                <b>{{getTaskById(runningJob.scheduledJob.taskId).name}}</b> Remaining:
+                <b>{{readableDuration(runningJob.scheduledJob,runningJob.scheduledJob.maximumEndTime)}}</b>
+                <button (click)="clickStopScheduledJob(runningJob.scheduledJob)"
+                  class="btn btn-link">
+                  Stop
+                </button>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div *ngIf="deviceInformation.scheduleStatus as scheduleState">
+
+          <h4>Scheduled Tasks</h4>
+          <device-scheduled-job-list [deviceInformation]="deviceInformation"></device-scheduled-job-list>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

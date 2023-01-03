@@ -1,0 +1,4 @@
+<button *ngIf="(configuredDevice$ | async).aquarium" class="btn btn-danger" (click)="clickLogin()">Logout</button>
+<button *ngIf="!(configuredDevice$ | async).aquarium" class="btn btn-outline-secondary" (click)="clickLogin()">
+    Login <i class="bi bi-arrow-bar-right"></i>
+</button>

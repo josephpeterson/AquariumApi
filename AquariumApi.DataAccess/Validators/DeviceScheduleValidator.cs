@@ -11,7 +11,7 @@ namespace AquariumApi.DataAccess.Validators
         public DeviceScheduleValidator()
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("The schedule must contain a valid name");
-            RuleFor(x => x.TaskAssignments).NotEmpty().WithMessage("The schedule must have atleast one task assigned to it");
+            RuleFor(x => x.Tasks).NotEmpty().WithMessage("The schedule must have atleast one task assigned to it");
         }
     }
 }

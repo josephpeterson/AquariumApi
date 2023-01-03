@@ -9,10 +9,7 @@ namespace AquariumApi.Models
 {
     public class DeviceInformation
     {
-        public List<ScheduledJob> ScheduledJobs;
-        public List<ScheduledJob> RunningJobs { get; set; }
-
-
+        public ScheduleState ScheduleStatus;
         public string Version {get; set;}
         public object Config {get; set; }
         public AquariumUser Account { get; set; }

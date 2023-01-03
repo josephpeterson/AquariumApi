@@ -1,0 +1,74 @@
+<h1 mat-dialog-title *ngIf="!schedule.id">Create Schedule</h1>
+<h1 mat-dialog-title *ngIf="schedule.id">Edit Schedule</h1>
+<div mat-dialog-content>
+  <div class="row">
+    <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon3">Name</span>
+        </div>
+        <input type="text" class="form-control" [disabled]="disabled" [(ngModel)]="schedule.name">
+      </div>
+    </div>
+    <div class="col-sm">
+
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <h3>Task Assignments</h3>
+      <div class="generic-list">
+        <div *ngFor="let t of schedule.tasks" class="generic-list-item row">
+          <div class="col">
+            <device-schedule-task-list-item [disabled]="disabled" [task]='t'></device-schedule-task-list-item>
+          </div>
+          <div class="col">
+            <button class="btn" (click)="clickRemoveTask(t)" [disabled]="disabled"
+              *ngIf="schedule.tasks.indexOf(t) != 0">
+              <fa-icon [icon]="faTrash"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <button [disabled]="disabled" class="btn btn-primary" (click)="clickAddTask()">Add Task</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="row">
+    <h3>Date Conditions</h3>
+    <div class="row">
+      <div class="col">
+        <mat-checkbox *ngFor="let filter of filters" class="p-2" [(ngModel)]="filter.value" [disabled]="disabled"
+          (change)="updateFilters()">{{filter.name}}
+        </mat-checkbox>
+      </div>
+
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <device-date-time-select [(inputModel)]="schedule.startTime" [disabled]="disabled"></device-date-time-select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <p class="text-muted">{{getDateConditionText()}}</p>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button *ngIf="schedule.id != null" (click)="clickDeleteSchedule()" class="m-2 btn btn-danger" [disabled]="disabled">
+    <fa-icon [icon]="faTrash"></fa-icon> Delete
+  </button>
+  <button class="m-2 btn btn-secondary" mat-dialog-close>Cancel</button>
+  <button *ngIf="!schedule.id" class="m-2 btn btn-success" (click)="clickSaveSchedule()">Create</button>
+  <button *ngIf="schedule.id" class="m-2 btn btn-success" (click)="clickSaveSchedule()">Update</button>
+</div>

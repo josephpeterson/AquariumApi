@@ -10,29 +10,27 @@ namespace AquariumApi.Models
     [Table("tblDeviceSchedule")]
     public class DeviceSchedule
     {
-        [Required]
         public int? Id { get; set; }
-        public int DeviceId { get; set; }
         public string Name { get; set; }
-        public string Host { get; set; }
-        public bool Deployed { get; set; }
+        public int DeviceId { get; set; }
+        public DateTime StartTime { get; set; }
+        public List<DeviceScheduleTask> Tasks { get; set; }
+        public bool Repeat { get; set; }
+        public int RepeatInterval { get; set; }
+        public DateTime RepeatEndTime { get; set; }
+        public string DateConditions{ get; set; }
+
 
         [ForeignKey("DeviceId")]
         public AquariumDevice Device { get; set; }
 
-
-        public ICollection<DeviceScheduleTaskAssignment> TaskAssignments { get; set; }
-
-        [NotMapped]
-        public bool Running { get; set; }
-
-
+        /*
         public List<ScheduledJob> ExpandTasks(DateTime startDate)
         {
             var allScheduledJobs = new List<ScheduledJob>();
 
             //get all task assignments that start by the time trigger
-            var taskAssignment = TaskAssignments
+            var taskAssignment = Tasks
                 .Where(ta => ta.TriggerTypeId == TriggerTypes.Time)
                 .ToList();
 
@@ -79,5 +77,6 @@ namespace AquariumApi.Models
             });
             return allScheduledJobs.OrderBy(t => t.StartTime).ToList();
         }
+        */
     }
 }

@@ -24,8 +24,8 @@ namespace AquariumApi.Core
         DeviceInformation PingDevice();
 
 
-        AquariumSnapshot TakeSnapshot(int deviceId);
-        byte[] TakePhoto(int deviceId);
+        AquariumSnapshot TakeSnapshot();
+        byte[] TakePhoto();
 
         ScheduleState GetDeviceScheduleStatus();
         ScheduledJob PerformScheduleTask(ScheduledJob scheduledJob);
@@ -34,25 +34,27 @@ namespace AquariumApi.Core
 
 
         void Configure(AquariumDevice device);
-        Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
         ScheduledJob StopScheduledJob(ScheduledJob scheduledJob);
         List<ScheduledJob> GetAllScheduledJobs();
         void RenewDevice();
+        List<KeyValuePair<string, string>> GetSelectOptionsBySelectType(string selectType);
+        
+        //DeviceSensorController
+        Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest);
+        Task<List<DeviceSensor>> ApplyDeviceSensors(List<DeviceSensor> deviceSensors);
     }
     public class DeviceClient : IDeviceClient
     {
         private readonly ILogger<DeviceClient> _logger;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IConfiguration _config;
-        private readonly IAquariumDao _aquariumDao;
         private AquariumDevice Device;
 
         private Dictionary<string, string> HostOveride = new Dictionary<string, string>();
 
-        public DeviceClient(IConfiguration config,IHostingEnvironment hostingEnvironment,IAquariumDao aquariumDao, ILogger<DeviceClient> logger)
+        public DeviceClient(IConfiguration config,IHostingEnvironment hostingEnvironment, ILogger<DeviceClient> logger)
         {
             _config = config;
-            _aquariumDao = aquariumDao;
             _logger = logger;
             _hostingEnvironment = hostingEnvironment;
 
@@ -111,7 +113,7 @@ namespace AquariumApi.Core
 
         public string GetDeviceLog()
         {
-            var path = DeviceOutboundEndpoints.LOG;
+            var path = DeviceOutboundEndpoints.SYSTEM_LOG_RETRIEVE;
             using (var client = GetHttpClient())
             {
                 HttpResponseMessage response = client.GetAsync(path).Result;
@@ -121,7 +123,7 @@ namespace AquariumApi.Core
         }
         public void ClearDeviceLog()
         {
-            var path = DeviceOutboundEndpoints.LOG_CLEAR;
+            var path = DeviceOutboundEndpoints.SYSTEM_LOG_CLEAR;
             using (var client = GetHttpClient())
             {
                 var httpContent = new StringContent("", Encoding.UTF8, "application/json");
@@ -145,6 +147,22 @@ namespace AquariumApi.Core
             }
         }
         /// <summary>
+        /// This is the most basic request to the Device
+        /// </summary>
+        /// <returns></returns>
+        public List<KeyValuePair<string, string>> GetSelectOptionsBySelectType(string selectType)
+        {
+            var path = DeviceOutboundEndpoints.SELECT_FORM_TYPES.AggregateParams(selectType);
+            using (var client = GetHttpClient())
+            {
+                var response = client.GetAsync(path).Result;
+                ValidateResponse(response);
+                var content = response.Content.ReadAsStringAsync().Result;
+                var d = JsonConvert.DeserializeObject<List<KeyValuePair<string, string>>>(content);
+                return d;
+            }
+        }
+        /// <summary>
         /// Tell the device to renew it's authentication token with us
         /// </summary>
         /// <returns></returns>
@@ -158,27 +176,25 @@ namespace AquariumApi.Core
             }
         }
 
-        public AquariumSnapshot TakeSnapshot(int deviceId)
+        public AquariumSnapshot TakeSnapshot()
         {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/Snapshot/Take";
+            var path = $"http://{Device.Address}:{Device.Port}/v1/Snapshot/Take";
             HttpClient client = new HttpClient();
             var data = client.GetStringAsync(path).Result;
             var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data);
-            snapshot.AquariumId = device.AquariumId;
+            snapshot.AquariumId = Device.AquariumId;
             return snapshot;
         }
-        public byte[] TakePhoto(int deviceId)
+        public byte[] TakePhoto()
         {
-            var device = _aquariumDao.GetAquariumDeviceById(deviceId);
-            var path = $"http://{device.Address}:{device.Port}/v1/Snapshot/TakePhoto";
+            var path = $"http://{Device.Address}:{Device.Port}/v1/Snapshot/TakePhoto";
 
             _logger.LogInformation($"Taking photo on device...");
             using (var client2 = new HttpClient())
             {
                 JsonSerializerSettings jss = new JsonSerializerSettings();
                 jss.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                var config = device.CameraConfiguration;
+                var config = Device.CameraConfiguration;
                 //config.Device = null;
                 var httpContent = new StringContent(JsonConvert.SerializeObject(config, jss), Encoding.UTF8, "application/json");
                 var result = client2.PostAsync(path, httpContent).Result;
@@ -286,7 +302,7 @@ namespace AquariumApi.Core
         #region Device Sensors
         public async Task<DeviceSensorTestRequest> TestDeviceSensor(DeviceSensorTestRequest testRequest)
         {
-            var path = DeviceOutboundEndpoints.DEVICE_SENSOR_TEST;
+            var path = DeviceOutboundEndpoints.SENSOR_TEST;
             using (var client = GetHttpClient())
             {
                 var content = JsonConvert.SerializeObject(testRequest);
@@ -307,8 +323,31 @@ namespace AquariumApi.Core
                 return createdTestRequest;
             }
         }
+        public async Task<List<DeviceSensor>> ApplyDeviceSensors(List<DeviceSensor> deviceSensors)
+        {
+            var path = DeviceOutboundEndpoints.SENSOR_UPDATE;
+            using (var client = GetHttpClient())
+            {
+                var content = JsonConvert.SerializeObject(deviceSensors);
+                var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
+                HttpResponseMessage result;
+                try
+                {
+                    result = await client.PutAsync(path, httpContent);
+                }
+                catch (Exception ex)
+                {
+                    throw new AquariumServiceException("The target device was unavailable.");
+                }
+                ValidateResponse(result);
+
+                var data = await result.Content.ReadAsStringAsync();
+                var updatedDeviceSensors = JsonConvert.DeserializeObject<List<DeviceSensor>>(data);
+                return updatedDeviceSensors;
+            }
+        }
         #endregion
 
-        
+
     }
 }

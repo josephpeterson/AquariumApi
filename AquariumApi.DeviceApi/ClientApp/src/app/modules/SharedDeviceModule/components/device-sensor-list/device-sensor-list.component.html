@@ -1,0 +1,7 @@
+<div class="generic-list" [class.generic-list-mini]="small != null">
+  <ul class="list-group" *ngFor="let sensor of configuredDevice.sensors">
+    <li class="list-group-item">
+      <device-sensor-list-item [sensor]="sensor" [hideEdit]="hideEdit" [hideTest]="hideTest" [small]="small"></device-sensor-list-item>
+    </li>
+  </ul>
+</div>

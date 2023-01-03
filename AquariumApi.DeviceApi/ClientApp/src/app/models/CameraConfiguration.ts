@@ -1,25 +1,25 @@
 class Vector {
-    constructor(public x, public y, public z) { };
+    constructor(public x, public y, public z) { }
 }
 export class CameraConfiguration {
     id: number;
-    height: number = 1080;
-    width: number = 1920;
-    sharpness: number = 0;
-    contrast: number = 0;
-    saturation: number = 0;
-    brightness: number = 50;
-    exposureMode: string = 'auto';
-    iso: number = 100;
-    hFlip: boolean = false;
-    vFlip: boolean = false;
-    roiX: number = 0;
-    roiY: number = 0;
-    roiW: number = 1;
-    roiH: number = 1;
-    rotation: number = 0;
+    height = 1080;
+    width = 1920;
+    sharpness = 0;
+    contrast = 0;
+    saturation = 0;
+    brightness = 50;
+    exposureMode = 'auto';
+    iso = 100;
+    hFlip = false;
+    vFlip = false;
+    roiX = 0;
+    roiY = 0;
+    roiW = 1;
+    roiH = 1;
+    rotation = 0;
 }
-export var CameraExposureModes = [
+export const CameraExposureModes = [
     { value: "auto", viewValue: "auto" },
     { value: "night", viewValue: "night" },
     { value: "nightpreview", viewValue: "nightpreview" },

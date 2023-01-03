@@ -1,0 +1,17 @@
+<div class="container">
+    <ng-container *ngIf="mixingStationStatus else noStatus">
+        <device-mixing-station-list-item [mixingStationStatus]="mixingStationStatus" hideConnect>
+        </device-mixing-station-list-item>
+    </ng-container>
+    <ng-template #noStatus>
+        <div *ngIf="mixingStationConnecting == -1">
+            Could not connect to mixing station.
+            <button class="btn btn-outline-secondary" (click)="clickPing()">Reconnect</button>
+        </div>
+        <div *ngIf="mixingStationConnecting == 1">
+            Connecting to {{mixingStation.hostname}}...
+        </div>
+
+    </ng-template>
+
+</div>

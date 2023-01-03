@@ -16,3 +16,16 @@ Run `npm run build-prod` to build the project. The build artifacts will be store
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
+
+## Set up Device
+
+Install Raspbian
+Run following commands:
+sudo apt install xrdp
+#Check status 
+sudo systemctl status aquarium-device
+#Watch log
+watch systemctl status aquarium-device
+#Dev resources
+Icons: bootstrap-icons https://icons.getbootstrap.com/

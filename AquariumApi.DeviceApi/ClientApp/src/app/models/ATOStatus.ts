@@ -1,4 +1,4 @@
-import { GpioPinValue } from "./types/GpioPinValue";
+import { GpioPinValue } from "../modules/SharedDeviceModule/models/GpioPinValue";
 
 export class ATOStatus {
   id: number;

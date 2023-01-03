@@ -1,0 +1,21 @@
+<h1 mat-dialog-title>Test Device Sensor</h1>
+<div mat-dialog-content>
+	<p>Perform a test on a device sensor. This will effectively turn on the sensor for a specified amount of
+		time.</p>
+
+	<div *ngIf="error" class="alert alert-danger">
+		<p class="error">{{error}}</p>
+	</div>
+	<device-sensor-list-item [sensor]="sensor" hideEdit hideTest></device-sensor-list-item>
+	<div class="input-group mb-3">
+		<div class="input-group-prepend">
+			<span class="input-group-text" id="basic-addon3">Runtime</span>
+		</div>
+		<input type="number" class="form-control" id="basic-url" placeholder="Runtime in seconds"
+			aria-describedby="basic-addon3" [(ngModel)]="request.runtime">
+	</div>
+</div>
+<div mat-dialog-actions>
+	<button class="m-2 btn btn-danger" mat-dialog-close>Cancel</button>
+	<button *ngIf="request.runtime" class="m-2 btn btn-success" (click)="clickRunTest()">Run...</button>
+</div>

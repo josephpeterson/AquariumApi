@@ -475,10 +475,12 @@ namespace AquariumApi.DataAccess
         {
             var device = _dbAquariumContext.TblDevice.AsNoTracking()
                 .Where(s => s.Id == deviceId)
+                /*
                 .Include(e => e.CameraConfiguration)
                 .Include(e => e.Sensors)
                 .Include(e => e.Tasks)
-                .Include(e => e.Schedules).ThenInclude(s => s.TaskAssignments)
+                .Include(e => e.Schedules).ThenInclude(s => s.Tasks)
+                */
                 .First();
             if (device.CameraConfiguration == null)
                 device.CameraConfiguration = new CameraConfiguration();
@@ -580,7 +582,7 @@ namespace AquariumApi.DataAccess
 
             var scheduleToUpdate = _dbAquariumContext.TblDeviceSchedule
                 .AsNoTracking()
-                .Include(d => d.TaskAssignments)
+                .Include(d => d.Tasks)
                 .First(s => s.Id == deviceSchedule.Id);
 
             _mapper.Map(deviceSchedule, scheduleToUpdate);
@@ -1311,7 +1313,7 @@ namespace AquariumApi.DataAccess
         }
         public void DeleteDeviceSensors(List<int> deviceSensorIds)
         {
-            var removedDeviceSensors = _dbAquariumContext.TblDeviceSensor.Where(n => deviceSensorIds.Contains(n.Id)).ToList();
+            var removedDeviceSensors = _dbAquariumContext.TblDeviceSensor.Where(n => deviceSensorIds.Contains(n.Id.Value)).ToList();
             _dbAquariumContext.RemoveRange(removedDeviceSensors);
             _dbAquariumContext.SaveChanges();
         }
@@ -1319,8 +1321,6 @@ namespace AquariumApi.DataAccess
         #region Device Tasks
         public DeviceScheduleTask AddDeviceTask(DeviceScheduleTask deviceTask)
         {
-            deviceTask.Device = null;
-            deviceTask.TargetSensor = null;
             deviceTask.TriggerSensor = null;
             _dbAquariumContext.TblDeviceScheduleTask.Add(deviceTask);
             _dbAquariumContext.SaveChanges();
@@ -1328,8 +1328,6 @@ namespace AquariumApi.DataAccess
         }
         public DeviceScheduleTask UpdateDeviceTask(DeviceScheduleTask deviceTask)
         {
-            deviceTask.Device = null;
-            deviceTask.TargetSensor = null;
             deviceTask.TriggerSensor = null;
             _dbAquariumContext.TblDeviceScheduleTask.Update(deviceTask);
             _dbAquariumContext.SaveChanges();

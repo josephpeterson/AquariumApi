@@ -33,7 +33,7 @@ namespace AquariumApi.DeviceApi.Controllers
             _deviceAPI = deviceAPI;
             _deviceConfiguration = deviceConfiguration;
         }
-        [HttpGet(DeviceOutboundEndpoints.LOG)]
+        [HttpGet(DeviceOutboundEndpoints.SYSTEM_LOG_RETRIEVE)]
         public IActionResult GetDeviceLog()
         {
             string txt;
@@ -43,12 +43,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"GET {DeviceOutboundEndpoints.LOG} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SYSTEM_LOG_RETRIEVE} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"GET {DeviceOutboundEndpoints.LOG} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SYSTEM_LOG_RETRIEVE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -57,7 +57,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             return new OkObjectResult(txt);
         }
-        [HttpPost(DeviceOutboundEndpoints.LOG_CLEAR)]
+        [HttpPost(DeviceOutboundEndpoints.SYSTEM_LOG_CLEAR)]
         public IActionResult ClearDeviceLog()
         {
             try
@@ -66,12 +66,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceOutboundEndpoints.LOG_CLEAR} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SYSTEM_LOG_CLEAR} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceOutboundEndpoints.LOG_CLEAR} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SYSTEM_LOG_CLEAR} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -80,7 +80,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             return new OkResult();
         }
-        [HttpPost(DeviceOutboundEndpoints.REBOOT)]
+        [HttpPost(DeviceOutboundEndpoints.SYSTEM_REBOOT)]
         public IActionResult AttemptReboot()
         {
             try
@@ -89,12 +89,12 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
-                _logger.LogInformation($"POST {DeviceOutboundEndpoints.REBOOT} endpoint caught exception: {ex.Message}");
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.SYSTEM_REBOOT} endpoint caught exception: {ex.Message}");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"POST {DeviceOutboundEndpoints.REBOOT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
+                _logger.LogError($"POST {DeviceOutboundEndpoints.SYSTEM_REBOOT} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 _logger.LogError(ex.StackTrace);
                 return BadRequest(new DeviceException("Unknown device error occurred")
                 {
@@ -102,6 +102,12 @@ namespace AquariumApi.DeviceApi.Controllers
                 });
             }
             return new OkResult();
+        }
+        [HttpPost(DeviceOutboundEndpoints.SYSTEM_FACTORY_RESET)]
+        public IActionResult PerformFactoryReset()
+        {
+            _deviceConfiguration.SaveDeviceConfiguration(new DeviceConfiguration());
+            return new OkObjectResult(_deviceConfiguration.LoadDeviceConfiguration());
         }
 
     }

@@ -1,0 +1,2 @@
+<device-generic-object-select [disabled]="disabled" [(inputModel)]="task.id" label="Select Task"
+  [availableObjects]="(configuredDevice$ | async)?.tasks"></device-generic-object-select>

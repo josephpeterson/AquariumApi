@@ -1,0 +1,28 @@
+<div *ngIf="(configuredDevice$ | async) as configuredDevice">
+
+  <div class="row">
+    <div class="col">
+      {{schedule.name}}
+      at
+      {{getReadableTime(schedule.startTime)}}
+    </div>
+    <div class="col">
+      <device-schedule-upsert-button [schedule]="schedule" *ngIf="hideEdit === null">
+        <fa-icon [icon]="faEdit" class="px-1"></fa-icon>Edit
+      </device-schedule-upsert-button>
+    </div>
+  </div>
+  <div *ngFor="let t of schedule.tasks">
+    <div *ngIf="getTaskById(t.id,configuredDevice) as task">
+
+      <div class="row">
+        <div class="col-sm-auto">
+          #{{schedule.tasks.indexOf(t)+1}}
+        </div>
+        <div class="col">
+          {{task.name}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,18 @@
+<div class="container">
+    <label for="basic-url">Search Results</label>
+    <ng-container *ngIf="!searching else searchingContainer">
+
+        <div *ngFor="let station of mixingStationResults">
+            <div class="card w-100 m-3">
+                <device-mixing-station-list-item [mixingStationStatus]="station"></device-mixing-station-list-item>
+            </div>
+        </div>
+    </ng-container>
+    <div class="row">
+        <ng-template #searchingContainer>
+            <device-loading-spinner></device-loading-spinner>
+        </ng-template>
+    </div>
+    <button class="btn btn-outline-secondary" type="button" (click)="clickSearchByHostname()"
+        [disabled]="disabled">Search</button>
+</div>

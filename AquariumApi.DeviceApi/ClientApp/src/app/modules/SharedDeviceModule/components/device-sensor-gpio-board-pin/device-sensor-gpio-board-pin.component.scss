@@ -1,0 +1,41 @@
+
+.gpioPort {
+    display: inline-block;
+    margin:1px;
+    height:23px;
+    width:23px;
+    border:2px solid gray;
+    background-color:#e3eed4;
+    border-radius:25px;
+    cursor: pointer;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+.gpioPort.unavailable {
+    border:2px solid gray;
+    background-color:#a5c578;
+}
+.gpioPort.ground {
+    border-color:#353535;
+    background-color:#939393;
+}
+.gpioPort.pwr3V {
+    border-color:goldenrod;
+    background-color:rgb(255, 229, 165);
+}
+.gpioPort.pwr5V { 
+    border-color:indianred;
+    background-color:rgb(238, 135, 135);
+}
+.gpioPort.disabled {
+    opacity: 0.4;
+    cursor: default;
+    box-shadow: none;
+}
+.gpioPort.selected {
+    border-color: rgb(22, 49, 22);
+    background-color: green;
+}
+.gpioPort.used {
+    border:2px solid gray;
+    background-color:rgb(235, 149, 235);
+}

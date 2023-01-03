@@ -25,25 +25,25 @@ namespace AquariumApi.DeviceApi.Clients
     {
         private ILogger<IAquariumClient> _logger;
         private IConfiguration _config;
-        private IAquariumAuthService _aquariumAuthService;
+        private IDeviceConfigurationService _deviceConfiguration;
 
 
         public AquariumClient(IConfiguration config,ILogger<IAquariumClient> logger,
-            IAquariumAuthService aquariumAuthService)
+            IDeviceConfigurationService deviceConfiguration)
         {
             _logger = logger;
             _config = config;
-            _aquariumAuthService = aquariumAuthService;
+            _deviceConfiguration = deviceConfiguration;
         }
         private HttpClient GetHttpClient()
         {
-            var token = _aquariumAuthService.GetToken();
-            if (token == null)
+            var loginResponse = _deviceConfiguration.LoadAccountInformation();
+            if (loginResponse == null)
                 throw new Exception("No authentication token available");
             HttpClient client = new HttpClient();
             client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
             client.Timeout = TimeSpan.FromMinutes(5);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token);
             return client;
         }
         public AquariumSnapshot SendAquariumSnapshotToHost(AquariumSnapshot snapshot, byte[] photo)
