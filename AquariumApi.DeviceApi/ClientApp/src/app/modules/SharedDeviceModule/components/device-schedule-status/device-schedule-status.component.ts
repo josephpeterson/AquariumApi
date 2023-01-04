@@ -26,9 +26,9 @@ export class DeviceScheduleStatusComponent implements OnInit {
 
   ngOnInit(): void {
     var endTime = moment().add(moment.duration(30,"seconds"));
-    if (this.deviceInformation.scheduleStatus.runningJobs.length)
+    if (this.deviceInformation.scheduleStatus?.runningJobs.length)
       endTime = moment(this.deviceInformation.scheduleStatus.runningJobs[0].scheduledJob.maximumEndTime);
-    else if (this.deviceInformation.scheduleStatus.nextTasks.length)
+    else if (this.deviceInformation.scheduleStatus?.nextTasks.length)
       endTime = moment(this.deviceInformation.scheduleStatus.nextTasks[0].startTime);
     var timeout = moment.duration(endTime.diff(moment())).asMilliseconds()+500
     if(timeout < 5 * 1000)

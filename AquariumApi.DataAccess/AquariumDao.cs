@@ -134,7 +134,6 @@ namespace AquariumApi.DataAccess
         WaterDosing AddWaterDosing(WaterDosing waterDosing);
         WaterDosing UpdateWaterDosing(WaterDosing waterDosing);
         void DeleteWaterDosings(List<int> waterDosingIds);
-        List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId);
         List<PhotoContent> GetPhotoContentByIds(int[] photoIds);
         ICollection<AquariumSnapshot> GetSnapshotsByIds(List<int> snapshotIds);
         ICollection<DeviceSensor> GetDeviceSensors(int deviceId);
@@ -491,7 +490,7 @@ namespace AquariumApi.DataAccess
             if (ipAddress == "::1") ipAddress = "localhost";
             return _dbAquariumContext.TblDevice.AsNoTracking()
                 .Where(s => s.Address == ipAddress && s.PrivateKey == deviceKey)
-                .Include(e => e.Aquarium)
+                //.Include(e => e.Aquarium)
                 .Include(e => e.CameraConfiguration)
                 .First();
         }
@@ -534,7 +533,7 @@ namespace AquariumApi.DataAccess
             if (aquarium == null)
                 throw new KeyNotFoundException();
 
-            device.AquariumId = aquarium.Id;
+            //device.AquariumId = aquarium.Id;
             _dbAquariumContext.TblDevice.Update(device);
             _dbAquariumContext.SaveChanges();
         }
@@ -590,10 +589,6 @@ namespace AquariumApi.DataAccess
             _dbAquariumContext.Update(scheduleToUpdate);
             _dbAquariumContext.SaveChanges();
             return deviceSchedule;
-        }
-        public List<DeviceScheduleAssignment> GetScheduleAssignmentBySchedule(int scheduleId)
-        {
-            throw new NotSupportedException();
         }
         public List<ScheduledJob> GetDeviceScheduledJobs(int deviceId, PaginationSliver pagination)
         {

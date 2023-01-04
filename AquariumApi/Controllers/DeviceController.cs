@@ -62,46 +62,6 @@ namespace AquariumApi.Controllers
                 return BadRequest();
             }
         }
-        [HttpPost]
-        [Route(AquariumApiEndpoints.DEVICE_UPDATE)]
-        public IActionResult UpdateAquariumDevice([FromBody] AquariumDevice device)
-        {
-            if (!ValidateRequest(device.Id))
-                return Unauthorized();
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_UPDATE} called");
-                var id = _accountService.GetCurrentUserId();
-                var aq = _aquariumService.GetAquariumById(device.AquariumId);
-                if(!_accountService.CanModify(id, aq))
-                    return new UnauthorizedResult();
-
-                var updatedDevice = _aquariumService.UpdateAquariumDevice(id,device);
-                return new OkObjectResult(updatedDevice);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_UPDATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
-        [HttpPost]
-        [Route(AquariumApiEndpoints.DEVICE_CREATE)]
-        public IActionResult AddAquariumDevice([FromBody] AquariumDevice device)
-        {
-            //todo validate
-            try
-            {
-                _logger.LogInformation($"POST {AquariumApiEndpoints.DEVICE_CREATE} called");
-                var newDevice = _aquariumService.AddAquariumDevice(device);
-                return CreatedAtAction(nameof(UpdateAquariumDevice), new { id = newDevice.Id }, newDevice);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"POST {AquariumApiEndpoints.DEVICE_CREATE} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
-            }
-        }
         [HttpGet]
         [Route(AquariumApiEndpoints.DEVICE_DISPATCH_SCAN)]
         public IActionResult ScanAquariumDeviceHardware(int deviceId)

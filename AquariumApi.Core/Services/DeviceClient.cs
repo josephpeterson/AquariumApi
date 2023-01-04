@@ -192,7 +192,7 @@ namespace AquariumApi.Core
             HttpClient client = new HttpClient();
             var data = client.GetStringAsync(path).Result;
             var snapshot = JsonConvert.DeserializeObject<AquariumSnapshot>(data);
-            snapshot.AquariumId = Device.AquariumId;
+            //snapshot.AquariumId = Device.AquariumId;
             return snapshot;
         }
         public byte[] TakePhoto()

@@ -160,7 +160,7 @@ namespace AquariumApi.Controllers
                             Address = "",
                             Port = "0",
                             PrivateKey = "",
-                            AquariumId = aq.Id
+                            //AquariumId = aq.Id
                         };
                         aq.Device = _aquariumService.AddAquariumDevice(d);
                     }

@@ -1,4 +1,4 @@
-<div class="card m-2">
+<div class="card m-2" *ngIf="deviceInformation.scheduleStatus as scheduleState">
   <div class="card-body">
     <div class="row">
       <div class="col">
@@ -6,7 +6,7 @@
           This information pertains to what the Pi is currently running. Schedules running on the Pi and within the
           application may become out of sync.
         </p>
-        <div *ngIf="deviceInformation.scheduleStatus as scheduleState" class="row">
+        <div  class="row">
           <div class="col">
             <h3 class="mb-0">General</h3>
             <small class="text-muted">
@@ -32,9 +32,9 @@
         </div>
         <div class="row">
           <div class="col">
-            <h3 class="mb-0" *ngIf="deviceInformation.scheduleStatus.runningJobs.length">
+            <h3 class="mb-0" *ngIf="scheduleState.runningJobs?.length">
               Running</h3>
-            <div *ngFor="let runningJob of deviceInformation.scheduleStatus.runningJobs">
+            <div *ngFor="let runningJob of scheduleState.runningJobs">
               <small class="text-muted">
                 <b>{{getTaskById(runningJob.scheduledJob.taskId).name}}</b> Remaining:
                 <b>{{readableDuration(runningJob.scheduledJob,runningJob.scheduledJob.maximumEndTime)}}</b>

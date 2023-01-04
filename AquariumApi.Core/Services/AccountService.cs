@@ -161,26 +161,29 @@ namespace AquariumApi.Core
                 new Claim(ClaimTypes.Role, "Device"),
                 new Claim(ClaimTypes.Name, aquariumId.ToString()),
             };
-            return GenerateLoginToken(claims, false);
+            return GenerateLoginToken(claims);
         }
 
-        private string GenerateLoginToken(List<Claim> claims,bool expires = true)
+        private string GenerateLoginToken(List<Claim> claims)
         {
-            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]));
-            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-            DateTime? expirationDate;
-            if (expires)
-                expirationDate = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:LengthMins"]));
-            else
-                expirationDate = DateTime.Now.AddDays(2);
-            var tokeOptions = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: expirationDate,
-                signingCredentials: signinCredentials
-            );
-            return new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+            TimeSpan expireLength = TimeSpan.FromDays(Convert.ToDouble(_configuration["Jwt:ExpireLengthDays"]));
+
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.Now.Add(expireLength),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials
+           (new SymmetricSecurityKey(key),
+           SecurityAlgorithms.HmacSha512Signature)
+            };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = tokenHandler.WriteToken(token);
+            var stringToken = tokenHandler.WriteToken(token);
+            return stringToken;
         }
         private string GenerateResetPassword(int uId)
         {

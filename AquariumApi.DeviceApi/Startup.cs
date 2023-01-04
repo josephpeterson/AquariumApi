@@ -3,13 +3,10 @@ using AquariumApi.DeviceApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace AquariumApi.DeviceApi
 {
@@ -43,10 +40,7 @@ namespace AquariumApi.DeviceApi
             services.AddAquariumDevice();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/dist/aquarium-device-dashboard/";
-            });
+     
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app,IHostingEnvironment env,DeviceAPI bootstrap,ILogger<Startup> logger)
@@ -61,38 +55,26 @@ namespace AquariumApi.DeviceApi
             {
                 app.UseHsts();
             }
-            // global cors policy
+
+            app.UseAuthentication();
+            app.UseStaticFiles();
+            app.UseRouting();
             app.UseCors(x => x
-                    .AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials());
-            //enable swagger
+               .AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               );
+            app.UseAuthorization();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aquarium Device");
                 c.RoutePrefix = "swagger";
             });
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseSpaStaticFiles();
-
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
-              name: "default",
-              template: "{controller}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
             });
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp";
-                //if (env.IsDevelopment())
-                //  spa.UseAngularCliServer(npmScript: "start");
-            });
-
-            app.UseStaticFiles();
             app.UseHttpsRedirection();
 
             bootstrap.Process();

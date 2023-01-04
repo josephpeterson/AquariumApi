@@ -24,7 +24,6 @@ namespace AquariumApi
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseKestrel()
                 .UseUrls($"http://*:{Configuration["Port"]}")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()

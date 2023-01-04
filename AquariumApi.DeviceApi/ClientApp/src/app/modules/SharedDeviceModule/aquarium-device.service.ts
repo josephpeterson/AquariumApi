@@ -44,7 +44,7 @@ export class AquariumDeviceService {
         return this.http.get(DeviceEndpoints.AUTH_RENEW);
     }
     public getExceptions() {
-        return this.http.get<BaseException[]>("/v1/Exception");
+        return this.http.get<BaseException[]>("v1/Exception");
     }
     public factoryReset() {
         return this.http.post(DeviceEndpoints.SYSTEM_FACTORY_RESET);

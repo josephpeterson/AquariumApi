@@ -28,7 +28,6 @@ namespace AquariumApi.Core
         #region Device Schedules
         List<DeviceSchedule> GetDeviceSchedulesByAccountId(int id);
         void DeleteDeviceSchedule(int deviceId,int scheduleId);
-        DeviceSchedule CreateDeviceSchedule(int deviceId,DeviceSchedule deviceSchedule);
         DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule);
         ScheduledJob PerformScheduleTask(int deviceId, DeviceScheduleTask deviceScheduleTask);
         ScheduleState GetDeviceScheduleStatus(int deviceId);
@@ -128,44 +127,6 @@ namespace AquariumApi.Core
             {
                 //todo could not update schedule assignment (pi is offline maybe)
             }
-        }
-        public DeviceSchedule CreateDeviceSchedule(int deviceId,DeviceSchedule deviceSchedule)
-        {
-            //cleanse data
-            deviceSchedule.DeviceId = deviceId;
-            deviceSchedule.Device = null;
-            deviceSchedule.Tasks.ToList().ForEach(t =>
-            {
-                t.TriggerSensor = null;
-            });
-
-            //validate
-            var validator = new DeviceScheduleValidator().Validate(deviceSchedule);
-            if (!validator.IsValid)
-                throw new FluentValidation.ValidationException(validator.Errors);
-
-            if (deviceSchedule.Id.HasValue)
-                deviceSchedule = _aquariumDao.UpdateDeviceSchedule(deviceSchedule);
-            else
-                deviceSchedule = _aquariumDao.AddDeviceSchedule(deviceSchedule);
-
-            //Update the actual device
-            var device = _aquariumDao.GetAquariumDeviceById(deviceSchedule.DeviceId);
-            try
-            {
-                ApplyUpdatedDevice(deviceId);
-            }
-            catch (Exception e)
-            {
-                //todo could not update schedule assignment (pi is offline maybe)
-                _logger.LogError("Error while attempting to update schedule on device");
-                _logger.LogError($"{e}");
-                var aq = _aquariumDao.GetAquariumById(device.AquariumId);
-                _notificationService.EmitAsync(aq.OwnerId, "Aquarium Device", $"[{device.Name}] Unable to deploy schedule to aquarium device. Your device may be offline. " +
-                    $"We attempted to contact: " +
-                    $"${device.Address}:{device.Port}").Wait();
-            }
-            return deviceSchedule;
         }
         public DeviceSchedule UpdateDeviceSchedule(DeviceSchedule deviceSchedule)
         {

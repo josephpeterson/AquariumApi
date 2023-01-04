@@ -7,7 +7,7 @@
     "Secret": "",
     "Issuer": "http://localhost:5000",
     "Audience": "http://localhost:5000",
-    "LengthMins": 720
+    "ExpireLengthDays": 7
   },
   "Password": {
     "ResetPasswordLimitMins": 10,

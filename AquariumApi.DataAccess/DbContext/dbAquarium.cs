@@ -41,7 +41,7 @@ namespace AquariumApi.DataAccess
         public virtual DbSet<PostThread> TblPostThreads { get; set; }
         public virtual DbSet<Post> TblPosts { get; set; }
         public virtual DbSet<PostReaction> TblPostReactions { get; set; }
-        public virtual DbQuery<PostBoardView> vwPostBoards { get; set; }
+        public virtual DbSet<PostBoardView> vwPostBoards { get; set; }
 
         public virtual DbSet<PhotoContent> TblPhotoContent { get; set; }
         public virtual DbSet<DeviceSchedule> TblDeviceSchedule { get; set; }
@@ -129,7 +129,7 @@ namespace AquariumApi.DataAccess
             modelBuilder.Entity<AquariumDevice>(entity =>
             {
                 entity.ToTable("tblDevice");
-                entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
+                //entity.HasOne(e => e.Aquarium).WithOne(e => e.Device);
                 entity.HasOne(e => e.CameraConfiguration);
 
             });
@@ -149,7 +149,7 @@ namespace AquariumApi.DataAccess
             /* Schedule */
             modelBuilder.Entity<DeviceSchedule>(entity =>
             {
-                entity.HasOne(e => e.Device);
+                //entity.HasOne(e => e.Device);
             });
             modelBuilder.Entity<DeviceScheduleTask>(entity =>
             {
@@ -289,7 +289,7 @@ namespace AquariumApi.DataAccess
             {
                 entity.Ignore(e => e.OnSensorTriggered); //we need to ignore delegates. this is the only way. move this to DeviceSensor class if possible
                 entity.ToTable("tblDeviceSensor");
-                entity.HasOne(e => e.Device);
+                //entity.HasOne(e => e.Device);
 
             });
             modelBuilder.Entity<ATOStatus>(entity =>
@@ -299,7 +299,7 @@ namespace AquariumApi.DataAccess
                 entity.HasOne(e => e.ScheduleJob);
 
             });
-            modelBuilder.Query<PostBoardView>().ToView("vw_PostBoards");
+            //modelBuilder.Query<PostBoardView>().ToView("vw_PostBoards");
         }
     }
 }

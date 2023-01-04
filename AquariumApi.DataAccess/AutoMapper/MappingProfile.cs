@@ -20,8 +20,8 @@ namespace AquariumApi.DataAccess.AutoMapper
             CreateMap<CameraConfiguration, CameraConfiguration>();
 
             CreateMap<AquariumDevice, AquariumDevice>()
-                .ForMember(c => c.CameraConfiguration, opt => opt.Ignore())
-                .ForMember(c => c.Aquarium, opt => opt.Ignore());
+                .ForMember(c => c.CameraConfiguration, opt => opt.Ignore());
+                //.ForMember(c => c.Aquarium, opt => opt.Ignore());
 
             CreateMap<DeviceSchedule, DeviceSchedule>();
 

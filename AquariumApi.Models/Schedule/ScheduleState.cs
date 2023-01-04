@@ -1,5 +1,6 @@
 ﻿using AquariumApi.Models;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +16,7 @@ namespace AquariumApi.Models
     {
         public ScheduledJob ScheduledJob { get; set; }
         public Task RunningTask { get; set; }
+        [JsonIgnore]
         public CancellationTokenSource CancellationSource { get; set; }
     }
 }

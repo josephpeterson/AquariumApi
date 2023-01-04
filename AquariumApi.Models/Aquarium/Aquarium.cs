@@ -19,7 +19,7 @@ namespace AquariumApi.Models
         public DateTime StartDate { get; set; }
 
 
-        public AquariumDevice Device { get; set; }
+        public virtual AquariumDevice Device { get; set; }
 
         public ICollection<Fish> Fish { get; set; }
         public ICollection<Feeding> Feedings { get; set; }

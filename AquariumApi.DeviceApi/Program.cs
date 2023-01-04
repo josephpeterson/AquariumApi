@@ -33,7 +33,6 @@ namespace AquariumApi.DeviceApi
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseKestrel()
                 .UseUrls($"http://*:{Configuration["Port"]}")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()

@@ -32,6 +32,8 @@ namespace AquariumApi
                 .SetBasePath(currentDirectory)
                 .AddJsonFile($"config.json", optional: false)
                 .AddEnvironmentVariables();
+
+            
             Configuration = builder.Build();
         }
 
@@ -103,9 +105,21 @@ namespace AquariumApi
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-                .AddJsonOptions(options => {
-                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                .AddNewtonsoftJson(o =>
+                {
+                    o.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
+                /* This no longer supports self referencing loop. We had to fall back. 
+                 * Eventually fix the loops and remove Microsoft.AspNetCore.Mvc.NewtonsoftJson
+                .AddJsonOptions(options => {
+                    //options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                });
+                */
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -121,39 +135,23 @@ namespace AquariumApi
             }
 
             app.UseAuthentication();
-
-
-            // global cors policy
-            app.UseCors(x => x
+            app.UseStaticFiles();
+            app.UseRouting();
+             app.UseCors(x => x
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader()
-                .AllowCredentials());
-
-            app.UseStaticFiles();
-
-
-
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
+                );
+            app.UseAuthorization();
             app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-            // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
                 c.RoutePrefix = "swagger";
             });
-
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                // default routes plus any other custom routes
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-                    routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new { controller = "Home", action = "Spa" });
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
             });
             app.UseHttpsRedirection();
         }

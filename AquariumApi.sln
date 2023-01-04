@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28803.352
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.Core", "AquariumApi.Core\AquariumApi.Core.csproj", "{28F3DA58-15A1-424F-90BC-1EBE294370E3}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -21,17 +21,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi", "AquariumApi\
 		{09533DD1-ACC8-469F-8A13-65366BB94748} = {09533DD1-ACC8-469F-8A13-65366BB94748}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.Tests", "AquariumApi.Tests\AquariumApi.Tests.csproj", "{4A891A6C-E7F3-4183-9E5E-82475EB5539E}"
-	ProjectSection(ProjectDependencies) = postProject
-		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0} = {88D70AE2-48E0-4DFC-9916-B14F3D7806D0}
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3FB6B02F-06D7-43A6-BBE1-8B13ADBBB2BF}"
 	ProjectSection(SolutionItems) = preProject
 		readme.txt = readme.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AquariumApi.DeviceApi", "AquariumApi.DeviceApi\AquariumApi.DeviceApi.csproj", "{EDF356E4-A178-460F-9F0E-8DB8F6DC6665}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquariumApi.DeviceApi", "AquariumApi.DeviceApi\AquariumApi.DeviceApi.csproj", "{EDF356E4-A178-460F-9F0E-8DB8F6DC6665}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5A7E1897-C2AC-4F80-BD50-5098F58B0375} = {5A7E1897-C2AC-4F80-BD50-5098F58B0375}
 	EndProjectSection
@@ -58,10 +53,6 @@ Global
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88D70AE2-48E0-4DFC-9916-B14F3D7806D0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4A891A6C-E7F3-4183-9E5E-82475EB5539E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EDF356E4-A178-460F-9F0E-8DB8F6DC6665}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EDF356E4-A178-460F-9F0E-8DB8F6DC6665}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDF356E4-A178-460F-9F0E-8DB8F6DC6665}.Release|Any CPU.ActiveCfg = Release|Any CPU
