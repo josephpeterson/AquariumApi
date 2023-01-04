@@ -17,7 +17,8 @@ variables:
 steps:
 - task: DotNetCoreCLI@2
   inputs:
+    command: 'restore'
+    
+- task: DotNetCoreCLI@2
+  inputs:
     command: 'build'
-
-- script: dotnet build --configuration $(BuildConfiguration)
-  displayName: dotnet build
