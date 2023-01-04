@@ -2,6 +2,7 @@
 using Bifrost.IO.Ports;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,9 +19,9 @@ namespace AquariumApi.DeviceApi
         private readonly IConfiguration _config;
         private readonly ILogger<HardwareService> _logger;
         private readonly ISerialService _serialService;
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public HardwareService(IConfiguration config, ILogger<HardwareService> logger,ISerialService serialService,IHostingEnvironment hostingEnvironment)
+        public HardwareService(IConfiguration config, ILogger<HardwareService> logger,ISerialService serialService, IWebHostEnvironment hostingEnvironment)
         {
             _config = config;
             _logger = logger;

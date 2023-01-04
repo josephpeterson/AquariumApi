@@ -2,6 +2,7 @@
 using Bifrost.IO.Ports;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace AquariumApi.DeviceApi
         private readonly IConfiguration _config;
         private readonly ILogger<GpioService> _logger;
         private readonly ISerialService _serialService;
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly IDeviceConfigurationService _deviceConfiguration;
         private readonly List<DeviceSensor> Pins = new List<DeviceSensor>();
         private IGpioControllerWrapper Controller;
@@ -36,7 +37,7 @@ namespace AquariumApi.DeviceApi
         public GpioService(IConfiguration config
             ,ILogger<GpioService> logger
             ,ISerialService serialService
-            ,IHostingEnvironment hostingEnvironment
+            , IWebHostEnvironment hostingEnvironment
             ,IDeviceConfigurationService deviceConfiguration
             )
         {

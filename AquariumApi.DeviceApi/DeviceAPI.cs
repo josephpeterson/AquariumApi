@@ -57,7 +57,7 @@ namespace AquariumApi.DeviceApi
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Could not get device information from AquariumService. Token may be expired");
+                    _logger.LogError($"Could not get device information from AquariumService. Token may be expired\r\nException Message: {ex.Message}");
                     _aquariumAuthService.Logout(); // this will delete the token
                 }
             }

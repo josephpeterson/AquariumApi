@@ -138,7 +138,8 @@ namespace AquariumApi.DeviceApi
             var url = MixingStationEndpoints.TEST_VALVE.AggregateParams($"{valveId}");
             var res = await client.GetAsync(url);
             _logger.LogInformation($"GET {url}");
-            AquariumMixingStationStatus status = JsonConvert.DeserializeObject<AquariumMixingStationStatus>(res.Content.ReadAsStringAsync().Result);
+            var content = await res.Content.ReadAsStringAsync();
+            AquariumMixingStationStatus status = JsonConvert.DeserializeObject<AquariumMixingStationStatus>(content);
             return status;
         }
         public async Task<AquariumMixingStationStatus> StopMixingStationSessions()

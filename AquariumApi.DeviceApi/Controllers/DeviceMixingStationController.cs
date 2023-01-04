@@ -50,7 +50,6 @@ namespace AquariumApi.DeviceApi.Controllers
                     Source = ex
                 });
             }
-            return new OkResult();
         }
         [HttpPost(DeviceOutboundEndpoints.MIXING_STATION_SEARCH)]
         public async Task<IActionResult> SearchForMixingStation()
