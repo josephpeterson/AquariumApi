@@ -9,7 +9,7 @@ namespace AquariumApi.Models
 {
     public class DeviceInformation
     {
-        public ScheduleState ScheduleStatus;
+        public ScheduleState ScheduleStatus { get; set; }
         public string Version {get; set;}
         public object Config {get; set; }
         public AquariumUser Account { get; set; }

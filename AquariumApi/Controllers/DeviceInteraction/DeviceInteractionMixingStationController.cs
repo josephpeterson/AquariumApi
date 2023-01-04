@@ -38,18 +38,18 @@ namespace AquariumApi.Controllers.DeviceInteraction
             var aquariums = _aquariumService.GetAquariumsByAccountId(id);
             return aquariums.Where(a => a.Id == aquariumId && a.Device != null).Any();
         }
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_PING)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_PING)]
         public async Task<IActionResult> PingMixingStationByHostname(int aquariumId,[FromQuery] string hostname)
         {
             throw new NotImplementedException();
         }
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_SEARCH)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_SEARCH)]
         public async Task<IActionResult> SearchForMixingStation(int aquariumId)
         {
             throw new NotImplementedException();
         }
 
-        [HttpGet("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_STATUS)]
+        [HttpGet("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_STATUS)]
         public async Task<IActionResult> PingMixingStation(int aquariumId)
         {
             if (!ValidateRequest(aquariumId))
@@ -66,22 +66,22 @@ namespace AquariumApi.Controllers.DeviceInteraction
                 return BadRequest();
             }
         }
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_UPDATE)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_UPDATE)]
         public async Task<IActionResult> UpsertMixingStation(int aquariumId, [FromBody] AquariumMixingStationStatus mixingStation)
         {
             throw new NotImplementedException();
         }
-        [HttpDelete("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_DELETE)]
+        [HttpDelete("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_DELETE)]
         public IActionResult DisconnectMixingStation(int aquariumId)
         {
             throw new NotImplementedException();
         }
-        [HttpGet("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_TEST_VALVE)]
+        [HttpGet("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_TEST_VALVE)]
         public async Task<IActionResult> TestMixingStationValve(int aquariumId, int valveId)
         {
             throw new NotImplementedException();
         }
-        [HttpGet("{aquariumId}" + DeviceOutboundEndpoints.MIXING_STATION_STOP)]
+        [HttpGet("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_STOP)]
         public async Task<IActionResult> StopMixingStationSessions(int aquariumId, int valveId)
         {
             throw new NotImplementedException();

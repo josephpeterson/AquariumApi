@@ -38,7 +38,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
             var aquariums = _aquariumService.GetAquariumsByAccountId(id);
             return aquariums.Where(a => a.Id == aquariumId && a.Device != null).Any();
         }
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.SENSOR_RETRIEVE)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.SENSOR_RETRIEVE)]
         public async Task<IActionResult> GetDeviceSensorValues(int aquariumId)
         {
             if (!ValidateRequest(aquariumId))
@@ -60,7 +60,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
         /// </summary>
         /// <param name="sensor"></param>
         /// <returns></returns>
-        [HttpPut("{aquariumId}" + DeviceOutboundEndpoints.SENSOR_UPDATE)]
+        [HttpPut("{aquariumId}/" + DeviceOutboundEndpoints.SENSOR_UPDATE)]
         public async Task<IActionResult> UpsertDeviceSensor(int aquariumId, [FromBody] DeviceSensor sensor)
         {
             if (!ValidateRequest(aquariumId))
@@ -82,7 +82,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
         /// </summary>
         /// <param name="sensor"></param>
         /// <returns></returns>
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.SENSOR_DELETE)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.SENSOR_DELETE)]
         public async Task<IActionResult> DeleteDeviceSensor(int aquariumId, [FromBody] DeviceSensor sensor)
         {
             if (!ValidateRequest(aquariumId))
@@ -104,7 +104,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
         /// </summary>
         /// <param name="testRequest"></param>
         /// <returns></returns>
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.SENSOR_TEST)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.SENSOR_TEST)]
         public async Task<IActionResult> TestDeviceSensor(int aquariumId,[FromBody] DeviceSensorTestRequest testRequest)
         {
             if (!ValidateRequest(aquariumId))

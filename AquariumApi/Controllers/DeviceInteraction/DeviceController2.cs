@@ -33,7 +33,7 @@ namespace AquariumApi.Controllers
             _logger = logger;
         }
         [HttpGet]
-        [Route("{aquariumId}" + DeviceOutboundEndpoints.PING)]
+        [Route("{aquariumId}/" + DeviceOutboundEndpoints.PING)]
         public IActionResult GetDeviceById(int aquariumId)
         {
             if (!ValidateRequest(aquariumId))
@@ -51,7 +51,7 @@ namespace AquariumApi.Controllers
             }
         }
         [HttpGet]
-        [Route("{aquariumId}" + DeviceOutboundEndpoints.SELECT_FORM_TYPES)]
+        [Route("{aquariumId}/" + DeviceOutboundEndpoints.SELECT_FORM_TYPES)]
         public IActionResult GetSelectOptionsByType(int aquariumId,string selectType)
         {
             if (!ValidateRequest(aquariumId))

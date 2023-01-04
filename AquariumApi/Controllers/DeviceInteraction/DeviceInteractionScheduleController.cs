@@ -38,7 +38,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
             var aquariums = _aquariumService.GetAquariumsByAccountId(id);
             return aquariums.Where(a => a.Id == aquariumId && a.Device != null).Any();
         }
-        [HttpGet("{aquariumId}" + DeviceOutboundEndpoints.SCHEDULE_START)]
+        [HttpGet("{aquariumId}/" + DeviceOutboundEndpoints.SCHEDULE_START)]
         public async Task<IActionResult> Start(int aquariumId)
         {
             try
@@ -62,7 +62,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
                 });
             }
         }
-        [HttpGet("{aquariumId}" + DeviceOutboundEndpoints.SCHEDULE_STOP)]
+        [HttpGet("{aquariumId}/" + DeviceOutboundEndpoints.SCHEDULE_STOP)]
         public async Task<IActionResult> Stop(int aquariumId)
         {
             try
@@ -86,7 +86,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
                 });
             }
         }
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.SCHEDULE_TASK_PERFORM)]
         public async Task<IActionResult> PerformTask(int aquariumId, [FromBody] DeviceScheduleTask deviceScheduleTask)
         {
             try
@@ -109,7 +109,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
                 });
             }
         }
-        [HttpPost("{aquariumId}" + DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP)]
+        [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.SCHEDULE_SCHEDULEDJOB_STOP)]
         public async Task<IActionResult> StopScheduledJob(int aquariumId,[FromBody] ScheduledJob scheduledJob)
         {
             try

@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
-
+﻿
 namespace AquariumApi.Models
 {
     public class DeviceSensor
@@ -17,8 +15,7 @@ namespace AquariumApi.Models
         public delegate void SensorTriggered(object sender,int value);
 
 
-        [JsonIgnore]
-        public SensorTriggered OnSensorTriggered { get; set; }
+        public SensorTriggered OnSensorTriggered;
 
     }
     public enum SensorTypes
