@@ -34,20 +34,23 @@ namespace AquariumApi.Controllers
         }
         [HttpGet]
         [Route("{aquariumId}/" + DeviceOutboundEndpoints.PING)]
-        public IActionResult GetDeviceById(int aquariumId)
+        public async Task<IActionResult> GetDeviceById(int aquariumId)
         {
             if (!ValidateRequest(aquariumId))
                 return Unauthorized();
             try
             {
                 _logger.LogInformation($"POST DeviceInteraction/{aquariumId}/{DeviceOutboundEndpoints.PING} called");
-                var deviceInformation = _deviceService.GetDeviceInformation(aquariumId);
+                var deviceInformation = await _deviceService.GetDeviceInformation(aquariumId);
                 return new OkObjectResult(deviceInformation);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"POST DeviceInteraction/{aquariumId}/{DeviceOutboundEndpoints.PING} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
-                return BadRequest();
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
             }
         }
         [HttpGet]

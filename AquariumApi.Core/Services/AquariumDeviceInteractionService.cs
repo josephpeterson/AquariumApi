@@ -24,7 +24,7 @@ namespace AquariumApi.Core
 
 
         void ClearDeviceLog(int aquariumId);
-        DeviceInformation GetDeviceInformation(int deviceId);
+        Task<DeviceInformation> GetDeviceInformation(int deviceId);
         string GetDeviceLog(int aquariumId);
         List<KeyValuePair<string, string>> GetSelectOptionsBySelectType(int aquariumId, string selectType);
         Task<ScheduleState> StartDeviceSchedule(int aquariumId);
@@ -49,10 +49,10 @@ namespace AquariumApi.Core
             _deviceClient.Configure(aquarium.Device);
         }
 
-        public DeviceInformation GetDeviceInformation(int deviceId)
+        public async Task<DeviceInformation> GetDeviceInformation(int deviceId)
         {
             Configure(deviceId);
-            return _deviceClient.PingDevice();
+            return await _deviceClient.PingDevice();
         }
         public List<KeyValuePair<string, string>> GetSelectOptionsBySelectType(int aquariumId, string selectType)
         {

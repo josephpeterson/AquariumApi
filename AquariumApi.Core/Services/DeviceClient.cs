@@ -21,7 +21,7 @@ namespace AquariumApi.Core
     {
         string GetDeviceLog();
         void ClearDeviceLog();
-        DeviceInformation PingDevice();
+        Task<DeviceInformation> PingDevice();
 
 
         AquariumSnapshot TakeSnapshot();
@@ -145,12 +145,12 @@ namespace AquariumApi.Core
         /// This is the most basic request to the Device
         /// </summary>
         /// <returns></returns>
-        public DeviceInformation PingDevice()
+        public async Task<DeviceInformation> PingDevice()
         {
             var path = DeviceOutboundEndpoints.PING;
             using (var client = GetHttpClient())
             {
-                var response = client.GetAsync(path).Result;
+                var response = await client.GetAsync(path);
                 ValidateResponse(response);
                 var d = JsonConvert.DeserializeObject<DeviceInformation>(response.Content.ReadAsStringAsync().Result);
                 return d;
