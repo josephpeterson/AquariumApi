@@ -23,27 +23,54 @@
 					</div>
 				</div>
 				<div class="col-sm">
-
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-sm">
 					<device-generic-select label="Sensor Type" [deviceSelectType]="'DeviceSensorTypes'"
 						[(inputModel)]="newDeviceSensor.type">
 					</device-generic-select>
 				</div>
+
+			</div>
+			<div class="row">
+				<div class="col">
+					<h5>Sensor Location</h5>
+					<mat-radio-group aria-labelledby="example-radio-group-label" [(ngModel)]="onboardSensor">
+						<mat-radio-button [value]="true" class="ml-2">
+							This device
+						</mat-radio-button>
+						<mat-radio-button [value]="false" class="ml-2">
+							Wireless device
+						</mat-radio-button>
+					</mat-radio-group>
+				</div>
+				<div class="col">
+					<h5>Sensor Polarity</h5>
+					<mat-radio-group aria-labelledby="example-radio-group-label" [(ngModel)]="newDeviceSensor.polarity">
+						<mat-radio-button [value]="DeviceSensorPolarity.Input" class="ml-2">
+							Read
+						</mat-radio-button>
+						<mat-radio-button [value]="DeviceSensorPolarity.Write" class="ml-2">
+							Write
+						</mat-radio-button>
+
+					</mat-radio-group>
+					<span *ngIf="newDeviceSensor.polarity == DeviceSensorPolarity.Write">
+						<mat-slide-toggle [(ngModel)]="newDeviceSensor.alwaysOn">Normally
+							On</mat-slide-toggle>
+					</span>
+				</div>
 			</div>
 
-			<ng-container *ngIf="newDeviceSensor.type == DeviceSensorTypes.Sensor">
+			<ng-container *ngIf="onboardSensor">
 				<div class="row">
 					<div class="col">
-						<p class="text-muted" *ngIf="configuredDevice.boardType">Select a pin location for the sensor.
+						<p class="text-muted">Select a pin location for the
+							sensor.
 							Based
 							on
 							your
 							selected
 							RaspberryPi configuration, this is your
-							Gpio arrangement. Your device model is current set to <b>{{configuredDevice.boardType}}</b>.
+							Gpio arrangement. Your device model is current set to
+							<b>{{configuredDevice.settings.boardType}}</b>.
 						</p>
 					</div>
 				</div>
@@ -52,55 +79,16 @@
 						[(inputModel)]="newDeviceSensor.pin"></device-sensor-gpio-board>
 				</div>
 			</ng-container>
-			<ng-container *ngIf="newDeviceSensor.type == DeviceSensorTypes.MixingStation">
-				<ng-container *ngIf="configuredDevice.mixingStation as mixingStation else noStatus">
-					<p class="font-weight-bold">
-						{{configuredDevice.mixingStation.hostname}}
-					</p>
-					<device-mixing-station-sensor-list [mixingStationStatus]="mixingStationStatus$ | async" selectable
-						[(inputModel)]="newDeviceSensor.pin">
-					</device-mixing-station-sensor-list>
-					<div
-						*ngIf="getMixingStationSensorByPin(newDeviceSensor.pin,mixingStationStatus$ | async) as sensor">
-						This sensor will use Pin: {{sensor.pin}} (Current Value: {{sensor.value}})
-					</div>
+			<ng-container *ngIf="!onboardSensor">
+				<ng-container *ngIf="configuredDevice.wirelessDevices.length > 0 else noDevices">
+					<device-wireless-device-list [configuredDevice]="configuredDevice" small selectable
+						[(inputModel)]="sensorWirelessDevice"
+						[(sensorInputModel)]="newDeviceSensor"></device-wireless-device-list>
 				</ng-container>
-				<ng-template #noStatus>
-					No mixing station assigned.
+				<ng-template #noDevices>
+					No wireless devices connected.
 				</ng-template>
 			</ng-container>
-
-
-			<div class="row">
-				<mat-radio-group aria-labelledby="example-radio-group-label" [(ngModel)]="newDeviceSensor.polarity">
-					<mat-radio-button [value]="DeviceSensorPolarity.Input" class="ml-2">
-						Read
-					</mat-radio-button>
-					<mat-radio-button [value]="DeviceSensorPolarity.Write" class="ml-2">
-						Write
-					</mat-radio-button>
-				</mat-radio-group>
-
-			</div>
-			<ng-container *ngIf="newDeviceSensor.polarity == DeviceSensorPolarity.Write">
-				<div class="row">
-					<div class="col">
-						<p class="text-muted">Set whether this sensor will start on or off</p>
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="col">
-						<div class="custom-control custom-switch">
-							<input type="checkbox" class="custom-control-input" id="customSwitches"
-								[(ngModel)]="newDeviceSensor.alwaysOn">
-							<label class="custom-control-label" for="customSwitches">Always On</label>
-						</div>
-					</div>
-
-				</div>
-			</ng-container>
-			<hr>
 		</ng-container>
 		<ng-template #unsupported>
 			<div class="container alert alert-danger mt-2">
@@ -109,7 +97,7 @@
 				supported device.
 				<br>
 				<br>
-				Current device type: {{configuredDevice.boardType}}
+				Current device type: {{configuredDevice.settings.boardType}}
 			</div>
 			<button class="m-2 btn btn-danger" mat-dialog-close>Close</button>
 		</ng-template>

@@ -1,0 +1,27 @@
+<div class="generic-list mb-2" [class.mini]="small != null">
+    <div *ngIf="selectable == null">
+        <ul class="list-group" *ngFor="let wirelessDevice of wirelessDevices">
+            <li class="list-group-item">
+                <device-wireless-device-list-item [wirelessDevice]="wirelessDevice"
+                    (onClick)="clickSelectAction(wirelessDevice)" [testable]="small != null"
+                    [(sensorInputModel)]="sensorInputModel"></device-wireless-device-list-item>
+            </li>
+        </ul>
+    </div>
+    <div *ngIf="selectable != null">
+        <mat-radio-group aria-label="Select a device" [value]="inputModel" class="w-100">
+            <ul class="list-group" *ngFor="let wirelessDevice of wirelessDevices">
+                <li class="list-group-item">
+                    <mat-radio-button [disableRipple]="true" class="d-flex w-100" (click)="clickSelectAction(wirelessDevice)"
+                        [value]="wirelessDevice">
+                        <device-wireless-device-list-item [wirelessDevice]="wirelessDevice"
+                            [(sensorInputModel)]="sensorInputModel" hideEdit></device-wireless-device-list-item>
+                    </mat-radio-button>
+                </li>
+            </ul>
+
+        </mat-radio-group>
+    </div>
+</div>
+<button *ngIf="searchable != null" class="btn btn-outline-secondary" type="button" (click)="clickSearchByHostname()"
+    [disabled]="disabled">{{searching ? 'Searching...':'Search'}}</button>

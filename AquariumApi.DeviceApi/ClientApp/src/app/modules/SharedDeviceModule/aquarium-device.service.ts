@@ -7,7 +7,7 @@ import { DeviceSensorTestRequest } from './models/DeviceSensorTestRequest';
 import { DeviceEndpoints } from './models/DeviceEndpoints';
 import { DeviceScheduledJob } from './models/DeviceScheduledJob';
 import { DeviceInformation } from './models/DeviceInformation';
-import { AquariumMixingStation } from './models/AquariumMixingStation';
+import { WirelessDevice } from './models/WirelessDevice';
 import { Observable } from 'rxjs';
 import { AquariumAccount } from './models/AquariumAccount';
 import { DeviceSensor } from './models/DeviceSensor';
@@ -15,7 +15,7 @@ import { DeviceConfiguration } from './models/DeviceConfiguration';
 
 /* Inherit correct one (either deviceAPI or AquariumDashboard) */
 import { AquariumDeviceHttpClient } from '../CoreModule/aquarium-device-client.service';
-import { AquariumMixingStationStatus } from './models/AquariumMixingStationStatus';
+import { WirelessDeviceStatus } from './models/WirelessDeviceStatus';
 import { DeviceSchedule } from 'src/app/modules/SharedDeviceModule/models/DeviceSchedule';
 
 const httpOptions = {
@@ -106,17 +106,17 @@ export class AquariumDeviceService {
     }
 
 
-    /* Mixing Station */
-    public upsertMixingStation(mixingStation: AquariumMixingStationStatus) {
+    /* Wireless Devices */
+    public upsertMixingStation(mixingStation: WirelessDevice) {
         return this.http.post(DeviceEndpoints.MIXING_STATION_UPDATE, mixingStation);
     }
-    public disconnectMixingStation() {
-        return this.http.delete(DeviceEndpoints.MIXING_STATION_DELETE);
+    public disconnectMixingStation(mixingStation: WirelessDevice) {
+        return this.http.post(DeviceEndpoints.MIXING_STATION_DELETE,mixingStation);
     }
     public getMixingStationStatus() {
         return this.http.get(DeviceEndpoints.MIXING_STATION_STATUS);
     }
-    public searchForMixingStation() {
+    public searchForMixingStation(): Observable<WirelessDevice[]> {
         return this.http.post(DeviceEndpoints.MIXING_STATION_SEARCH, null);
     }
     public stopMixingStationProcedures() {

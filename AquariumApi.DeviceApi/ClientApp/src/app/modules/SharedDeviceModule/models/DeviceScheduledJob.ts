@@ -11,8 +11,6 @@ export class DeviceScheduledJob {
   public endTime: string;
   public maximumEndTime: string;
   public updatedAt: string;
-
-  public task: DeviceScheduleTask;
 }
 
 export class RunningScheduledJob {

@@ -67,7 +67,7 @@ namespace AquariumApi.Controllers.DeviceInteraction
             }
         }
         [HttpPost("{aquariumId}/" + DeviceOutboundEndpoints.MIXING_STATION_UPDATE)]
-        public async Task<IActionResult> UpsertMixingStation(int aquariumId, [FromBody] AquariumMixingStationStatus mixingStation)
+        public async Task<IActionResult> UpsertMixingStation(int aquariumId, [FromBody] WirelessDeviceStatus mixingStation)
         {
             throw new NotImplementedException();
         }

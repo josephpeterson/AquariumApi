@@ -51,7 +51,7 @@ namespace AquariumApi.Core
         Task<ScheduledJob> StopScheduledJob(ScheduledJob scheduledJob);
 
         //DeviceMixingStationController
-        Task<AquariumMixingStationStatus> GetMixingStationStatus();
+        Task<WirelessDeviceStatus> GetMixingStationStatus();
     }
     public class DeviceClient : IDeviceClient
     {
@@ -440,14 +440,14 @@ namespace AquariumApi.Core
         #endregion
 
         #region MixingStation
-        public async Task<AquariumMixingStationStatus> GetMixingStationStatus()
+        public async Task<WirelessDeviceStatus> GetMixingStationStatus()
         {
             var path = DeviceOutboundEndpoints.MIXING_STATION_STATUS;
             using (var client = GetHttpClient())
             {
                 var result = await client.GetAsync(path);
                 ValidateResponse(result);
-                var scheduleState = JsonConvert.DeserializeObject<AquariumMixingStationStatus>(result.Content.ReadAsStringAsync().Result);
+                var scheduleState = JsonConvert.DeserializeObject<WirelessDeviceStatus>(result.Content.ReadAsStringAsync().Result);
                 return scheduleState;
             }
         }

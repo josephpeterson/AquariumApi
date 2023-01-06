@@ -1,16 +1,13 @@
 <div class="container-fluid" *ngIf="configuredDevice$ | async as configuredDevice">
     <div class="row">
-        <h4>Device Settings</h4>
-        <p>Manage advanced device configuration here.</p>
+        <div class="col">
+            <device-settings-account-list></device-settings-account-list>
+        </div>
+        <div class="col-sm">
+            <device-settings-shared-list></device-settings-shared-list>
+        </div>
     </div>
     <div class="row">
-
-        <div class="col-sm">
-            <device-configuration-card></device-configuration-card>
-        </div>
-        <div class="col">
-
-        </div>
+        <device-settings-private-list></device-settings-private-list>
     </div>
-
 </div>

@@ -16,7 +16,7 @@ namespace AquariumApi.Models.Constants
         public const string SYSTEM_LOG_CLEAR = "v1/Device/Log/Clear";
         public const string SYSTEM_FACTORY_RESET = "v1/Device/FactoryReset";
         public const string MIXING_STATION_UPDATE = "v1/Device/MixingStation";
-        public const string MIXING_STATION_DELETE = "v1/Device/MixingStation";
+        public const string MIXING_STATION_DELETE = "v1/Device/MixingStation/Delete";
         public const string MIXING_STATION_STATUS = "v1/Device/MixingStation";
         public const string MIXING_STATION_TEST_VALVE = "v1/Device/MixingStation/Test/{valveId}";
         public const string MIXING_STATION_PING = "v1/Device/MixingStation/Ping";

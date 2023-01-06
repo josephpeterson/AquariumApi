@@ -12,7 +12,7 @@ import { DeviceConnectionStatus } from './modules/SharedDeviceModule/models/Rasp
 @Component({
   selector: 'device-app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: []
 })
 export class AppComponent implements OnInit {
 

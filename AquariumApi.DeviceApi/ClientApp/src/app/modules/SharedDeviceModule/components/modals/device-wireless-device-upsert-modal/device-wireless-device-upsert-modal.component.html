@@ -1,0 +1,22 @@
+<h1 mat-dialog-title>{{wirelessDevice.id != null ? 'Edit Wireless Device':'Connect Wireless Device'}}</h1>
+<div mat-dialog-content>
+  <div class="row">
+    <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  </div>
+  <div class="row" *ngIf="wirelessDevice.id != null">
+
+  </div>
+  <div class="row" *ngIf="wirelessDevice.id == null">
+    <h3>Available Devices</h3>
+    <device-wireless-device-list [disabled]="disabled" [configuredDevice]="configuredDevice" searchable selectable
+      hideConnected [(inputModel)]="wirelessDevice" small></device-wireless-device-list>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button *ngIf="wirelessDevice.id != null" class="m-2 btn btn-danger" [disabled]="disabled"
+    (click)='clickRemoveTask()'>
+    <fa-icon [icon]="faTrashAlt"></fa-icon> Disconnect
+  </button>
+  <button [disabled]="disabled" class="m-2 btn btn-danger" mat-dialog-close>Cancel</button>
+  <button [disabled]="disabled" class="m-2 btn btn-success" (click)='clickFinishTask()'>Save</button>
+</div>

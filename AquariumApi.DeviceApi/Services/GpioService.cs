@@ -159,8 +159,6 @@ namespace AquariumApi.DeviceApi
         public void SetPinValue(DeviceSensor sensor, GpioPinValue pinValue)
         {
             var pin = Pins.First(p => p.Id == sensor.Id);
-            if(pin.AlwaysOn) //invert the value we are setting
-                pinValue = pinValue == GpioPinValue.Low ? GpioPinValue.High : GpioPinValue.Low;
             pin.Value = pinValue;
             Controller.Write(pin.Pin, pinValue);
         }

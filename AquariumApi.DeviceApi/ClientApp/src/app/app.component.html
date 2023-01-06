@@ -1,7 +1,12 @@
 <ng-container *ngIf="deviceConnection$ | async as deviceState">
   <device-nav-bar [deviceInformation]="deviceState.deviceConnection"></device-nav-bar>
   <div class="container" *ngIf="isConnected(deviceState) else notConnected ">
-    <router-outlet></router-outlet>
+    <div class="row mt-2">
+      <div class="col">
+        <router-outlet></router-outlet>
+
+      </div>
+    </div>
   </div>
   <ng-template #notConnected>
     <div *ngIf="isConnecting(deviceState) else hasError">

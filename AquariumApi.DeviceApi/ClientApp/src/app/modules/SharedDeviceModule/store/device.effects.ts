@@ -9,7 +9,7 @@ import { of } from "rxjs";
 import { switchMap, map, catchError, withLatestFrom, mergeMap } from "rxjs/operators";
 import { DeviceConfiguration } from "../models/DeviceConfiguration";
 import { DeviceInformation } from "../models/DeviceInformation";
-import { AquariumMixingStationStatus } from "../models/AquariumMixingStationStatus";
+import { WirelessDeviceStatus } from "../models/WirelessDeviceStatus";
 import { selectDeviceTypes } from "./device.selectors";
 import { DeviceSensor } from "../models/DeviceSensor";
 
@@ -47,7 +47,7 @@ export class DeviceEffects {
         this.actions$.pipe(
             ofType(connectToMixingStation),
             switchMap(() => this.aquariumDeviceService.getMixingStationStatus().pipe(
-                map((info: AquariumMixingStationStatus) => deviceMixingStationConnectionSuccess(info)),
+                map((info: WirelessDeviceStatus) => deviceMixingStationConnectionSuccess(info)),
                 catchError((d) => of(deviceMixingStationConnectionFailure(d)))
             ))
         ))

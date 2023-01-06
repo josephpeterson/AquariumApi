@@ -601,7 +601,6 @@ namespace AquariumApi.DataAccess
         public ScheduledJob UpsertDeviceScheduledJob(ScheduledJob scheduledJob)
         {
             scheduledJob.Device = null;
-            scheduledJob.Task = null;
             if (scheduledJob.Id.HasValue)
                 _dbAquariumContext.TblDeviceScheduledJob.Update(scheduledJob);
             else

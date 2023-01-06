@@ -85,12 +85,17 @@ namespace AquariumApi.DeviceApi
         }
         public DeviceConfiguration LoadDeviceConfiguration()
         {
+            return LoadDeviceConfiguration(_config);
+        }
+        public static DeviceConfiguration LoadDeviceConfiguration(IConfiguration configuration)
+        {
+            var filePath = configuration["configuration"];
             DeviceConfiguration deviceConfiguration = null;
-            if (File.Exists(_filePath))
+            if (File.Exists(filePath))
             {
                 try
                 {
-                    deviceConfiguration = JsonConvert.DeserializeObject<DeviceConfiguration>(File.ReadAllText(_filePath));
+                    deviceConfiguration = JsonConvert.DeserializeObject<DeviceConfiguration>(File.ReadAllText(filePath));
                     return deviceConfiguration;
                 }
                 catch

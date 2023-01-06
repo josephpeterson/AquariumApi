@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AquariumDeviceService } from 'src/app/modules/SharedDeviceModule/aquarium-device.service';
 import { DeviceInformation } from 'src/app/modules/SharedDeviceModule/models/DeviceInformation';
 import { DeviceConfiguration } from 'src/app/modules/SharedDeviceModule/models/DeviceConfiguration';
-import { AquariumMixingStationStatus } from 'src/app/modules/SharedDeviceModule/models/AquariumMixingStationStatus';
+import { WirelessDeviceStatus } from 'src/app/modules/SharedDeviceModule/models/WirelessDeviceStatus';
 import { Store } from '@ngrx/store';
 import { selectDeviceAccount, selectDeviceInformation, selectMixingStationConnection } from 'src/app/modules/SharedDeviceModule/store/device.selectors';
 

@@ -16,7 +16,8 @@ import { connectToDevice, deviceConnectionSuccess } from '../../../store/device.
 import { DeviceSensorPolarity } from '../../../models/DeviceSensorPolarity';
 import { DeviceSensorTypes } from '../../../models/DeviceSensorTypes';
 import { selectMixingStationConnection, selectMixingStationStatus } from '../../../store/device.selectors';
-import { AquariumMixingStationStatus } from '../../../models/AquariumMixingStationStatus';
+import { WirelessDeviceStatus } from '../../../models/WirelessDeviceStatus';
+import { WirelessDevice } from '../../../models/WirelessDevice';
 
 @Component({
   selector: 'device-sensor-upsert-modal',
@@ -27,13 +28,14 @@ export class DeviceSensorUpsertModalComponent implements OnInit {
   public mixingStationStatus$ = this.store.select(selectMixingStationConnection);
   public mixingStationConnectionStatus$ = this.store.select(selectMixingStationStatus);
   public configuredDevice: DeviceConfiguration;
-  public GpioPinTypes: typeof GpioPinTypes = GpioPinTypes;
   public newDeviceSensor: DeviceSensor = new DeviceSensor();
   public loading: boolean = false;
   public disabled: boolean = false;
   public error: string;
 
   public faTrash = faTrash;
+  public onboardSensor = true;
+  public sensorWirelessDevice: WirelessDevice = null;
 
   constructor(@Inject(MAT_DIALOG_DATA) private data,
     private dialog: MatDialog,
@@ -47,13 +49,18 @@ export class DeviceSensorUpsertModalComponent implements OnInit {
 
   }
   ngOnInit() {
+    if (this.newDeviceSensor.locationId != null) {
+      this.onboardSensor = false;
+      this.sensorWirelessDevice = this.configuredDevice.wirelessDevices.filter(x => x.id == this.newDeviceSensor.locationId)[0];
+    }
   }
   isBoardSupported() {
-    return RaspberryPiUtils.getGpioConfiguration(this.configuredDevice.boardType) != null;
+    return RaspberryPiUtils.getGpioConfiguration(this.configuredDevice.settings.boardType) != null;
   }
   clickEditSensor() {
     this.loading = true;
     delete this.error;
+    
 
     this.service.updateDeviceSensor(this.newDeviceSensor).subscribe(res => {
       this.loading = false;
@@ -97,7 +104,7 @@ export class DeviceSensorUpsertModalComponent implements OnInit {
 
     });
   }
-  getMixingStationSensorByPin(pin: number, status: AquariumMixingStationStatus) {
+  getMixingStationSensorByPin(pin: number, status: WirelessDeviceStatus) {
     if (isNaN(pin))
       return null;
     return status.valves.filter(v => v.pin == pin)[0];
