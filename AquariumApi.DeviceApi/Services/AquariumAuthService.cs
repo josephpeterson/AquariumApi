@@ -101,7 +101,7 @@ namespace AquariumApi.DeviceApi
             _logger.LogInformation($"Scheduling auth token renew...");
             if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
                 RenewTokenTick.Cancel();
-            var renewTime = Convert.ToInt32(_config["AuthTokenRenewTime"]);
+            int renewTime = _deviceConfiguration.LoadDeviceConfiguration().Settings.AuthTokenRenewTime;
             var renewOnFailure = Convert.ToBoolean(_config["AuthTokenRenewOnFailure"]);
             var delay = TimeSpan.FromHours(renewTime);
             RenewTokenTick = new CancellationTokenSource();

@@ -41,7 +41,7 @@ namespace AquariumApi.DeviceApi.Clients
             if (loginResponse == null)
                 throw new Exception("No authentication token available");
             HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
+            client.BaseAddress = new Uri(_deviceConfiguration.LoadDeviceConfiguration().Settings.AquariumServiceUrl);
             client.Timeout = TimeSpan.FromMinutes(5);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token);
             return client;

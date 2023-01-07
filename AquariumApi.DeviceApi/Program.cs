@@ -5,6 +5,7 @@ using Bifrost.IO.Ports;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using NLog.Web;
 
 namespace AquariumApi.DeviceApi

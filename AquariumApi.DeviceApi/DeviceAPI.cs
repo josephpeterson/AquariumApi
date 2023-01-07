@@ -39,17 +39,8 @@ namespace AquariumApi.DeviceApi
             if (configuredDevice == null)
             {
                 _logger.LogInformation($"No device configuration found. Applying default configuration...");
-                configuredDevice = new DeviceConfiguration();
-
-                //Apply regular settings
-                try
-                {
-                    configuredDevice = JsonConvert.DeserializeObject<DeviceConfiguration>(_configuration.GetSection("configuredDevice").ToString());
-                }
-                catch(Exception ex)
-                {
-                    _logger.LogWarning($"Could not parse 'configuredDevice' section from configuration.");
-                }
+                configuredDevice = DeviceConfigurationService.LoadDeviceConfiguration(_configuration);
+                _deviceConfiguration.SaveDeviceConfiguration(configuredDevice);
             }
             else
             {

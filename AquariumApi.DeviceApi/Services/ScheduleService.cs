@@ -517,7 +517,7 @@ namespace AquariumApi.DeviceApi
             var sensor = sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
             if (sensor == null) throw new DeviceException($"Could not locate sensor on this device by that sensor id ({testRequest.SensorId}).");
 
-            var maxTestRuntime = Convert.ToInt32(_config["DeviceSensorTestMaximumRuntime"]);
+            var maxTestRuntime = Convert.ToInt32(deviceConfiguration.Settings.DeviceSensorTestMaximumRuntime);
             if (testRequest.Runtime > maxTestRuntime) throw new DeviceException($"Runtime exceeds maximum runtime allowed (Maximum allowed: {maxTestRuntime})");
             maxTestRuntime = testRequest.Runtime;
 

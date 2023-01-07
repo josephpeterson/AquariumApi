@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -103,8 +104,18 @@ namespace AquariumApi.DeviceApi
                     return null;
                 }
             }
-            else
-                return null;
+            if(deviceConfiguration == null)
+            {
+                deviceConfiguration = new DeviceConfiguration();
+                //Apply regular settings
+                var defaultDeviceSettings = configuration.GetSection("deviceSettings").Get<DeviceConfigurationSettings>();
+                var defaultPrivateSettings = configuration.GetSection("privateDeviceSettings").Get<DeviceConfigurationPrivateSettings>();
+                if(defaultDeviceSettings != null)
+                deviceConfiguration.Settings = defaultDeviceSettings;
+                if (defaultPrivateSettings != null)
+                    deviceConfiguration.PrivateSettings = defaultPrivateSettings;
+            }
+            return deviceConfiguration;
         }
         public void RegisterService(Action setupCallback, Action cleanUpCallback = null)
         {
