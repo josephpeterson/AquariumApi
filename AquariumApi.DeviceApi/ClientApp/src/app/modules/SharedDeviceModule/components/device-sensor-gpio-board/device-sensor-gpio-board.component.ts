@@ -28,24 +28,25 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
   constructor(private aquariumDeviceService: AquariumDeviceService) {
   }
   ngOnInit() {
-    var boardModel = RaspberryPiModels.filter(x => x.name == this.configuredDevice.boardType)[0];
-    for (var i = 0; i < boardModel.gpioConfiguration.length; i++) {
-      this.gpioPorts.push(boardModel.gpioConfiguration[i].map(gpio => {
-        var boardPin = new GpioPortStatus();
-        boardPin.boardPinType = gpio;
-        boardPin.disabled = this.isPortDisabled(gpio);
-        boardPin.selected = this.inputModel == gpio;
-        var used = this.isPortUsed(gpio);
-        if (used) {
-          boardPin.used = true;
-          boardPin.sensor = used;
-        }
-        return boardPin;
-      }));
-    }
+    var boardModel = RaspberryPiModels.filter(x => x.name == this.configuredDevice.settings.boardType)[0];
+    if (boardModel)
+      for (var i = 0; i < boardModel.gpioConfiguration.length; i++) {
+        this.gpioPorts.push(boardModel.gpioConfiguration[i].map(gpio => {
+          var boardPin = new GpioPortStatus();
+          boardPin.boardPinType = gpio;
+          boardPin.disabled = this.isPortDisabled(gpio);
+          boardPin.selected = this.inputModel == gpio;
+          var used = this.isPortUsed(gpio);
+          if (used) {
+            boardPin.used = true;
+            boardPin.sensor = used;
+          }
+          return boardPin;
+        }));
+      }
   }
   isBoardSupported() {
-    return RaspberryPiUtils.getGpioConfiguration(this.configuredDevice.boardType) != null;
+    return RaspberryPiUtils.getGpioConfiguration(this.configuredDevice.settings.boardType) != null;
   }
   isPortDisabled(portType: GpioPinTypes) {
     return portType == GpioPinTypes.pwr3V || portType == GpioPinTypes.pwr5V || portType == GpioPinTypes.Ground
@@ -54,7 +55,7 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
     //check if port is in use
     var used;
     if (this.configuredDevice.sensors)
-      this.configuredDevice.sensors.filter(x => x.type == DeviceSensorTypes.Sensor).forEach(s => {
+      this.configuredDevice.sensors.filter(x => x.locationId == null).forEach(s => {
         if (s.pin == portType && s.pin != this.inputModel) {
           used = true;
           used = s;

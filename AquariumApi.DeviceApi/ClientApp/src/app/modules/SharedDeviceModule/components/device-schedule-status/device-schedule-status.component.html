@@ -20,8 +20,8 @@
             </small>
 
           </div>
-          <div class="col">
-            <h3 class="mb-0" *ngIf="scheduleState.nextTasks.length">Next Task</h3>
+          <div class="col" *ngIf="scheduleState.nextTasks[0]">
+            <h3 class="mb-0">Next Task</h3>
             <small class="text-muted">
               Next Task ETA: <b>{{readableDuration(scheduleState.nextTasks[0],scheduleState.nextTasks[0].startTime)}}</b>
               <div *ngFor="let nextTask of scheduleState.nextTasks">

@@ -1,15 +1,15 @@
 import { createReducer, on } from "@ngrx/store";
-import { AquariumMixingStationStatus } from "../models/AquariumMixingStationStatus";
+import { WirelessDeviceStatus } from "../models/WirelessDeviceStatus";
 import { DeviceInformation } from "../models/DeviceInformation";
 import { DeviceSensorTypes } from "../models/DeviceSensorTypes";
 import { DeviceConnectionStatus } from "../models/RaspberyPiModels";
-import { connectToDevice, connectToMixingStation, deviceConnectionFailure, deviceConnectionSuccess, deviceGetScheduleStatusSuccess, deviceGetSensorValuesSuccess, deviceMixingStationConnectionFailure, deviceMixingStationConnectionSuccess, deviceTypeListingSuccess, disconnectMixingStation } from "./device.actions";
+import { connectToDevice, connectToMixingStation, deviceConnectionFailure, deviceConnectionSuccess, deviceGetScheduleStatusSuccess, deviceGetSensorValuesSuccess, deviceMixingStationConnectionFailure, deviceMixingStationConnectionSuccess, deviceTypeListingSuccess} from "./device.actions";
 
 export interface DeviceConnectionState {
     error: string;
     deviceConnection: DeviceInformation,
     deviceConnectionStatus: DeviceConnectionStatus,
-    mixingStationConnection: AquariumMixingStationStatus,
+    mixingStationConnection: WirelessDeviceStatus,
     mixingStationConnectionStatus: DeviceConnectionStatus,
 
     sensorTypes: {
@@ -35,15 +35,17 @@ export const deviceReducer = createReducer(
     })),
     on(deviceGetSensorValuesSuccess, (state, { content }) => {
         var mixingStationConnection = null;
+        /* todo update wireless devices with sensor info 
         if (state.mixingStationConnection) {
             mixingStationConnection = {
                 ...state.mixingStationConnection,
                 valves: state.mixingStationConnection.valves.map(v => ({ ...v, value: content.filter(s => s.pin === v.pin && s.type == DeviceSensorTypes.MixingStation)[0]?.value }))
             }
         }
+        */
         return {
             ...state,
-            mixingStationConnection: mixingStationConnection,
+            //mixingStationConnection: mixingStationConnection,
             deviceConnection: {
                 ...state.deviceConnection,
                 configuredDevice: {
@@ -76,12 +78,6 @@ export const deviceReducer = createReducer(
         ...state,
         error: null,
         mixingStationConnectionStatus: DeviceConnectionStatus.Connecting
-    })),
-    on(disconnectMixingStation, (state) => ({
-        ...state,
-        error: null,
-        mixingStationConnection: null,
-        mixingStationConnectionStatus: DeviceConnectionStatus.Failed
     })),
     on(deviceMixingStationConnectionFailure, (state, { content }) => ({
         ...state,

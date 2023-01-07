@@ -1,0 +1,30 @@
+<div class="row" (click)="clickAction()">
+    <div class="col-auto">
+        <div>
+            <b>{{wirelessDevice.hostname ? wirelessDevice.hostname:'Unknown'}}</b>
+        </div>
+        <div class="row">
+            <div class="col" *ngIf="wirelessDevice.status as status">
+                Status: {{status.sessionId == -1 ? 'Ready':'Busy'}}
+                <device-mixing-station-stop-button *ngIf="status.sessionId != -1">
+                    Stop
+                </device-mixing-station-stop-button>
+            </div>
+            <div class="col">
+                Sensors: {{wirelessDevice.sensors.length}}
+            </div>
+            
+        </div>
+        <div class="row">
+            <device-wireless-device-sensor-list [wirelessDevice]="wirelessDevice" [testable]="testable"
+                [(inputModel)]="sensorInputModel" [selectable]="sensorInputModel != null">
+            </device-wireless-device-sensor-list>
+        </div>
+    </div>
+    <div class="col-auto">
+
+        <device-wireless-device-upsert-button [wirelessDevice]="wirelessDevice" *ngIf="hideEdit === null">
+            <fa-icon [icon]="faEdit" class="px-1"></fa-icon>Edit
+        </device-wireless-device-upsert-button>
+    </div>
+</div>

@@ -1,5 +1,5 @@
 import { createAction, props } from "@ngrx/store";
-import { AquariumMixingStationStatus } from "../models/AquariumMixingStationStatus";
+import { WirelessDeviceStatus } from "../models/WirelessDeviceStatus";
 import { DeviceInformation } from "../models/DeviceInformation";
 import { DeviceSensor } from "../models/DeviceSensor";
 export const connectToDevice = createAction(
@@ -32,16 +32,12 @@ export const connectToMixingStation = createAction(
     '[Device] Device connecting to mixing station',
     //props<{ content: string }>()
 );
-export const disconnectMixingStation = createAction(
-    '[Device] Device disconnecting mixing station',
-    //props<{ content: string }>()
-);
 export const deviceMixingStationConnectionSuccess = createAction(
-    '[Device] Device mixing station success',
-    props<AquariumMixingStationStatus>()
+    '[Device] Device wireless devices retrieve success',
+    props<WirelessDeviceStatus>()
 );
 export const deviceMixingStationConnectionFailure = createAction(
-    '[Device] Device mixing station failure',
+    '[Device] Device wireless devices retrieve failure',
     props<{ content: string }>()
 );
 export const loadDeviceTypesByType = createAction(

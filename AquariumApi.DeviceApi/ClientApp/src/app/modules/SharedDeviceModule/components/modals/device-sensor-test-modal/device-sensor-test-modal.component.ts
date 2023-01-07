@@ -5,11 +5,11 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DeviceSensor } from 'src/app/modules/SharedDeviceModule/models/DeviceSensor';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DeviceSensorTestRequest } from 'src/app/modules/SharedDeviceModule/models/DeviceSensorTestRequest';
-import { NotificationService } from 'src/app/services/notification.service';
 import { BaseException } from 'src/app/modules/SharedDeviceModule/models/BaseException';
 import { AquariumDeviceService } from '../../../aquarium-device.service';
 import { Store } from '@ngrx/store';
 import { deviceGetSensorValues } from '../../../store/device.actions';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'device-sensor-test-modal',
@@ -26,7 +26,7 @@ export class DeviceSensorTestModalComponent implements OnInit {
   constructor(@Inject(MAT_DIALOG_DATA) private data,
     private _self: MatDialogRef<DeviceSensorTestModalComponent>,
     private store: Store,
-    private notifier: NotificationService,
+    private notifier: ToastrService,
     private _aquariumService: AquariumDeviceService) {
     this.sensor = data.sensor;
   }
@@ -38,12 +38,12 @@ export class DeviceSensorTestModalComponent implements OnInit {
     this._aquariumService.testDeviceSensor(this.request).subscribe(
       (request: DeviceSensorTestRequest) => {
         console.log(request);
-        this.notifier.notify("success", `Successfully ran test for sensor: ${this.sensor.name}`);
+        this.notifier.success(`Successfully ran test for sensor: ${this.sensor.name}`);
         this.store.dispatch(deviceGetSensorValues());
       }, (err: HttpErrorResponse) => {
         var error = err.error as BaseException;
         console.log(error);
-        this.notifier.notify("error", `Could not run test for device sensor. ${error.message}`);
+        this.notifier.error(`Could not run test for device sensor. ${error.message}`);
       })
     this._self.close();
   }

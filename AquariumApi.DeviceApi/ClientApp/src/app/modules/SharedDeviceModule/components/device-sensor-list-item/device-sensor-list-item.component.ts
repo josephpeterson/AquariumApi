@@ -1,14 +1,8 @@
 import { Component, OnInit, Input } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { IconDefinition, faSync, faTrash, faEdit, faVial, faCarBattery, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
-import { Observable, Subject } from "rxjs";
-import { take } from "rxjs/operators";
-import { Aquarium } from "src/app/models/Aquarium";
-import { AquariumDevice } from "src/app/models/AquariumDevice";
 import { DeviceSensor } from "src/app/modules/SharedDeviceModule/models/DeviceSensor";
 import { GpioPinValue } from "src/app/modules/SharedDeviceModule/models/GpioPinValue";
-import { NotificationService } from "src/app/services/notification.service";
-import { DeviceSensorUpsertModalComponent } from "../modals/device-sensor-upsert-modal/device-sensor-upsert-modal.component";
 import { AquariumDeviceService } from "../../aquarium-device.service";
 import { DeviceSensorPolarity } from "../../models/DeviceSensorPolarity";
 import { selectDeviceSensorTypes } from "../../store/device.selectors";
@@ -43,7 +37,6 @@ export class DeviceSensorListItemComponent implements OnInit {
 
   constructor(private service: AquariumDeviceService,
     private store: Store,
-    public notifier: NotificationService,
     public dialog: MatDialog) { }
 
   ngOnInit() {

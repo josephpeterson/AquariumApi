@@ -22,7 +22,6 @@ namespace AquariumApi.DeviceApi
     public interface IAquariumAuthService
     {
         void Setup(Action setupCallback, Action cleanUpCallback);
-        bool IsLoggedIn();
         Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest);
         Task RenewAuthenticationToken();
         void Logout();
@@ -61,11 +60,6 @@ namespace AquariumApi.DeviceApi
             _token = JsonConvert.DeserializeObject<DeviceLoginResponse>(File.ReadAllText("login.json"));
             return _token;
         }
-        public bool IsLoggedIn()
-        {
-            return string.IsNullOrEmpty(_deviceConfiguration.LoadAccountInformation()?.Token);
-        }
-
 
         public async Task RenewAuthenticationToken()
         {
@@ -107,7 +101,7 @@ namespace AquariumApi.DeviceApi
             _logger.LogInformation($"Scheduling auth token renew...");
             if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
                 RenewTokenTick.Cancel();
-            var renewTime = Convert.ToInt32(_config["AuthTokenRenewTime"]);
+            int renewTime = _deviceConfiguration.LoadDeviceConfiguration().Settings.AuthTokenRenewTime;
             var renewOnFailure = Convert.ToBoolean(_config["AuthTokenRenewOnFailure"]);
             var delay = TimeSpan.FromHours(renewTime);
             RenewTokenTick = new CancellationTokenSource();

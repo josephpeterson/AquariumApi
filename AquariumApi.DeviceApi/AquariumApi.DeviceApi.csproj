@@ -9,16 +9,17 @@
     <FileVersion>1.0.1.0</FileVersion>
     <AssemblyVersion>1.0.1.0</AssemblyVersion>
     <Version>1.0.2</Version>
+    <StartupObject>AquariumApi.DeviceApi.Program</StartupObject>
   </PropertyGroup>
   
 
   <ItemGroup>
-    <Folder Include="Tasks\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.12" />
     <PackageReference Include="MMALSharp" Version="0.6.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.1" /> 
@@ -55,8 +56,15 @@
 
   <ItemGroup>
     <!-- Don't publish the SPA source files, but do show them in the project files list -->
+    <Compile Remove="Tasks\**" />
     <Content Remove="$(SpaRoot)**" />
+    <Content Remove="Tasks\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Tasks\**" />
+    <None Remove="Tasks\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,7 +73,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="aquarium_schedules.json" />
     <None Include="login.json" />
   </ItemGroup>
 

@@ -31,7 +31,7 @@ namespace AquariumApi.Core
         Task<ScheduleState> StopDeviceSchedule(int aquariumId);
         Task<RunningScheduledJob> PerformDeviceTask(int aquariumId,DeviceScheduleTask deviceScheduleTask);
         Task<ScheduledJob> StopScheduledJob(int aquariumId, ScheduledJob scheduledJob);
-        Task<AquariumMixingStationStatus> GetMixingStationStatus(int aquariumId);
+        Task<WirelessDeviceStatus> GetMixingStationStatus(int aquariumId);
     }
     public class AquariumDeviceInteractionService : IAquariumDeviceInteractionService
     {
@@ -121,7 +121,7 @@ namespace AquariumApi.Core
             var res = await _deviceClient.StopScheduledJob(scheduledJob);
             return res;
         }
-        public async Task<AquariumMixingStationStatus> GetMixingStationStatus(int aquariumId)
+        public async Task<WirelessDeviceStatus> GetMixingStationStatus(int aquariumId)
         {
             Configure(aquariumId);
             var res = await _deviceClient.GetMixingStationStatus();

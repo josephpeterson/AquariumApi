@@ -8,7 +8,7 @@ namespace AquariumApi.Models
 {
     public class ScheduleState {
         public bool Running { get; set; }
-        public List<ScheduledJob> NextTasks { get; set; }
+        public List<ScheduledJob> NextTasks { get; set; } = new List<ScheduledJob>();
         public List<ScheduledJob> Scheduled { get; set; } = new List<ScheduledJob>();
         public List<RunningScheduledJob> RunningJobs { get; set; } = new List<RunningScheduledJob>();
     }

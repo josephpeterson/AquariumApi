@@ -2,7 +2,6 @@ import { Component, OnInit, Input } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 import { DeviceSensor } from "src/app/modules/SharedDeviceModule/models/DeviceSensor";
-import { NotificationService } from "src/app/services/notification.service";
 import { AquariumDeviceService } from "../../aquarium-device.service";
 import { DeviceConfiguration } from "../../models/DeviceConfiguration";
 import { DeviceInformation } from "../../models/DeviceInformation";
@@ -24,7 +23,6 @@ export class DeviceScheduledJobListComponent implements OnInit {
   public readableTypes = new Subject<any>();
 
   constructor(private service: AquariumDeviceService,
-    public notifier: NotificationService,
     public dialog: MatDialog) { }
 
   ngOnInit() {

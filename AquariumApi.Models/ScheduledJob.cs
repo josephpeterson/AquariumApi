@@ -14,7 +14,7 @@ namespace AquariumApi.Models
         public DateTime? MaximumEndTime { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-        public virtual DeviceScheduleTask Task { get; set; }
+        [NotMapped]
         public virtual AquariumDevice Device { get; set; }
         [NotMapped]
         public virtual ScheduledJob PreviousJob { get; set; }

@@ -4,13 +4,13 @@ import { DeviceSchedule } from 'src/app/modules/SharedDeviceModule/models/Device
 
 import { MatDialogRef, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { faPlus, faTrash, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { NotificationService } from 'src/app/services/notification.service';
 import { AquariumDeviceService } from '../../../aquarium-device.service';
 import * as moment from 'moment';
 import { DeviceConfiguration } from '../../../models/DeviceConfiguration';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Store } from '@ngrx/store';
 import { connectToDevice } from '../../../store/device.actions';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'device-schedule-upsert-modal',
@@ -29,7 +29,7 @@ export class DeviceScheduleUpsertModalComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) private data,
     private _aquariumService: AquariumDeviceService,
     private store: Store,
-    private _notifier: NotificationService,
+    private _notifier: ToastrService,
     private _dialog: MatDialog,
     private _dialogRef: MatDialogRef<DeviceScheduleUpsertModalComponent>) {
     if (data.schedule && data.schedule.id) {
@@ -84,7 +84,7 @@ export class DeviceScheduleUpsertModalComponent implements OnInit {
       this.store.dispatch(connectToDevice());
     }, err => {
       this.disabled = false;
-      this._notifier.notify("error", "Could not delete device schedule...");
+      this._notifier.error("Could not delete device schedule...");
       console.error(err);
     });
   }

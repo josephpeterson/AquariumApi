@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 
 namespace AquariumApi.DeviceApi
 {
@@ -33,31 +32,32 @@ namespace AquariumApi.DeviceApi
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddLogging();
             // Register the Swagger generator, defining 1 or more Swagger documents
+            /*
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "AquariumDevice API", Version = "v1" });
             });
+            */
             services.AddAquariumDevice();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "ClientApp/dist";
+            });
 
-     
         }
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app,IHostingEnvironment env,DeviceAPI bootstrap,ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app,IWebHostEnvironment env,DeviceAPI bootstrap,ILogger<Startup> logger)
         {
             _logger = logger;
-
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHsts();
-            }
-
             app.UseAuthentication();
             app.UseStaticFiles();
+
+
+            app.UseSpaStaticFiles();
+
+
+
             app.UseRouting();
             app.UseCors(x => x
                .AllowAnyOrigin()
@@ -65,11 +65,21 @@ namespace AquariumApi.DeviceApi
                .AllowAnyHeader()
                );
             app.UseAuthorization();
+
+
+            /*
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aquarium Device");
                 c.RoutePrefix = "swagger";
+            });
+            */
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";
+                //if (env.IsDevelopment())
+                //  spa.UseAngularCliServer(npmScript: "start");
             });
             app.UseEndpoints(endpoints =>
             {

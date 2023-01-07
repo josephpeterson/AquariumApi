@@ -24,3 +24,4 @@ AquariumApi.DeviceApi/Properties/PublishProfiles/*
 AquariumApi/config.json
 AquariumApi/config.json
 AquariumApi.DeviceApi/config.json
+AquariumApi.DeviceApi/configured_device.json

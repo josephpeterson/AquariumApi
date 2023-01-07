@@ -1,15 +1,12 @@
 {
-  "Port": 80,
-  "DeviceKey": "testtankdevicekey",
-  "AuthTokenRenewTime": 4,
-  "AquariumCachePath": "aquarium.json",
-  //"AquariumServiceUrl": "https://aquarium-api-dev.azurewebsites.net",
-  "AquariumServiceUrl": "http://localhost:5000",
-  "ScheduleAssignmentPath": "aquarium_schedules.json",
-  "ATOMaximumRuntime": 600,
-  "WaterChangeMaximumRuntime": 30,
-  "DeviceSensorTestMaximumRuntime": 600,
-  "ATOScheduledRuntime": 90,
-  "DefaultMixingStationHostname": "mixingstation",
-  "configuration":  "configured_device.json"
+  "configuration": "configured_device.json",
+  "deviceSettings": {
+    "Port": 8080,
+    "AuthTokenRenewTime": 4,
+    "DeviceSensorTestMaximumRuntime": 600,
+    "AquariumServiceUrl": "http://localhost:5000"
+  },
+  "privateDeviceSettings": {
+    "AllowRemoteConnections": true
+  }
 }

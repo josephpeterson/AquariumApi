@@ -109,6 +109,30 @@ namespace AquariumApi.DeviceApi.Controllers
             _deviceConfiguration.SaveDeviceConfiguration(new DeviceConfiguration());
             return new OkObjectResult(_deviceConfiguration.LoadDeviceConfiguration());
         }
+        [HttpPost(DeviceOutboundEndpoints.UPDATE)]
+        public IActionResult UpdateDeviceInformation([FromBody] DeviceConfiguration configuredDevice)
+        {
+            try
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.UPDATE} called");
+                _deviceConfiguration.SaveDeviceConfiguration(configuredDevice);
+                return new OkObjectResult(_deviceConfiguration.LoadDeviceConfiguration());
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"POST {DeviceOutboundEndpoints.UPDATE} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.UPDATE} endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
 
     }
 }

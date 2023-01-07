@@ -1,0 +1,8 @@
+<div class="row" *ngIf="configuredDevice$ | async as configuredDevice">
+    <div class="col-auto" *ngFor="let sensor of wirelessDevice.sensors">
+        <device-wireless-device-sensor-list-item [valve]="sensor" [disabled]="disabled" [selectable]="selectable"
+            [tooltip]="getTooltip(sensor,configuredDevice)" [selected]="isSelected(sensor)"
+            [used]="(isUsed(sensor,configuredDevice) !== null)"
+            (onClick)="clickValve(sensor,configuredDevice)"></device-wireless-device-sensor-list-item>
+    </div>
+</div>

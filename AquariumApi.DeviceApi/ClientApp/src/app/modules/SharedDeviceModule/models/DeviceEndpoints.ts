@@ -39,7 +39,7 @@ export class DeviceEndpoints {
   static TASK_DELETE = "v1/Tasks/Delete";
 
   static MIXING_STATION_UPDATE = "v1/Device/MixingStation";
-  static MIXING_STATION_DELETE = "v1/Device/MixingStation";
+  static MIXING_STATION_DELETE = "v1/Device/MixingStation/Delete";
   static MIXING_STATION_STATUS = "v1/Device/MixingStation";
   static MIXING_STATION_PING = "v1/Device/MixingStation/Ping";
   static MIXING_STATION_TEST_VALVE = "v1/Device/MixingStation/Test/{valveId}";

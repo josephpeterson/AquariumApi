@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,12 +86,17 @@ namespace AquariumApi.DeviceApi
         }
         public DeviceConfiguration LoadDeviceConfiguration()
         {
+            return LoadDeviceConfiguration(_config);
+        }
+        public static DeviceConfiguration LoadDeviceConfiguration(IConfiguration configuration)
+        {
+            var filePath = configuration["configuration"];
             DeviceConfiguration deviceConfiguration = null;
-            if (File.Exists(_filePath))
+            if (File.Exists(filePath))
             {
                 try
                 {
-                    deviceConfiguration = JsonConvert.DeserializeObject<DeviceConfiguration>(File.ReadAllText(_filePath));
+                    deviceConfiguration = JsonConvert.DeserializeObject<DeviceConfiguration>(File.ReadAllText(filePath));
                     return deviceConfiguration;
                 }
                 catch
@@ -98,8 +104,18 @@ namespace AquariumApi.DeviceApi
                     return null;
                 }
             }
-            else
-                return null;
+            if(deviceConfiguration == null)
+            {
+                deviceConfiguration = new DeviceConfiguration();
+                //Apply regular settings
+                var defaultDeviceSettings = configuration.GetSection("deviceSettings").Get<DeviceConfigurationSettings>();
+                var defaultPrivateSettings = configuration.GetSection("privateDeviceSettings").Get<DeviceConfigurationPrivateSettings>();
+                if(defaultDeviceSettings != null)
+                deviceConfiguration.Settings = defaultDeviceSettings;
+                if (defaultPrivateSettings != null)
+                    deviceConfiguration.PrivateSettings = defaultPrivateSettings;
+            }
+            return deviceConfiguration;
         }
         public void RegisterService(Action setupCallback, Action cleanUpCallback = null)
         {

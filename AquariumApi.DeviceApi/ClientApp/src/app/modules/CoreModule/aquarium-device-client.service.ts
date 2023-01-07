@@ -15,8 +15,11 @@ export class AquariumDeviceHttpClient {
     private _url: string;
     constructor(private http: HttpClient) {
         this._url = environment.url;
+        if(this._url[this._url.length-1] != "/")
+            this._url += "/";
     }
     public get<T>(endpoint: DeviceEndpoints, body?: object): Observable<T> {
+        console.log("getting",this._url);
         return this.http.get<T>(this._url + endpoint, body);
     }
     public post<T>(endpoint: DeviceEndpoints, body?: object): Observable<T> {

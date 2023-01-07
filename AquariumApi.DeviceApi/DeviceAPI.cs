@@ -1,5 +1,7 @@
 ﻿using AquariumApi.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,12 +14,14 @@ namespace AquariumApi.DeviceApi
         private IDeviceService _deviceService;
         private ScheduleService _scheduleService;
         private IGpioService _gpioService;
+        private IConfiguration _configuration;
         private ILogger<DeviceAPI> _logger;
         private IAquariumAuthService _aquariumAuthService;
         private readonly IDeviceConfigurationService _deviceConfiguration;
 
-        public DeviceAPI(ILogger<DeviceAPI> logger,IAquariumAuthService aquariumAuthService, IDeviceConfigurationService deviceConfiguration,IDeviceService deviceService, ScheduleService scheduleService, IGpioService gpioService)
+        public DeviceAPI(IConfiguration configuration,ILogger<DeviceAPI> logger,IAquariumAuthService aquariumAuthService, IDeviceConfigurationService deviceConfiguration,IDeviceService deviceService, ScheduleService scheduleService, IGpioService gpioService)
         {
+            _configuration = configuration;
             _logger = logger;
             _aquariumAuthService = aquariumAuthService;
             _deviceConfiguration = deviceConfiguration;
@@ -35,7 +39,7 @@ namespace AquariumApi.DeviceApi
             if (configuredDevice == null)
             {
                 _logger.LogInformation($"No device configuration found. Applying default configuration...");
-                configuredDevice = new DeviceConfiguration();
+                configuredDevice = DeviceConfigurationService.LoadDeviceConfiguration(_configuration);
                 _deviceConfiguration.SaveDeviceConfiguration(configuredDevice);
             }
             else
@@ -45,14 +49,19 @@ namespace AquariumApi.DeviceApi
                 _logger.LogInformation($"-+ Sensors: {configuredDevice.Sensors.Count}");
                 _logger.LogInformation($"-+ Tasks: {configuredDevice.Tasks.Count}");
                 _logger.LogInformation($"-+ Schedules: {configuredDevice.Schedules.Count}");
-                _logger.LogInformation($"-+ Aquarium: {configuredDevice.Aquarium?.Name}");
                 _logger.LogInformation($"------------------------------------");
             }
-
-            if (_aquariumAuthService.IsLoggedIn())
+            var acc = _aquariumAuthService.GetAccount();
+            var aq = _aquariumAuthService.GetAquarium();
+            if (acc != null && aq != null)
             {
                 try
                 {
+                    _logger.LogInformation($"------------------------------------");
+                    _logger.LogInformation($"-+ Aquarium Account");
+                    _logger.LogInformation($"-+ Account: {acc.Username} {acc.Email}");
+                    _logger.LogInformation($"-+ Aquarium: {aq.Name} {aq.Gallons} gallons");
+                    _logger.LogInformation($"------------------------------------");
                     _aquariumAuthService.RenewAuthenticationToken().Wait();
                 }
                 catch (Exception ex)
