@@ -57,6 +57,7 @@ namespace AquariumApi.DeviceApi
         public void Setup()
         {
             CleanUp();
+            _gpioService.Setup();
             var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
             var schedules = deviceConfiguration.Schedules;
             var tasks = deviceConfiguration.Tasks;

@@ -16,7 +16,7 @@ import { DeviceSensorTypes } from '../../models/DeviceSensorTypes';
 export class DeviceSensorGpioBoardComponent implements OnInit {
   @Input() public configuredDevice: DeviceConfiguration;
   @Input() public selectable: any = null;
-  @Input() inputModel: GpioPinTypes;
+  @Input() inputModel: number;
   @Output() inputModelChange = new EventEmitter<GpioPinTypes>();
   @Output() onChange = new EventEmitter();
 
@@ -28,14 +28,15 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
   constructor(private aquariumDeviceService: AquariumDeviceService) {
   }
   ngOnInit() {
-    var boardModel = RaspberryPiModels.filter(x => x.name == this.configuredDevice.settings.boardType)[0];
+    var boardModel = RaspberryPiModels.filter(x => x.name.indexOf(this.configuredDevice.settings.boardType) != -1)[0];
     if (boardModel)
       for (var i = 0; i < boardModel.gpioConfiguration.length; i++) {
         this.gpioPorts.push(boardModel.gpioConfiguration[i].map(gpio => {
           var boardPin = new GpioPortStatus();
-          boardPin.boardPinType = gpio;
+          boardPin.type = gpio;
+          boardPin.logicalBoardPin = boardModel.getLogicalPinLocation(gpio);
           boardPin.disabled = this.isPortDisabled(gpio);
-          boardPin.selected = this.inputModel == gpio;
+          boardPin.selected = this.inputModel == boardPin.logicalBoardPin;
           var used = this.isPortUsed(gpio);
           if (used) {
             boardPin.used = true;
@@ -70,12 +71,13 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
       return;
     this.gpioPorts.forEach(r => r.filter(x => x.selected).forEach(x => x.selected = false));
     port.selected = true;
-    this.inputModelChange.emit(port.boardPinType);
-    this.onChange.emit(port.boardPinType);
+    this.inputModelChange.emit(port.logicalBoardPin);
+    this.onChange.emit(port.logicalBoardPin);
   }
 }
 export class GpioPortStatus {
-  public boardPinType: GpioPinTypes;
+  public type: GpioPinTypes;
+  public logicalBoardPin: number;
   public selected: boolean = false;
   public disabled: boolean = false;
   public used: boolean = false;

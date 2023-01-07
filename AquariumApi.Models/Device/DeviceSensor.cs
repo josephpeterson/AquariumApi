@@ -1,4 +1,6 @@
 ﻿
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace AquariumApi.Models
 {
     public class DeviceSensor
@@ -8,7 +10,10 @@ namespace AquariumApi.Models
         public string Name { get; set; }
         public SensorTypes Type { get; set; }
         public int? LocationId { get; set; }
+        [NotMapped]
         public GpioPinValue? Value { get; set; }
+        [NotMapped]
+        public bool Open { get; set; }
         public int Pin { get; set; }
         public bool AlwaysOn { get; set; }
         public Polarity Polarity {get; set; }

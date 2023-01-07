@@ -10,6 +10,7 @@
     <AssemblyVersion>1.0.1.0</AssemblyVersion>
     <Version>1.0.2</Version>
     <StartupObject>AquariumApi.DeviceApi.Program</StartupObject>
+    <ApplicationInsightsResourceId>/subscriptions/6ffd6d91-a51a-42f5-8302-6e68eb0cf27c/resourceGroups/aquarium/providers/microsoft.insights/components/devaquarium-api</ApplicationInsightsResourceId>
   </PropertyGroup>
   
 
@@ -18,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.12" />
     <PackageReference Include="MMALSharp" Version="0.6.0" />

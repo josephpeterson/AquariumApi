@@ -54,27 +54,35 @@ namespace AquariumApi.DeviceApi
             {
                 if (!Controller.IsPinOpen(p.Pin))
                 {
-                    Controller.OpenPin(p.Pin, p.Polarity == 0 ? PinMode.InputPullUp : PinMode.Output);
-                    p.Value = GpioPinValue.Low;
-
-                    if (p.Polarity == 0) // Input only
+                    try
                     {
-                        Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
-                            OnDeviceSensorTriggered(p,sender,pinValueChangedEventArgs)
-                        );
-                        Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Rising, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
-                            OnDeviceSensorTriggered(p, sender, pinValueChangedEventArgs)
-                        );
-                        p.Value = Controller.Read(p.Pin);
-                    }
 
-                    //default always on
-                    if (p.AlwaysOn)
+                        Controller.OpenPin(p.Pin, p.Polarity == 0 ? PinMode.InputPullUp : PinMode.Output);
+                        p.Value = GpioPinValue.Low;
+
+                        if (p.Polarity == 0) // Input only
+                        {
+                            Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Falling, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
+                                OnDeviceSensorTriggered(p, sender, pinValueChangedEventArgs)
+                            );
+                            Controller.RegisterCallbackForPinValueChangedEvent(p.Pin, PinEventTypes.Rising, (object sender, PinValueChangedEventArgs pinValueChangedEventArgs) =>
+                                OnDeviceSensorTriggered(p, sender, pinValueChangedEventArgs)
+                            );
+                            p.Value = Controller.Read(p.Pin);
+                        }
+
+                        //default always on
+                        if (p.AlwaysOn)
+                        {
+                            p.Value = GpioPinValue.High;
+                            Controller.Write(p.Pin, GpioPinValue.High);
+                        }
+
+                    }
+                    catch(Exception ex)
                     {
-                        p.Value = GpioPinValue.High;
-                        Controller.Write(p.Pin, GpioPinValue.High);
+                        _logger.LogError($"Could not open pin for device sensor ID: {p.Id} Name: {p.Name} Pin: {p.Pin}: {ex.Message}\r\n{ex.StackTrace}");
                     }
-
                 }
                 //else
                 //   _logger.LogInformation("GpioService: PreparePins: Pin is already open (" + p.Name + ")");
@@ -124,7 +132,11 @@ namespace AquariumApi.DeviceApi
         }
         public List<DeviceSensor> GetAllSensors()
         {
-            return Pins;
+            return Pins.Select(p =>
+            {
+                p.Value = GetPinValue(p);
+                return p;
+            }).ToList();
             /* var inputPins = Pins.Where(p => p.Polarity == Polarity.Input).ToList();
             inputPins.ForEach(p => {
                 var val = Controller.Read(p.Pin);
@@ -145,16 +157,7 @@ namespace AquariumApi.DeviceApi
         {
             CreateController();
             Pins.Add(deviceSensor);
-            try
-            {
-                PreparePins();
-            }
-            catch(Exception e)
-            {
-                Pins.Remove(deviceSensor);
-                _logger.LogError($"Could not register device sensor ({deviceSensor.Name} Pin Number: {deviceSensor.Pin} Polarity: {deviceSensor.Polarity})");
-                _logger.LogError(e.Message);
-            }
+            PreparePins();
         }
         public void SetPinValue(DeviceSensor sensor, GpioPinValue pinValue)
         {

@@ -81,7 +81,6 @@ namespace AquariumApi.DeviceApi
             _logger.LogInformation("Setting up services...");
             try
             {
-                _gpioService.Setup();
                 _scheduleService.Setup();
             }
             catch (Exception e)

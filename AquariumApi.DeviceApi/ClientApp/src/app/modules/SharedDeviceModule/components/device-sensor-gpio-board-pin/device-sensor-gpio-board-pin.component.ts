@@ -21,7 +21,7 @@ export class DeviceSensorGpioBoardPinComponent implements OnInit {
   ngOnInit() {
   }
   getGpioToolTip(pin: GpioPortStatus) {
-    var str = "Gpio Pin: " + pin.boardPinType;
+    var str = "Board Pin: " + pin.logicalBoardPin + " Type: " + pin.type;
     if(pin.used)
       str += "\n" + pin.sensor.name;
     return str;
