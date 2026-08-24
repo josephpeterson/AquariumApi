@@ -8,7 +8,7 @@ namespace AquariumApi.Models
         public string SessionId { get; set; }
         public long SessionStartTime { get; set; }
         public long SessionExpirationTime { get; set; }
-        public List<WirelessDeviceSensor> Valves { get; set; }
+        public List<WirelessDeviceSensor> Sensors { get; set; }
         public string Actions { get; set; }
     }
 }

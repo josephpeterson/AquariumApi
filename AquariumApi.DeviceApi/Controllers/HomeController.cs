@@ -47,11 +47,15 @@ namespace AquariumApi.DeviceApi.Controllers
                 string version = fileVersionInfo.FileVersion;
                 string productVersion = fileVersionInfo.ProductVersion;
 
+                var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+                //Get onboard sensors right away
+                deviceConfiguration.Sensors = _scheduleService.GetDeviceSensorValues(true);
+
                 var information = new DeviceInformation()
                 {
                     Version = productVersion,
                     Config = System.IO.File.ReadAllText("config.json"),
-                    ConfiguredDevice = _deviceConfiguration.LoadDeviceConfiguration(),
+                    ConfiguredDevice = deviceConfiguration,
                     Account = _deviceConfiguration.LoadAccountInformation()?.Account,
                     ScheduleStatus = _scheduleService.GetScheduleStatus()
                 };

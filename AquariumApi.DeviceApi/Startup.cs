@@ -30,7 +30,7 @@ namespace AquariumApi.DeviceApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IConfiguration>(Configuration);
-            services.AddLogging();
+            //services.AddLogging();
             // Register the Swagger generator, defining 1 or more Swagger documents
             /*
             services.AddSwaggerGen(c =>

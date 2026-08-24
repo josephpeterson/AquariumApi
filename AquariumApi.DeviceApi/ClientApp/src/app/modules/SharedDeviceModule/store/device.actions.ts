@@ -21,6 +21,17 @@ export const deviceGetSensorValuesSuccess = createAction(
     '[Device] Device Get Device Sensor Values success',
     props<any>()
 );
+export const deviceGetScheduleArchive = createAction(
+    '[Device] Device Get Schedule Archive'
+);
+export const deviceGetScheduleArchiveSuccess = createAction(
+    '[Device] Device Get Schedule Archive success',
+    props<any>()
+);
+export const deviceGetScheduleArchiveFailure = createAction(
+    '[Device] Device Get Schedule Archive failure',
+    props<any>()
+);
 export const deviceGetScheduleStatus = createAction(
     '[Device] Device Get Schedule Status'
 );

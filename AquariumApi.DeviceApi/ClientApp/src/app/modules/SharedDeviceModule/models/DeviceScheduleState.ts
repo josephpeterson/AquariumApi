@@ -6,4 +6,5 @@ export class DeviceScheduleState
   public nextTasks: DeviceScheduledJob[]
   public scheduled: DeviceScheduledJob[]
   public runningJobs: RunningScheduledJob[]
+  public jobHistory: DeviceScheduledJob[]
 }

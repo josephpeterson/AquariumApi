@@ -4,6 +4,26 @@
     <div *ngIf="error" class="alert alert-danger">{{error}}</div>
   </div>
   <div class="row" *ngIf="wirelessDevice.id != null">
+    <div class="col-auto">
+      <div class="row">
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Name</span>
+          </div>
+          <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3"
+            [(ngModel)]="wirelessDevice.name">
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Hostname</span>
+          </div>
+          <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3"
+            [(ngModel)]="wirelessDevice.hostname">
+        </div>
+      </div>
+    </div>
 
   </div>
   <div class="row" *ngIf="wirelessDevice.id == null">

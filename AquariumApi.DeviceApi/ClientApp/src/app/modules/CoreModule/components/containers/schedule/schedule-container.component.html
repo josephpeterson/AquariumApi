@@ -1,13 +1,21 @@
 <div class="row">
     <div class="col">
-        <h4>Device Schedules</h4>
+        <device-page-header>Device Schedules</device-page-header>
         <device-schedule-list [configuredDevice]="(configuredDevice$ | async)"></device-schedule-list>
         <device-schedule-upsert-button>New Schedule...</device-schedule-upsert-button>
 
     </div>
     <div class="col">
-        <h4>Device Tasks</h4>
+        <device-page-header>Device Tasks</device-page-header>
         <device-task-list [configuredDevice]="(configuredDevice$ | async)"></device-task-list>
         <device-task-upsert-button>New Task...</device-task-upsert-button>
     </div>
+</div>
+<div class="row">
+    <device-page-header>Job History</device-page-header>
+    <ng-container *ngIf="deviceInformation$ | async as deviceInformation">
+        <device-scheduled-job-list *ngIf="deviceInformation.scheduleStatus.jobHistory"
+            [deviceInformation]="deviceInformation"
+            [scheduledJobs]="deviceInformation.scheduleStatus.jobHistory"></device-scheduled-job-list>
+    </ng-container>
 </div>

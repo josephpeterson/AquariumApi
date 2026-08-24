@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -27,6 +28,7 @@ namespace AquariumApi.DeviceApi
         Task<WirelessDeviceStatus> StopWirelessDevice(WirelessDevice wirelessDevice);
         Task<WirelessDeviceStatus> TriggerWirelessDeviceSensor(WirelessDevice wirelessDevice, int valveId, GpioPinValue gpioPinValue = GpioPinValue.Low);
         Task<List<WirelessDeviceStatus>> GetWirelessDeviceStatuses();
+        Task<WirelessDeviceStatus> TriggerWirelessDeviceSensor(WirelessDevice wirelessDevice, List<WirelessDeviceSensor> sensorValues);
     }
     public class WirelessDeviceService : IWirelessDeviceService
     {
@@ -58,9 +60,12 @@ namespace AquariumApi.DeviceApi
                 throw new DeviceException($"Wireless device must contain a valid name.");
             if (string.IsNullOrEmpty(wirelessDevice.Hostname))
                 throw new DeviceException($"Wireless device must contain a valid hostname.");
+            if (deviceConfiguration.WirelessDevices.Where(t => t.Id != wirelessDevice.Id).Any(x => x.Hostname == wirelessDevice.Hostname))
+                throw new DeviceException($"Hostname is in used by another wireless device.");
 
             var wirelessDevices = deviceConfiguration.WirelessDevices.Where(t => t.Id != wirelessDevice.Id && t.Id.HasValue).ToList();
-            deviceConfiguration.WirelessDevices.Add(wirelessDevice);
+            wirelessDevices.Add(wirelessDevice);
+            deviceConfiguration.WirelessDevices = wirelessDevices;
             _deviceConfigurationService.SaveDeviceConfiguration(deviceConfiguration);
             return deviceConfiguration;
         }
@@ -81,21 +86,18 @@ namespace AquariumApi.DeviceApi
         {
             return hostnames.Select(wd =>
             {
-                var client = new HttpClient();
-                client.BaseAddress = new Uri("http://" + wd.Hostname);
+                var client = new WirelessDeviceClient(wd);
                 try
                 {
-                    var res = client.GetAsync(MixingStationEndpoints.PING).Result;
-                    WirelessDeviceStatus mixingStation = JsonConvert.DeserializeObject<WirelessDeviceStatus>(res.Content.ReadAsStringAsync().Result);
-                    if (mixingStation.Hostname == null)
-                        mixingStation.Hostname = wd.Hostname;
-                    return mixingStation;
+                    var status = client.PingDevice().Result;
+                    return status;
                 }
                 catch (Exception e)
                 {
-                    throw new DeviceException($"Could not find device by hostname '{wd.Hostname}'");
+                    _logger.LogWarning($"Could not ping wireless device {wd.Name}: {wd.Hostname}.");
+                    return null;
                 }
-            }).ToList();
+            }).Where(x => x != null).ToList();
         }
         public async Task<List<WirelessDevice>> SearchForDevices()
         {
@@ -104,7 +106,6 @@ namespace AquariumApi.DeviceApi
             var baseAddress= "192.168.1";
             List<WirelessDevice> results = new List<WirelessDevice>();
             var max = 255;
-            max = 1;
             Task[] tasks = new Task[max];
             var count = 0;
             for(var i=0;i<max;i++)
@@ -112,24 +113,20 @@ namespace AquariumApi.DeviceApi
                 var idx = i;
                 tasks[i] = Task.Run(() =>
                 {
-                    idx = 72;
                     var hostname = $"{baseAddress}.{idx}";
-                    _logger.LogInformation($"Checking {hostname}...");
-                    Ping ping = new Ping();
-                    PingOptions pingOption = new PingOptions(128, true);
-                    var reply = ping.Send(hostname, 1000);
-
-                    if (reply.Status == IPStatus.Success)
+                    //_logger.LogInformation($"Checking {hostname}...");
+                    try
                     {
-                        var cl = new HttpClient();
-                        try
+                        Ping ping = new Ping();
+                        PingOptions pingOption = new PingOptions(128, true);
+                        var reply = ping.Send(hostname, 1000);
+
+                        if (reply.Status == IPStatus.Success)
                         {
-                            var res = cl.GetAsync("http://" + hostname + MixingStationEndpoints.PING).Result;
-                            if (!res.IsSuccessStatusCode)
-                                return;
-                            var responseBody = res.Content.ReadAsStringAsync().Result;
-                            var response = JsonConvert.DeserializeObject<WirelessDeviceStatus>(responseBody);
-                            response.Hostname = hostname;
+                            var client = new WirelessDeviceClient(hostname);
+                            var cl = new HttpClient();
+
+                            var response = client.PingDevice().Result;
                             if (response != null)
                             {
                                 var existingDevice = wirelessDevices.FirstOrDefault(x => x.Hostname == response.Hostname);
@@ -140,39 +137,43 @@ namespace AquariumApi.DeviceApi
                                         Hostname = hostname,
                                     };
                                 existingDevice.Status = response;
-                                existingDevice.Sensors = response.Valves;
+                                existingDevice.Sensors = response.Sensors;
                                 existingDevice.LastConnected = DateTime.Now;
                                 results.Add(existingDevice);
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning($"Could not parse response from device. Exception: " + ex.Message + "\r\n" + ex.StackTrace);
-                        }
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        //ignore
+                    }
+                    catch (Exception ex)
+                    {
+                        //_logger.LogWarning($"Could not parse response from {hostname}. Exception: " + ex.Message);
                     }
                 });
             }
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
             return results;
         }
         public async Task<WirelessDeviceStatus> StopWirelessDevice(WirelessDevice wirelessDevice)
         {
-            var client = new HttpClient();
-            client.BaseAddress = new Uri("http://" + wirelessDevice.Hostname);
-            var res = await client.GetAsync(MixingStationEndpoints.STOP);
-            WirelessDeviceStatus status = JsonConvert.DeserializeObject<WirelessDeviceStatus>(res.Content.ReadAsStringAsync().Result);
+            var client = new WirelessDeviceClient(wirelessDevice);
+            WirelessDeviceStatus status = await client.StopWirelessDevice();
             return status;
         }
-        public async Task<WirelessDeviceStatus> TriggerWirelessDeviceSensor(WirelessDevice wirelessDevice, int valveId,GpioPinValue gpioPinValue = GpioPinValue.Low)
+        public async Task<WirelessDeviceStatus> TriggerWirelessDeviceSensor(WirelessDevice wirelessDevice, int pin,GpioPinValue gpioPinValue = GpioPinValue.Low)
         {
-            _logger.LogInformation($"Testing sensor ID: {valveId} on wireless device Hostname: {wirelessDevice.Hostname}");
-            var client = new HttpClient();
-            client.BaseAddress = new Uri("http://" + wirelessDevice.Hostname);
-            var url = MixingStationEndpoints.TEST_VALVE.AggregateParams($"{valveId}");
-            var res = await client.GetAsync(url);
-            _logger.LogInformation($"GET {url}");
-            var content = await res.Content.ReadAsStringAsync();
-            WirelessDeviceStatus status = JsonConvert.DeserializeObject<WirelessDeviceStatus>(content);
+            _logger.LogInformation($"Testing Pin: {pin} on wireless device Hostname: {wirelessDevice.Hostname}");
+            var client = new WirelessDeviceClient(wirelessDevice);
+            WirelessDeviceStatus status = await client.TriggerWirelessDeviceSensor(pin, gpioPinValue);
+            return status;
+        }
+        public async Task<WirelessDeviceStatus> TriggerWirelessDeviceSensor(WirelessDevice wirelessDevice,List<WirelessDeviceSensor> sensorValues)
+        {
+            _logger.LogInformation($"Testing multiple pins:\n\t{string.Join("\n\t",sensorValues.Select(p => $"Pin: {p.Pin} Value: {p.Value}").ToList())}\n on wireless device Hostname: {wirelessDevice.Hostname}");
+            var client = new WirelessDeviceClient(wirelessDevice);
+            WirelessDeviceStatus status = await client.TriggerWirelessDeviceSensor(sensorValues);
             return status;
         }
     }

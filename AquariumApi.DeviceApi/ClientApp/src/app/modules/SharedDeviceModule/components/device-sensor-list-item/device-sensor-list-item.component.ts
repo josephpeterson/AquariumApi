@@ -56,4 +56,6 @@ export class DeviceSensorListItemComponent implements OnInit {
     return null;
   }
   public DeviceSensorPolarity = DeviceSensorPolarity;
+  public GpioPinValue = GpioPinValue;
+
 }

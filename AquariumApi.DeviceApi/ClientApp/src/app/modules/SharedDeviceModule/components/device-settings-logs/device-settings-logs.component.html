@@ -1,7 +1,9 @@
 <h5>Filters</h5>
 <div class="row">
-  <mat-checkbox *ngFor="let filter of filters" class="p-2" [(ngModel)]="filter.value">{{filter.name}}
-  </mat-checkbox>
+  <div class="col-auto" *ngFor="let filter of filters">
+    <mat-checkbox  class="p-2" [(ngModel)]="filter.value">{{filter.name}}
+    </mat-checkbox>
+  </div>
 </div>
 <div class="card card-body ">
   <code>

@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace AquariumApi.DeviceApi
 {
@@ -19,7 +20,7 @@ namespace AquariumApi.DeviceApi
         private readonly ILogger<ScheduleService> _logger;
         private readonly DateTimeProvider _dateTimeProvider;
         private IAquariumAuthService _aquariumAuthService;
-        private IWirelessDeviceService _mixingStationService;
+        private IWirelessDeviceService _wirelessDeviceService;
         private readonly IAquariumClient _aquariumClient;
 
         public IExceptionService _exceptionService { get; }
@@ -38,7 +39,7 @@ namespace AquariumApi.DeviceApi
             ILogger<ScheduleService> logger,
             DateTimeProvider dateTimeProvider,
             IAquariumAuthService aquariumAuthService,
-            IWirelessDeviceService mixingStationService,
+            IWirelessDeviceService wirelessDeviceService,
             IAquariumClient aquariumClient,
             IExceptionService exceptionService,
             IDeviceConfigurationService deviceConfigurationService,
@@ -48,7 +49,7 @@ namespace AquariumApi.DeviceApi
             _logger = logger;
             _dateTimeProvider = dateTimeProvider;
             _aquariumAuthService = aquariumAuthService;
-            _mixingStationService = mixingStationService;
+            _wirelessDeviceService = wirelessDeviceService;
             _aquariumClient = aquariumClient;
             _exceptionService = exceptionService;
             _gpioService = gpioService;
@@ -57,20 +58,35 @@ namespace AquariumApi.DeviceApi
         public void Setup()
         {
             CleanUp();
-            _gpioService.Setup();
+            
             var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
             var schedules = deviceConfiguration.Schedules;
             var tasks = deviceConfiguration.Tasks;
-            var sensors = deviceConfiguration.Sensors;
-            _logger.LogInformation($"Schedule Information:\r\n- {schedules.Count()} Schedules found\r\n- {tasks.Count()} tasks found\r\n- {sensors.Count()} sensors found");
+            var allSensors = deviceConfiguration.Sensors;
+            var gpioSensors = allSensors.Where(x => !x.LocationId.HasValue).ToList();
+            var wirelessSensors = allSensors.Where(x => x.LocationId.HasValue).ToList();
+            _logger.LogInformation($"Sensor Information:\r\n\t{gpioSensors.Count()} onboard sensors found\r\n\t{wirelessSensors.Count()} wireless sensors found");
+            _gpioService.Setup(gpioSensors);
 
+            //Apply wireless sensors
+            var sensorsToSetup = wirelessSensors;
+            if(sensorsToSetup.Any())
+            {
+                _logger.LogInformation($"Setting up {sensorsToSetup.Count()} wireless sensors.");
+                ResetDeviceSensors(sensorsToSetup);
+            }
+
+
+
+            _logger.LogInformation($"Schedule Information:\r\n- {schedules.Count()} Schedules found\r\n- {tasks.Count()} tasks found");
             //Register all sensors
-            var listeningSensors = sensors.Where(s => s.Polarity == Polarity.Input && s.Type == SensorTypes.Sensor).ToList();
+            var listeningSensors = gpioSensors.Where(s => s.Polarity == Polarity.Input && !s.LocationId.HasValue).ToList();
             _logger.LogInformation($"{listeningSensors.Count()} readable sensors found. Registering input triggers...");
             listeningSensors.ForEach(s =>
             {
                 _logger.LogInformation($"[ScheduleService] Registering sensor callback for sensor {s.Name} Gpio Pin: {s.Pin}");
                 s.OnSensorTriggered = (sender, value) => {
+                    _logger.LogWarning($"Device Sensor {s.Name} triggered to {value}");
                     OnDeviceSensorTriggered(s);
                 };
             });
@@ -98,7 +114,10 @@ namespace AquariumApi.DeviceApi
                     while (!stoppingToken.IsCancellationRequested)
                     {
                         if (!ScheduleState.NextTasks.Any())
+                        {
+                            _logger.LogWarning($"No next tasks discovered, ending schedule.");
                             break;
+                        }
                         var nextTaskTime = ScheduleState.NextTasks.First().StartTime;
                         var eta = (nextTaskTime - _dateTimeProvider.Now);
                             string time = string.Format("{0:D2}h:{1:D2}m", eta.Hours, eta.Minutes);
@@ -130,13 +149,14 @@ namespace AquariumApi.DeviceApi
                             }
                             catch(DeviceException ex)
                             {
-                                //we probably did not need to run this
                                 _logger.LogWarning($"GenericPerformTask threw a DeviceException: {ex}");
+                                ArchiveScheduledJob(scheduledJob);
                             }
                             catch(Exception ex)
                             {
                                 _logger.LogError($"Error occured during task: {ex.Message}");
                                 _logger.LogError($"{ex.StackTrace}");
+                                ArchiveScheduledJob(scheduledJob);
                             }
                             ScheduleState.Scheduled.Remove(scheduledJob);
                         });
@@ -196,6 +216,13 @@ namespace AquariumApi.DeviceApi
                 }
             }
 
+            //Check if any sensors are busy
+            var busySensorIds = tasks.Where(t => ScheduleState.RunningJobs.Select(r => r.ScheduledJob.TaskId).Any(v => v == t.Id))
+                .SelectMany(t => t.Actions)
+                .Select(a => a.TargetSensorId);
+            if(busySensorIds.Any(s => task.Actions.Any(a => a.TargetSensorId == s)))
+                throw new DeviceException($"Task target sensors are already in use by a running job.");
+
 
 
             var maxRuntime = TimeSpan.FromSeconds(task.MaximumRuntime); //maybe switch this to job.MaximumEndTime
@@ -215,24 +242,65 @@ namespace AquariumApi.DeviceApi
             _logger.LogInformation($"[ScheduleService] Task end time: {job.MaximumEndTime}");
 
 
-            //Load wireless devices (Mixing stations)
-            var wirelessDeviceStatuses = _mixingStationService.GetWirelessDeviceStatuses().Result;
+            List<DeviceSensor> openedSensors = new List<DeviceSensor>();
 
-            //Set all sensors
-            task.Actions.ForEach(action =>
+
+            //Trigger a groupby update for all wireless devices
+            var wirelessDeviceActions = task.Actions.Where(a => sensors.First(s => s.Id == a.TargetSensorId).LocationId.HasValue).ToList();
+            var wirelessDeviceStatuses = wirelessDeviceActions.GroupBy(p => sensors.First(s => s.Id == p.TargetSensorId).LocationId,
+            (key, g) =>
             {
-                var targetSensor = sensors.First(s => s.Id == action.TargetSensorId);
-                _logger.LogInformation($"Setting device sensor {targetSensor.Name} to Value: {action.TargetSensorValue}");
-
-                if(!targetSensor.LocationId.HasValue)
-                    _gpioService.SetPinValue(targetSensor, action.TargetSensorValue);
-                else
+                var wd = deviceConfiguration.WirelessDevices.First(wd => wd.Id == key);
+                try
                 {
-                    var wirelessDevice = deviceConfiguration.WirelessDevices.FirstOrDefault(wd => wd.Id == targetSensor.LocationId);
-                    var wirelessDeviceStatus = wirelessDeviceStatuses.FirstOrDefault(wd => wd.Hostname == wirelessDevice.Hostname);
-                    _mixingStationService.TriggerWirelessDeviceSensor(wirelessDevice,wirelessDeviceStatus.Valves.First(v => v.Pin == targetSensor.Pin).Id);
+                    var wdSensors = new List<DeviceSensor>();
+                    var sensorActions = g.Select(action =>
+                    {
+                        var sensor = sensors.First(s => s.Id == action.TargetSensorId);
+                        wdSensors.Add(sensor);
+                        return new WirelessDeviceSensor()
+                        {
+                            Pin = sensor.Pin,
+                            Value = action.TargetSensorValue,
+                            Length = maxRuntime.TotalMilliseconds,
+                            InitialValue = sensor.AlwaysOn ? GpioPinValue.High : GpioPinValue.Low,
+                        };
+                    }).ToList();
+                    _logger.LogInformation($"Triggering sensors on wireless device {wd.Name} Sensor count: {sensorActions.Count()}");
+                    var status = _wirelessDeviceService.TriggerWirelessDeviceSensor(wd, sensorActions).Result;
+                    openedSensors.AddRange(wdSensors);
+                    return status;
                 }
-            });
+                catch (Exception e)
+                {
+                    ResetDeviceSensors(openedSensors);
+                    _logger.LogError(e.Message);
+                    throw new DeviceException($"Error occurred while communicating with wireless device {wd.Name} ({wd.Hostname}).");
+                }
+            }).ToList();
+
+
+            var gpioActions = task.Actions.Where(a => !sensors.First(s => s.Id == a.TargetSensorId).LocationId.HasValue).ToList();
+            //Complete GPIO Actions
+            try
+            {
+                gpioActions.ForEach(a =>
+                {
+                    var sensor = sensors.First(x => x.Id == a.TargetSensorId);
+                    openedSensors.Add(sensor);
+                    _logger.LogInformation($"Triggering onboard sensor {sensor.Name} to Value: {GpioPinValue.Low} Location: {sensor.LocationId}");
+                    if (!sensor.LocationId.HasValue)
+                        _gpioService.SetPinValue(sensor, a.TargetSensorValue);
+                });
+            }
+            catch(Exception e)
+            {
+                ResetDeviceSensors(openedSensors);
+                throw new DeviceException("Error occurred while setting GPIO values.");
+            }
+
+
+
 
             var newRunningTask = Task.Run(() =>
             {
@@ -262,8 +330,14 @@ namespace AquariumApi.DeviceApi
         }
         public RunningScheduledJob GenericPerformTask(DeviceScheduleTask task)
         {
+            var r = new Random();
+            int? v = null;
+            while (v == null)
+                v = r.Next(1000, 999999);
+
             return GenericPerformTask(new ScheduledJob()
             {
+                Id = v.Value,
                 TaskId = task.Id.Value,
                 StartTime = _dateTimeProvider.Now,
                 MaximumEndTime = _dateTimeProvider.Now.AddSeconds(task.MaximumRuntime)
@@ -272,7 +346,7 @@ namespace AquariumApi.DeviceApi
 
         public void CleanUp()
         {
-            StopAllScheduledJobs();
+            ScheduleState.RunningJobs.Select(rj => StopScheduledJob(rj.ScheduledJob, JobEndReason.ForceStop)).ToList();
             ScheduleState.Scheduled.Clear();
             Running = false;
             if(!_cancellationSource.IsCancellationRequested)
@@ -319,20 +393,9 @@ namespace AquariumApi.DeviceApi
             job.Status = JobStatus.Completed;
             job.EndReason = jobEndReason;
             job.UpdatedAt = _dateTimeProvider.Now;
-            var mixingStationStatuses = _mixingStationService.GetWirelessDeviceStatuses().Result;
-            task.Actions.ForEach(a =>
-            {
-                var targetSensor = sensors.First(x => x.Id == a.TargetSensorId);
-                _logger.LogInformation($"Resetting device sensor {targetSensor.Name} to Value: {GpioPinValue.Low} Location: {targetSensor.LocationId}");
-                if(targetSensor.Type == SensorTypes.Sensor)
-                _gpioService.SetPinValue(targetSensor, GpioPinValue.Low);
-                else if(targetSensor.Type == SensorTypes.MixingStation)
-                {
-                    var wirelessDevice = deviceConfiguration.WirelessDevices.FirstOrDefault(wd => wd.Id == targetSensor.LocationId);
-                    var wirelessDeviceStatus = mixingStationStatuses.First(s => s.Hostname == wirelessDevice.Hostname);
-                    _mixingStationService.TriggerWirelessDeviceSensor(wirelessDevice, wirelessDeviceStatus.Valves.First(v => v.Pin == targetSensor.Pin).Id);
-                }
-            });
+
+            var openedSensors = sensors.Where(s => task.Actions.Any(a => a.TargetSensorId == s.Id)).ToList();
+            ResetDeviceSensors(openedSensors);
 
             ScheduleState.RunningJobs.Remove(runningJob);
             //_ = DispatchJobStatus(job);
@@ -370,11 +433,55 @@ namespace AquariumApi.DeviceApi
                 }
                 */
             }
+            ArchiveScheduledJob(job);
             return job;
         }
-        public List<ScheduledJob> StopAllScheduledJobs()
+        private void ResetDeviceSensors(List<DeviceSensor> deviceSensors = null)
         {
-            return ScheduleState.RunningJobs.Select(rj => StopScheduledJob(rj.ScheduledJob, JobEndReason.ForceStop)).ToList();
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            if (deviceSensors == null)
+                deviceSensors = deviceConfiguration.Sensors;
+            var resetSensors = new List<DeviceSensor>();
+            deviceConfiguration.WirelessDevices.ForEach(wd =>
+            {
+                var wdSensors = deviceSensors.Where(s => s.LocationId == wd.Id)
+                .Select(s => new WirelessDeviceSensor()
+                {
+                    Pin = s.Pin,
+                    Value = s.AlwaysOn ? GpioPinValue.High : GpioPinValue.Low,
+                    InitialValue = s.AlwaysOn ? GpioPinValue.High : GpioPinValue.Low,
+                    Length = -1
+                })
+                .ToList();
+                if (!wdSensors.Any())
+                    return;
+
+                try
+                {
+                    _logger.LogInformation($"Resetting device sensors on wireless device {wd.Name} Sensor count: {wdSensors.Count()}");
+                    _wirelessDeviceService.TriggerWirelessDeviceSensor(wd, wdSensors).Wait();
+                    resetSensors.AddRange(deviceSensors.Where(s => s.LocationId == wd.Id));
+                }
+                catch(Exception e)
+                {
+                    _logger.LogWarning($"Could not reset sensors on wireless device: Id: {wd.Id} Hostname: {wd.Hostname}");
+                }
+            });
+            deviceSensors.Where(s => !s.LocationId.HasValue).ToList().ForEach(sensor =>
+            {
+                try
+                {
+                    var val = sensor.AlwaysOn ? GpioPinValue.High : GpioPinValue.Low;
+                    _logger.LogInformation($"Resetting onboard device sensor {sensor.Name} to Value: {val}");
+                    _gpioService.SetPinValue(sensor, val);
+                    resetSensors.Add(sensor);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning($"Could not reset onboard sensor {sensor.Name} Pin: {sensor.Pin}");
+                }
+            });
+            _logger.LogInformation($"Reset {resetSensors.Count()} sensor(s).");
         }
 
         #endregion
@@ -491,21 +598,30 @@ namespace AquariumApi.DeviceApi
         }
         #endregion
         #region Device Sensor CRUD
-        public List<DeviceSensor> GetDeviceSensorValues()
+        public List<DeviceSensor> GetDeviceSensorValues(bool onboardOnly = false)
         {
             var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
             var sensors = deviceConfiguration.Sensors;
             var onboardSensors = _gpioService.GetAllSensors();
             onboardSensors.ForEach(s => sensors.First(ss => ss.Id == s.Id).Value = s.Value);
 
+            if (onboardOnly)
+                return sensors;
+
             //Get wireless sensor values
-            var wirelessDeviceStatuses = _mixingStationService.GetWirelessDeviceStatuses().Result;
+            var wirelessDeviceStatuses = _wirelessDeviceService.GetWirelessDeviceStatuses().Result;
             
             sensors.Where(s => s.LocationId.HasValue).ToList().ForEach(s =>
             {
                 var wirelessDevice = deviceConfiguration.WirelessDevices.FirstOrDefault(wd => wd.Id == s.LocationId);
-                var wirelessDeviceStatus = wirelessDeviceStatuses.First(s => s.Hostname == wirelessDevice.Hostname);
-                s.Value = wirelessDeviceStatus.Valves.First(v => v.Pin == s.Pin).Value;
+                var wirelessDeviceStatus = wirelessDeviceStatuses.FirstOrDefault(s => s.Hostname == wirelessDevice.Hostname);
+                if(wirelessDeviceStatus != null)
+                    s.Value = wirelessDeviceStatus.Sensors.First(v => v.Pin == s.Pin).Value;
+            });
+
+            sensors.Where(s => !s.Value.HasValue).ToList().ForEach(s =>
+            {
+                _logger.LogWarning($"DeviceSensor {s.Name} (Pin: {s.Pin})'s value was not found onboard or wirelessly.");
             });
 
             return sensors;
@@ -514,8 +630,7 @@ namespace AquariumApi.DeviceApi
         public DeviceSensorTestRequest TestDeviceSensor(DeviceSensorTestRequest testRequest)
         {
             var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
-            var sensors = GetDeviceSensorValues();
-            var sensor = sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
+            var sensor = deviceConfiguration.Sensors.Where(s => s.Id == testRequest.SensorId).FirstOrDefault();
             if (sensor == null) throw new DeviceException($"Could not locate sensor on this device by that sensor id ({testRequest.SensorId}).");
 
             var maxTestRuntime = Convert.ToInt32(deviceConfiguration.Settings.DeviceSensorTestMaximumRuntime);
@@ -530,6 +645,7 @@ namespace AquariumApi.DeviceApi
                 sensorValue = GpioPinValue.Low;
                 endValue = GpioPinValue.High;
             }
+
             if (!sensor.LocationId.HasValue)
             {
                 _logger.LogWarning($"Testing onboard sensor ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity})");
@@ -543,15 +659,23 @@ namespace AquariumApi.DeviceApi
             {
                 _logger.LogWarning($"Testing wireless device sensor ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity})");
                 var wirelessDevice = deviceConfiguration.WirelessDevices.First(x => x.Id == sensor.LocationId);
-                _mixingStationService.TriggerWirelessDeviceSensor(wirelessDevice, sensor.Pin, sensorValue);
+
+                _wirelessDeviceService.TriggerWirelessDeviceSensor(wirelessDevice, new List<WirelessDeviceSensor>()
+                {
+                    new WirelessDeviceSensor()
+                    {
+                        Pin = sensor.Pin,
+                        Value = sensor.AlwaysOn ? GpioPinValue.Low : GpioPinValue.High,
+                        InitialValue = sensor.AlwaysOn ? GpioPinValue.High : GpioPinValue.Low,
+                        Length = TimeSpan.FromSeconds(maxTestRuntime).TotalMilliseconds
+                    }
+                });
                 testRequest.StartTime = DateTime.UtcNow;
                 Thread.Sleep(TimeSpan.FromSeconds(maxTestRuntime));
                 testRequest.EndTime = DateTime.UtcNow;
-                _mixingStationService.TriggerWirelessDeviceSensor(wirelessDevice, sensor.Pin, endValue);
+                ResetDeviceSensors(new List<DeviceSensor>() { sensor });
             }
-
-            var value = _gpioService.GetPinValue(sensor);
-            _logger.LogWarning($"Testing sensor completed ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity} Value: {value})");
+            _logger.LogWarning($"Testing sensor completed ({sensor.Name} Pin Number: {sensor.Pin} Polarity: {sensor.Polarity} Value: {endValue})");
             return testRequest;
         }
         public List<DeviceSensor> UpsertDeviceSensor(DeviceSensor deviceSensor)
@@ -570,7 +694,15 @@ namespace AquariumApi.DeviceApi
             if (string.IsNullOrEmpty(deviceSensor.Name))
                 throw new DeviceException($"Sensor must contain a valid name.");
 
-            var sensors = deviceConfiguration.Sensors.Where(t => t.Id != deviceSensor.Id && t.Id.HasValue).ToList();
+            var sensors = deviceConfiguration.Sensors
+                .Where(t => t.Id != deviceSensor.Id && t.Id.HasValue)
+                .Select(s =>
+                {
+                    s.Value = null;
+                    return s;
+                })
+                .ToList();
+            deviceSensor.Value = null;
             sensors.Add(deviceSensor);
             deviceConfiguration.Sensors = sensors.OrderBy(s => s.Name).ToList();
             _logger.LogInformation($"Saving {sensors.Count()} device sensors to device...");
@@ -591,7 +723,40 @@ namespace AquariumApi.DeviceApi
             deviceConfiguration.Sensors = deviceConfiguration.Sensors.Where(t => t.Id != deviceSensor.Id).ToList();
             _deviceConfiguration.SaveDeviceConfiguration(deviceConfiguration);
             Setup();
-            return _gpioService.GetAllSensors();
+            return deviceConfiguration.Sensors;
+        }
+        #endregion
+        #region Schedule Archive CRUD
+        public List<ScheduledJob> GetScheduledJobArchive()
+        {
+            var archivePath = _deviceConfiguration.LoadDeviceConfiguration()?.Settings.ScheduledJobArchivePath;
+            try
+            {
+                var data = File.ReadAllText(archivePath);
+                var archive = JsonConvert.DeserializeObject<List<ScheduledJob>>(data);
+                return archive;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogWarning($"Could not read scheduled jobs archive.");
+                return new List<ScheduledJob>();
+            }
+        }
+        public List<ScheduledJob> ArchiveScheduledJob(ScheduledJob scheduledJob)
+        {
+            var archivePath = _deviceConfiguration.LoadDeviceConfiguration()?.Settings.ScheduledJobArchivePath;
+            var archive = GetScheduledJobArchive();
+            archive.Add(scheduledJob);
+            File.WriteAllText(archivePath,JsonConvert.SerializeObject(archive));
+            return archive;
+        }
+        public List<ScheduledJob> RemoveScheduledJobFromArchive(ScheduledJob scheduledJob)
+        {
+            var archivePath = _deviceConfiguration.LoadDeviceConfiguration()?.Settings.ScheduledJobArchivePath;
+            var archive = GetScheduledJobArchive();
+            archive = archive.Where(j => j.Id != scheduledJob.Id).ToList();
+            File.WriteAllText(archivePath, JsonConvert.SerializeObject(archive));
+            return archive;
         }
         #endregion
         #region Private Methods
@@ -615,8 +780,15 @@ namespace AquariumApi.DeviceApi
                     schedule.Tasks.ToList().ForEach(t =>
                     {
                         var task = deviceConfiguration.Tasks.First(tt => tt.Id == t.Id);
+
+                        var r = new Random();
+                        int? v = null;
+                        while (v == null || allScheduledJobs.Any(tt => tt.Id == v))
+                            v = r.Next(1000, 999999);
+
                         var scheduledJob = new ScheduledJob()
                         {
+                            Id = v.Value,
                             TaskId = task.Id.Value,
                             StartTime = time.AddMinutes(offset)
                         };

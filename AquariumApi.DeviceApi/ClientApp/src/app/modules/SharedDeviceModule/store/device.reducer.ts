@@ -3,7 +3,7 @@ import { WirelessDeviceStatus } from "../models/WirelessDeviceStatus";
 import { DeviceInformation } from "../models/DeviceInformation";
 import { DeviceSensorTypes } from "../models/DeviceSensorTypes";
 import { DeviceConnectionStatus } from "../models/RaspberyPiModels";
-import { connectToDevice, connectToMixingStation, deviceConnectionFailure, deviceConnectionSuccess, deviceGetScheduleStatusSuccess, deviceGetSensorValuesSuccess, deviceMixingStationConnectionFailure, deviceMixingStationConnectionSuccess, deviceTypeListingSuccess} from "./device.actions";
+import { connectToDevice, connectToMixingStation, deviceConnectionFailure, deviceConnectionSuccess, deviceGetScheduleArchiveSuccess, deviceGetScheduleStatusSuccess, deviceGetSensorValuesSuccess, deviceMixingStationConnectionFailure, deviceMixingStationConnectionSuccess, deviceTypeListingSuccess } from "./device.actions";
 
 export interface DeviceConnectionState {
     error: string;
@@ -34,18 +34,8 @@ export const deviceReducer = createReducer(
         deviceConnectionStatus: DeviceConnectionStatus.Connected
     })),
     on(deviceGetSensorValuesSuccess, (state, { content }) => {
-        var mixingStationConnection = null;
-        /* todo update wireless devices with sensor info 
-        if (state.mixingStationConnection) {
-            mixingStationConnection = {
-                ...state.mixingStationConnection,
-                valves: state.mixingStationConnection.valves.map(v => ({ ...v, value: content.filter(s => s.pin === v.pin && s.type == DeviceSensorTypes.MixingStation)[0]?.value }))
-            }
-        }
-        */
         return {
             ...state,
-            //mixingStationConnection: mixingStationConnection,
             deviceConnection: {
                 ...state.deviceConnection,
                 configuredDevice: {
@@ -60,7 +50,23 @@ export const deviceReducer = createReducer(
             ...state,
             deviceConnection: {
                 ...state.deviceConnection,
-                scheduleStatus: content
+                scheduleStatus: {
+                    ...content,
+                    //Because job history is returned in another call
+                    jobHistory: state.deviceConnection?.scheduleStatus?.jobHistory
+                }
+            }
+        }
+    }),
+    on(deviceGetScheduleArchiveSuccess, (state, { content }) => {
+        return {
+            ...state,
+            deviceConnection: {
+                ...state.deviceConnection,
+                scheduleStatus: {
+                    ...state.deviceConnection?.scheduleStatus,
+                    jobHistory: content
+                }
             }
         }
     }),

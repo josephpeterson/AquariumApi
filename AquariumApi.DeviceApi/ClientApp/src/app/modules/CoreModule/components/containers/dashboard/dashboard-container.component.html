@@ -1,25 +1,27 @@
 <div *ngIf="(deviceInformation$ | async).configuredDevice as configuredDevice">
   <div class="row">
     <div class="col col-sm-4">
-      <h4>Aquarium Monitor</h4>
-      <device-aquarium-overview-card [aquarium]="configuredDevice.aquarium" [account]="account$ | async"
-        *ngIf="configuredDevice.aquarium">
-      </device-aquarium-overview-card>
-      <h4>Sensors</h4>
-      <device-sensor-list [configuredDevice]="configuredDevice" hideEdit small></device-sensor-list>
-      <h4>Wireless Devices</h4>
+      <device-page-header>Aquarium Monitor</device-page-header>
+      <div class="row mb-5">
+        <device-aquarium-overview-card [aquarium]="configuredDevice.aquarium" [account]="account$ | async">
+        </device-aquarium-overview-card>
+      </div>
+      <device-page-header>Sensors</device-page-header>
+      <div class="row mb-5">
+        <device-sensor-list [configuredDevice]="configuredDevice" hideEdit small></device-sensor-list>
+      </div>
+      <device-page-header>Wireless Devices</device-page-header>
       <device-wireless-device-list [configuredDevice]="configuredDevice"></device-wireless-device-list>
     </div>
     <div class="col">
-      <h4>Schedule Status</h4>
-      <device-schedule-status [deviceInformation]="deviceInformation$ | async"></device-schedule-status>
+      <device-page-header>Schedule Status</device-page-header>
+      <div class="row mb-5">
+        <device-schedule-status [deviceInformation]="deviceInformation$ | async"></device-schedule-status>
+      </div>
+      <device-page-header>Exceptions</device-page-header>
+      <div class="row mb-5">
+        <device-exception-list></device-exception-list>
+      </div>
     </div>
   </div>
-  <div class="row">
-    <div class="col">
-      <h4>Exceptions</h4>
-      <device-exception-list></device-exception-list>
-    </div>
-  </div>
-
 </div>

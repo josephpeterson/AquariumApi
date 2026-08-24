@@ -6,6 +6,6 @@ export class WirelessDeviceStatus {
   hostname: string;
   sessionStartTime: number;
   sessionExpirationTime: number;
-  valves: WirelessDeviceSensor[];
+  sensors: WirelessDeviceSensor[];
   actions: string;
 }

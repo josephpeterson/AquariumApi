@@ -11,5 +11,6 @@ namespace AquariumApi.Models
         public int DeviceSensorTestMaximumRuntime { get; set; }
         public string AquariumServiceUrl { get; set; }
         public int AuthTokenRenewTime { get; set; }
+        public string ScheduledJobArchivePath { get; set; }
     }
 }

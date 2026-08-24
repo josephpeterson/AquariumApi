@@ -234,5 +234,51 @@ namespace AquariumApi.Controllers
                 });
             }
         }
+        [HttpGet(DeviceOutboundEndpoints.SCHEDULE_ARCHIVE_RETRIEVE)]
+        public IActionResult GetScheduledJobArchive()
+        {
+            try
+            {
+                var scheduledJobs = _scheduleService.GetScheduledJobArchive();
+                return new OkObjectResult(scheduledJobs);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"GET {DeviceOutboundEndpoints.SCHEDULE_ARCHIVE_RETRIEVE} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GET {DeviceOutboundEndpoints.SCHEDULE_ARCHIVE_RETRIEVE} endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
+        [HttpPost(DeviceOutboundEndpoints.SCHEDULE_ARCHIVE_DELETE)]
+        public IActionResult RemoveScheduledJobFromArchive([FromBody] ScheduledJob scheduledJob)
+        {
+            try
+            {
+                var scheduledJobs = _scheduleService.RemoveScheduledJobFromArchive(scheduledJob);
+                return new OkObjectResult(scheduledJobs);
+            }
+            catch (DeviceException ex)
+            {
+                _logger.LogInformation($"DELETE {DeviceOutboundEndpoints.SCHEDULE_ARCHIVE_DELETE} endpoint caught exception: {ex.Message}");
+                return BadRequest(new DeviceException(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"DELETE {DeviceOutboundEndpoints.SCHEDULE_ARCHIVE_DELETE} endpoint caught exception: {ex.Message} Details: {ex.ToString()}");
+                _logger.LogError(ex.StackTrace);
+                return BadRequest(new DeviceException("Unknown device error occurred")
+                {
+                    Source = ex
+                });
+            }
+        }
     }
 }

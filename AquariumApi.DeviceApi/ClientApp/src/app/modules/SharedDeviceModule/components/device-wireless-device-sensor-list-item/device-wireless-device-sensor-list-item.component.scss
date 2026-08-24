@@ -1,8 +1,21 @@
-.mixing-station-sensor-active
+
+.mixing-station-sensor {
+    color: rgb(170, 168, 143);
+
+}
+.mixing-station-sensor.active
 {
     color: green;
 }
-.mixing-station-sensor-used
+.mixing-station-sensor.used
 {
-    color: purple;
+    color: darkkhaki;
+}
+.device-sensor-test-button.clickable {
+    cursor: pointer;
+
+}
+
+.device-sensor-test-button.clickable:hover {
+    color: rgb(212, 206, 114);
 }

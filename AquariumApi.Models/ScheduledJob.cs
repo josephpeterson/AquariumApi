@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AquariumApi.Models
 {
@@ -8,15 +9,12 @@ namespace AquariumApi.Models
     {
         public int DeviceId { get; set; }
         public int TaskId { get; set; }
-        public JobStatus Status { get; set; }
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public JobStatus Status { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public JobEndReason EndReason { get; set; }
         public DateTime? EndTime { get; set; }
         public DateTime? MaximumEndTime { get; set; }
         public DateTime? UpdatedAt { get; set; }
-
-        [NotMapped]
-        public virtual AquariumDevice Device { get; set; }
-        [NotMapped]
-        public virtual ScheduledJob PreviousJob { get; set; }
     }
 }

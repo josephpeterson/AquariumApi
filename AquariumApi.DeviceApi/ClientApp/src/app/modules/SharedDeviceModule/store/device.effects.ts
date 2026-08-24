@@ -3,7 +3,7 @@ import { ActivationStart } from "@angular/router";
 import { Store } from "@ngrx/store";
 import { AquariumDeviceService } from "../aquarium-device.service";
 import { SharedDeviceModuleState } from "../shared-device-module.state";
-import { connectToDevice, connectToMixingStation, deviceConnectionFailure, deviceConnectionSuccess, deviceGetScheduleStatus, deviceGetScheduleStatusSuccess, deviceGetSensorValues, deviceGetSensorValuesSuccess, deviceMixingStationConnectionFailure, deviceMixingStationConnectionSuccess, deviceTypeListingSuccess, loadDeviceTypesByType } from "./device.actions";
+import { connectToDevice, connectToMixingStation, deviceConnectionFailure, deviceConnectionSuccess, deviceGetScheduleArchive, deviceGetScheduleArchiveSuccess, deviceGetScheduleStatus, deviceGetScheduleStatusSuccess, deviceGetSensorValues, deviceGetSensorValuesSuccess, deviceMixingStationConnectionFailure, deviceMixingStationConnectionSuccess, deviceTypeListingSuccess, loadDeviceTypesByType } from "./device.actions";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { of } from "rxjs";
 import { switchMap, map, catchError, withLatestFrom, mergeMap } from "rxjs/operators";
@@ -31,7 +31,7 @@ export class DeviceEffects {
         ))
     deviceGetSensorValues = createEffect(() =>
         this.actions$.pipe(
-            ofType(deviceConnectionSuccess,deviceGetSensorValues),
+            ofType(deviceConnectionSuccess, deviceGetSensorValues),
             switchMap(() => this.aquariumDeviceService.getDeviceSensorValues().pipe(
                 map((content) => deviceGetSensorValuesSuccess({ content: content }))
             ))
@@ -41,6 +41,13 @@ export class DeviceEffects {
             ofType(deviceGetScheduleStatus),
             switchMap(() => this.aquariumDeviceService.getDeviceScheduleStatus().pipe(
                 map((content) => deviceGetScheduleStatusSuccess({ content: content }))
+            ))
+        ))
+    deviceGetScheduleArchive = createEffect(() =>
+        this.actions$.pipe(
+            ofType(deviceGetScheduleArchive),
+            switchMap(() => this.aquariumDeviceService.getScheduledJobArchive().pipe(
+                map((content) => deviceGetScheduleArchiveSuccess({ content: content }))
             ))
         ))
     connectToMixingStation = createEffect(() =>

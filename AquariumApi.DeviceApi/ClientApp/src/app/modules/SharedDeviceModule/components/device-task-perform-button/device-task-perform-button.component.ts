@@ -26,7 +26,10 @@ export class DeviceTaskPerformButtonComponent {
             this.store.dispatch(deviceGetScheduleStatus());
             this.store.dispatch(deviceGetSensorValues());
         }, err => {
-            this.notifier.error("Could not perform device task...");
+            var msg = "Could not perform device task...";
+            if(err.error?.message)
+                msg = err.error?.message;
+            this.notifier.error(msg);
             console.error(err);
         });
     }

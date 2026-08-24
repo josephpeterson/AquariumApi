@@ -1,3 +1,9 @@
-<button (click)="clickAction()" class="float-md-right btn btn-link ml-2" [disabled]="disabled">
-	<ng-content></ng-content>
-</button>
+<h1 class="device-sensor-test-button " [class.clickable]="!disabled" (click)="clickAction()">
+	<i *ngIf="sensor.value === GpioPinValue.High" class="bi"
+		[class.bi-lightbulb-fill]="sensor.polarity == DeviceSensorPolarity.Write"
+		[class.bi-diamond-fill]="sensor.polarity == DeviceSensorPolarity.Input"></i>
+	<i *ngIf="sensor.value === GpioPinValue.Low" class="bi bi-lightbulb"
+		[class.bi-lightbulb]="sensor.polarity == DeviceSensorPolarity.Write"
+		[class.bi-diamond-fill]="sensor.polarity == DeviceSensorPolarity.Input"></i>
+	<i *ngIf="sensor.value === null" class="bi bi-slash-circle"></i>
+</h1>

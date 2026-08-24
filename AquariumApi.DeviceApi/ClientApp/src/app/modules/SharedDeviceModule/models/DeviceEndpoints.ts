@@ -30,7 +30,8 @@ export class DeviceEndpoints {
   static SCHEDULE_STOP = "v1/Schedule/Stop/";
   static SCHEDULE_STATUS = "v1/Schedule/Status";
   static SCHEDULE_TASK_PERFORM = "v1/Schedule/Tasks/Perform";
-  static SCHEDULE_REMAINING_TASKS = "v1/Schedule/Tasks/Remaining";
+  static SCHEDULE_ARCHIVE_RETRIEVE = "v1/Schedule/Archive";
+  static SCHEDULE_ARCHIVE_DELETE = "v1/Schedule/Archive";
 
   static SCHEDULE_SCHEDULEDJOB_STOP = "v1/Schedule/Tasks/Stop";
 

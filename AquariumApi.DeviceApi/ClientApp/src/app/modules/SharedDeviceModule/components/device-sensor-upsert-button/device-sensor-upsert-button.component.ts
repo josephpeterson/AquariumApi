@@ -18,6 +18,7 @@ export class DeviceSensorUpsertButtonComponent {
     public configuredDevice$ = this.store.select(selectConfiguredDevice);
     @Input() sensor: DeviceSensor;
     @Input() disabled: boolean;
+    @Input() inline: any = null;
 
     public faTrash = faTrash;
     constructor(private dialog: MatDialog,

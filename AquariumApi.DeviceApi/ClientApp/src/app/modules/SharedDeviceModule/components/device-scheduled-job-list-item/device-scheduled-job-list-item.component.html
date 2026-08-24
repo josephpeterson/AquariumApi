@@ -1,14 +1,22 @@
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-4 text-truncate">
     <small class="text-muted">
-      {{task.name}}
+      {{task?.name}}
     </small>
     <!--       <device-task-list-item [task]='t'></device-task-list-item> -->
   </div>
-  <div class="col-md-auto">
+  <div class="col-md-5">
     <small class="text-muted">
-    {{getReadableTime(scheduledJob.startTime)}}
+      {{getReadableTime(scheduledJob.startTime)}}
     </small>
   </div>
-
+  <div class="col-md-auto" *ngIf="scheduledJob.endTime">
+    <small class="text-muted">
+      {{getReadableDuration(scheduledJob.startTime,scheduledJob.endTime)}}
+    </small>
+    <small class="text-muted">
+      {{scheduledJob.endReason}}
+    </small>
+    <button class="p-0 btn btn-link" (click)="clickRemoveAction()">Remove</button>
+  </div>
 </div>

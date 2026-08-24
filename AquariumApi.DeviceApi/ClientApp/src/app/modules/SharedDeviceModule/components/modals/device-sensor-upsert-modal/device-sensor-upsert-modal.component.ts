@@ -107,7 +107,7 @@ export class DeviceSensorUpsertModalComponent implements OnInit {
   getMixingStationSensorByPin(pin: number, status: WirelessDeviceStatus) {
     if (isNaN(pin))
       return null;
-    return status.valves.filter(v => v.pin == pin)[0];
+    return status.sensors.filter(v => v.pin == pin)[0];
   }
   DeviceSensorPolarity = DeviceSensorPolarity;
   DeviceSensorTypes = DeviceSensorTypes;

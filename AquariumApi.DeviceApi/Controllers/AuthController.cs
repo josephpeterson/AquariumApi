@@ -14,7 +14,6 @@ using Microsoft.Extensions.Logging;
 namespace AquariumApi.DeviceApi.Controllers
 {
     [ApiController]
-    [DisableCors]
     public class AuthController : Controller
     {
         private IDeviceService _deviceService;

@@ -1,5 +1,6 @@
 {
   "configuration": "configured_device.json",
+  "ScheduledJobArchivePath": "scheduled_jobs_archive.json",
   "deviceSettings": {
     "Port": 8080,
     "AuthTokenRenewTime": 4,

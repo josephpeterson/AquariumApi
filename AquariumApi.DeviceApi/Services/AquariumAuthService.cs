@@ -30,7 +30,6 @@ namespace AquariumApi.DeviceApi
     }
     public class AquariumAuthService : IAquariumAuthService
     {
-        private IConfiguration _config;
         private ILogger<AquariumAuthService> _logger;
         private readonly IDeviceConfigurationService _deviceConfiguration;
         private DeviceLoginResponse _token;
@@ -39,104 +38,20 @@ namespace AquariumApi.DeviceApi
 
         public CancellationTokenSource RenewTokenTick { get; private set; }
 
-        public AquariumAuthService(IConfiguration config
-            , ILogger<AquariumAuthService> logger
+        public AquariumAuthService(ILogger<AquariumAuthService> logger
             , IDeviceConfigurationService deviceConfigurationService
             )
         {
-            _config = config;
             _logger = logger;
             _deviceConfiguration = deviceConfigurationService;
         }
-        private void SaveTokenToCache(DeviceLoginResponse deviceLoginResponse)
-        {
-            _token = deviceLoginResponse;
-            File.WriteAllText("login.json", JsonConvert.SerializeObject(deviceLoginResponse));
-        }
-        private DeviceLoginResponse LoadTokenFromCache()
-        {
-            if (!File.Exists("login.json")) return null;
-
-            _token = JsonConvert.DeserializeObject<DeviceLoginResponse>(File.ReadAllText("login.json"));
-            return _token;
-        }
-
-        public async Task RenewAuthenticationToken()
-        {
-            if (_token == null)
-                throw new Exception("No authentication token available");
-
-            _logger.LogInformation("Renewing authentication token...");
-            var path = AquariumApiEndpoints.AUTH_RENEW;
-            var retries = 3;
-            using (var client = new HttpClient())
-            {
-                HttpResponseMessage result = null;
-                client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
-                client.Timeout = TimeSpan.FromMinutes(5);
-
-                for(var i=0;i<retries;i++)
-                {
-                    result = await client.GetAsync(path);
-                    if (result.IsSuccessStatusCode)
-                        break;
-                }
-                if(result == null || !result.IsSuccessStatusCode)
-                    throw new Exception($"Could not renew authentication token after {retries} connection attempts.");
-
-
-                _logger.LogInformation("Authentication Token Successfully Renewed");
-
-                var res = await result.Content.ReadAsStringAsync();
-                var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
-                SaveTokenToCache(response);
-                ScheduleRenewToken();
-                //RequestAquariumDeviceFromService();
-            }
-    
-        }
-        private void ScheduleRenewToken()
-        {
-            _logger.LogInformation($"Scheduling auth token renew...");
-            if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
-                RenewTokenTick.Cancel();
-            int renewTime = _deviceConfiguration.LoadDeviceConfiguration().Settings.AuthTokenRenewTime;
-            var renewOnFailure = Convert.ToBoolean(_config["AuthTokenRenewOnFailure"]);
-            var delay = TimeSpan.FromHours(renewTime);
-            RenewTokenTick = new CancellationTokenSource();
-            CancellationToken ct = RenewTokenTick.Token;
-            _ = Task.Run(() =>
-            {
-                try
-                {
-                    string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
-                    _logger.LogInformation($"Renewing auth token in {time}");
-                    Thread.Sleep(delay);
-                    if (ct.IsCancellationRequested)
-                        return;
-                    RenewAuthenticationToken().Wait();
-                }
-                catch(Exception e)
-                {
-                    _logger.LogCritical("Renew Authentication Token: Error Occurred:");
-                    _logger.LogCritical(e.Message);
-                    _logger.LogCritical(e.StackTrace);
-                    if (renewOnFailure)
-                        ScheduleRenewToken();
-                }
-
-            }).ConfigureAwait(false);//Fire and forget
-        }
-        /* Attempt to retrieve login token */
-        /* First attempt will log user with no aquarium */
-        /* Second attempt will select an aquarium */
         public async Task<DeviceLoginResponse> AttemptLogin(DeviceLoginRequest loginRequest)
         {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
             var path = AquariumApiEndpoints.AUTH_LOGIN_DEVICE;
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri(_config["AquariumServiceUrl"]);
+                client.BaseAddress = new Uri(deviceConfiguration.Settings.AquariumServiceUrl);
                 client.Timeout = TimeSpan.FromMinutes(5);
 
                 var httpContent = new StringContent(JsonConvert.SerializeObject(loginRequest), Encoding.UTF8, "application/json");
@@ -183,5 +98,74 @@ namespace AquariumApi.DeviceApi
         {
             return _token?.Account;
         }
+
+        public async Task RenewAuthenticationToken()
+        {
+            if (_token == null)
+                throw new Exception("No authentication token available");
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            _logger.LogInformation("Renewing authentication token...");
+            var path = AquariumApiEndpoints.AUTH_RENEW;
+            var retries = 3;
+            using (var client = new HttpClient())
+            {
+                HttpResponseMessage result = null;
+                client.BaseAddress = new Uri(deviceConfiguration.Settings.AquariumServiceUrl);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
+                client.Timeout = TimeSpan.FromMinutes(5);
+
+                for (var i = 0; i < retries; i++)
+                {
+                    result = await client.GetAsync(path);
+                    if (result.IsSuccessStatusCode)
+                        break;
+                }
+                if (result == null || !result.IsSuccessStatusCode)
+                    throw new Exception($"Could not renew authentication token after {retries} connection attempts.");
+
+
+                _logger.LogInformation("Authentication Token Successfully Renewed");
+
+                var res = await result.Content.ReadAsStringAsync();
+                var response = JsonConvert.DeserializeObject<DeviceLoginResponse>(res);
+                ScheduleRenewToken();
+                //RequestAquariumDeviceFromService();
+            }
+
+        }
+        private void ScheduleRenewToken()
+        {
+            var deviceConfiguration = _deviceConfiguration.LoadDeviceConfiguration();
+            _logger.LogInformation($"Scheduling auth token renew...");
+            if (RenewTokenTick != null && !RenewTokenTick.IsCancellationRequested)
+                RenewTokenTick.Cancel();
+            int renewTime = deviceConfiguration.Settings.AuthTokenRenewTime;
+            var delay = TimeSpan.FromHours(renewTime);
+            RenewTokenTick = new CancellationTokenSource();
+            CancellationToken ct = RenewTokenTick.Token;
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    string time = string.Format("{0:D2}h:{1:D2}m", delay.Hours, delay.Minutes);
+                    _logger.LogInformation($"Renewing auth token in {time}");
+                    Thread.Sleep(delay);
+                    if (ct.IsCancellationRequested)
+                        return;
+                    RenewAuthenticationToken().Wait();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogCritical("Renew Authentication Token: Error Occurred:");
+                    _logger.LogCritical(e.Message);
+                    _logger.LogCritical(e.StackTrace);
+                }
+
+            }).ConfigureAwait(false);//Fire and forget
+        }
+        /* Attempt to retrieve login token */
+        /* First attempt will log user with no aquarium */
+        /* Second attempt will select an aquarium */
     }
+
 }

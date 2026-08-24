@@ -26,6 +26,8 @@ import { DeviceLoginButton } from "./components/shared/login-button/login-button
 import { DeviceLoginModalComponent } from "./components/shared/login-modal/login-modal.component";
 import { NavBarComponent as DeviceNavBarComponent } from "./components/shared/nav-bar/nav-bar.component";
 import { DeviceSettingsPrivateListComponent } from "./components/shared/device-settings-private-list/device-settings-private-list.component";
+import { DevicePageHeaderComponent } from "./components/shared/device-page-header/device-page-header.component";
+import { DevicePageLayoutComponent } from "./components/shared/device-page-layout/device-page-layout.component";
 
 
 @NgModule({
@@ -50,6 +52,8 @@ import { DeviceSettingsPrivateListComponent } from "./components/shared/device-s
     //Dashboard
     DashboardContainerComponent,
     DeviceAquariumOverviewCardComponent,
+    DevicePageHeaderComponent,
+    DevicePageLayoutComponent,
     
 
     //Sensors

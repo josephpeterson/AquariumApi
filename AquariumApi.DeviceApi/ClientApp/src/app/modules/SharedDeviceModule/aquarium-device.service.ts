@@ -49,6 +49,7 @@ export class AquariumDeviceService {
     public factoryReset() {
         return this.http.post(DeviceEndpoints.SYSTEM_FACTORY_RESET);
     }
+
     /* Device */
     public getDeviceInformation(): Observable<DeviceInformation> {
         return this.http.get(DeviceEndpoints.PING);
@@ -74,6 +75,25 @@ export class AquariumDeviceService {
     public stopScheduledJob(scheduledJob: DeviceScheduledJob) {
         return this.http.post(DeviceEndpoints.SCHEDULE_SCHEDULEDJOB_STOP, scheduledJob);
     }
+    public upsertDeviceSchedule(deviceSchedule: DeviceSchedule) {
+        return this.http.post<DeviceSchedule[]>(DeviceEndpoints.SCHEDULE_UPSERT, deviceSchedule);
+    }
+    public deleteDeviceSchedule(deviceSchedule: DeviceSchedule) {
+        return this.http.post<DeviceSchedule[]>(DeviceEndpoints.SCHEDULE_DELETE, deviceSchedule);
+    }
+    public upsertDeviceTask(deviceTask: DeviceScheduleTask) {
+        return this.http.post<DeviceScheduleTask>(DeviceEndpoints.TASK_UPSERT, deviceTask);
+    }
+    public deleteDeviceTask(deviceTask: DeviceScheduleTask) {
+        return this.http.post(DeviceEndpoints.TASK_DELETE, deviceTask);
+    }
+    public getScheduledJobArchive(): Observable<DeviceScheduledJob[]> {
+        console.log("Getting scheduled job archive...");
+        return this.http.get(DeviceEndpoints.SCHEDULE_ARCHIVE_RETRIEVE);
+    }
+    public removeScheduledJobFromArchive(scheduledJob: DeviceScheduledJob) {
+        return this.http.post(DeviceEndpoints.SCHEDULE_ARCHIVE_DELETE,scheduledJob);
+    }
 
     /* Device Sensors */
     public deleteDeviceSensor(deviceSensor: DeviceSensor) {
@@ -91,27 +111,12 @@ export class AquariumDeviceService {
         return this.http.post(DeviceEndpoints.SENSOR_RETRIEVE);
     }
 
-    /* Device Schedule */
-    public upsertDeviceSchedule(deviceSchedule: DeviceSchedule) {
-        return this.http.post<DeviceSchedule[]>(DeviceEndpoints.SCHEDULE_UPSERT, deviceSchedule);
-    }
-    public deleteDeviceSchedule(deviceSchedule: DeviceSchedule) {
-        return this.http.post<DeviceSchedule[]>(DeviceEndpoints.SCHEDULE_DELETE, deviceSchedule);
-    }
-    public upsertDeviceTask(deviceTask: DeviceScheduleTask) {
-        return this.http.post<DeviceScheduleTask>(DeviceEndpoints.TASK_UPSERT, deviceTask);
-    }
-    public deleteDeviceTask(deviceTask: DeviceScheduleTask) {
-        return this.http.post(DeviceEndpoints.TASK_DELETE, deviceTask);
-    }
-
-
     /* Wireless Devices */
     public upsertMixingStation(mixingStation: WirelessDevice) {
         return this.http.post(DeviceEndpoints.MIXING_STATION_UPDATE, mixingStation);
     }
     public disconnectMixingStation(mixingStation: WirelessDevice) {
-        return this.http.post(DeviceEndpoints.MIXING_STATION_DELETE,mixingStation);
+        return this.http.post(DeviceEndpoints.MIXING_STATION_DELETE, mixingStation);
     }
     public getMixingStationStatus() {
         return this.http.get(DeviceEndpoints.MIXING_STATION_STATUS);

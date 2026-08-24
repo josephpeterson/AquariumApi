@@ -1,8 +1,12 @@
 <div (click)="clickValve()"
+    class="mixing-station-sensor"
     [matTooltip]="(tooltip != null ? tooltip:selectable != null ? 'Select Sensor ' + valve.id:null)"
-    [class.mixing-station-sensor-active]="selected === true"
-    [class.mixing-station-sensor-used]="used == true">
-    <i class="bi" [class.bi-lightning]="used == true" [class.bi-lightning-fill]="valve.value && used == true"
-        [class.bi-check-circle]="valve.value || selected === true && !used"
-        [class.bi-circle]="selected != true && !valve.value && !used"></i>
+    [class.active]="selected === true" [class.used]="used == true">
+
+    <h1 class="device-sensor-test-button " [class.clickable]="!disabled">
+        <i *ngIf="valve.value === GpioPinValue.High && (used || (selected === true && !used))" class="bi bi-lightbulb-fill"></i>
+        <i *ngIf="valve.value === GpioPinValue.Low  && (used || (selected === true && !used))" class="bi bi-lightbulb"></i>
+        <i *ngIf="selected != true && valve.value === GpioPinValue.High && !used" class="bi bi-lightbulb-off-fill"></i>
+        <i *ngIf="selected != true && valve.value === GpioPinValue.Low && !used" class="bi bi-lightbulb-off"></i>
+    </h1>
 </div>

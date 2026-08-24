@@ -15,7 +15,7 @@
             </ng-template>
 
           </div>
-          <div class="col">
+          <div class="col" *ngIf="aquarium">
             <h3>Aquarium</h3>
             <span>{{aquarium.name}}</span>
             <span>Size: {{aquarium.gallons}} gallons</span>

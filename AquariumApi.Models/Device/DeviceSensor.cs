@@ -1,5 +1,6 @@
 ﻿
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AquariumApi.Models
 {
@@ -10,18 +11,16 @@ namespace AquariumApi.Models
         public string Name { get; set; }
         public SensorTypes Type { get; set; }
         public int? LocationId { get; set; }
-        [NotMapped]
         public GpioPinValue? Value { get; set; }
-        [NotMapped]
-        public bool Open { get; set; }
         public int Pin { get; set; }
         public bool AlwaysOn { get; set; }
-        public Polarity Polarity {get; set; }
+        public Polarity Polarity { get; set; }
 
-        public delegate void SensorTriggered(object sender,int value);
+        public delegate void SensorTriggered(object sender, GpioPinValue value);
 
 
-        public SensorTriggered OnSensorTriggered;
+        [JsonIgnore]
+        public virtual SensorTriggered OnSensorTriggered { get; set; }
 
     }
     public enum SensorTypes

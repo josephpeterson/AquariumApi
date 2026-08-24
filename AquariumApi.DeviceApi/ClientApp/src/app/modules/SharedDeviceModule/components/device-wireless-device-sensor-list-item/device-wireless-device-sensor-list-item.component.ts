@@ -8,6 +8,7 @@ import { WirelessDeviceStatus } from '../../models/WirelessDeviceStatus';
 import { Store } from '@ngrx/store';
 import { connectToDevice, connectToMixingStation } from '../../store/device.actions';
 import { WirelessDeviceSensor } from '../../models/WirelessDeviceSensor';
+import { GpioPinValue } from '../../models/GpioPinValue';
 @Component({
   selector: 'device-wireless-device-sensor-list-item',
   templateUrl: './device-wireless-device-sensor-list-item.component.html',
@@ -32,4 +33,5 @@ export class DeviceWirelessDeviceSensorListItemComponent implements OnInit {
   public clickValve() {
     this.onClick.emit(this.valve);
   }
+  public GpioPinValue = GpioPinValue;
 }

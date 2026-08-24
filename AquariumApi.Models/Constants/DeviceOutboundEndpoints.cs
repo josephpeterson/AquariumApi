@@ -49,7 +49,8 @@ namespace AquariumApi.Models.Constants
         public const string SCHEDULE_STOP = "v1/Schedule/Stop/";
         public const string SCHEDULE_STATUS = "v1/Schedule/Status/";
         public const string SCHEDULE_TASK_PERFORM = "v1/Schedule/Tasks/Perform";
-        public const string SCHEDULE_REMAINING_TASKS = "v1/Schedule/Tasks/Remaining";
+        public const string SCHEDULE_ARCHIVE_RETRIEVE = "v1/Schedule/Archive";
+        public const string SCHEDULE_ARCHIVE_DELETE = "v1/Schedule/Archive";
 
         public const string SCHEDULE_SCHEDULEDJOB_STOP = "v1/Schedule/Tasks/Stop";
 

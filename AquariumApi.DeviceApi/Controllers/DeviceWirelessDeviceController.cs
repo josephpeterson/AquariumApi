@@ -15,15 +15,15 @@ using Microsoft.Extensions.Logging;
 namespace AquariumApi.DeviceApi.Controllers
 {
     [ApiController]
-    public class DeviceMixingStationController : Controller
+    public class DeviceWirelessDeviceController : Controller
     {
-        private ILogger<DeviceMixingStationController> _logger;
+        private ILogger<DeviceWirelessDeviceController> _logger;
         private IConfiguration _config;
         private IWirelessDeviceService _wirelessDeviceService;
 
-        public DeviceMixingStationController(
+        public DeviceWirelessDeviceController(
             IWirelessDeviceService mixingStationService,
-            ILogger<DeviceMixingStationController> logger, IConfiguration config)
+            ILogger<DeviceWirelessDeviceController> logger, IConfiguration config)
         {
             _logger = logger;
             _config = config;
@@ -61,6 +61,7 @@ namespace AquariumApi.DeviceApi.Controllers
             }
             catch (DeviceException ex)
             {
+                _logger.LogError($"POST {DeviceOutboundEndpoints.MIXING_STATION_SEARCH} endpoint caught exception: { ex.Message } Details: { ex.ToString() }");
                 return BadRequest(new DeviceException(ex.Message));
             }
             catch (Exception ex)

@@ -5,6 +5,7 @@ import { DeviceSensor } from "src/app/modules/SharedDeviceModule/models/DeviceSe
 import { AquariumDeviceService } from "../../aquarium-device.service";
 import { DeviceConfiguration } from "../../models/DeviceConfiguration";
 import { DeviceInformation } from "../../models/DeviceInformation";
+import { DeviceScheduledJob } from "../../models/DeviceScheduledJob";
 
 @Component({
   selector: 'device-scheduled-job-list',
@@ -14,6 +15,7 @@ import { DeviceInformation } from "../../models/DeviceInformation";
 export class DeviceScheduledJobListComponent implements OnInit {
 
   @Input() public deviceInformation: DeviceInformation;
+  @Input() public scheduledJobs: DeviceScheduledJob[] = null;
 
   public loading: boolean = false;
   public error: string;
@@ -26,14 +28,9 @@ export class DeviceScheduledJobListComponent implements OnInit {
     public dialog: MatDialog) { }
 
   ngOnInit() {
-  }
-  getSensorReadableType(types, type: string) {
-    if (!types) return "------";
-    for (var i = 0; i < types.length; i++) {
-      var t = types[i];
-      if (t.value == type)
-        return t.key;
+    if(this.scheduledJobs == null)
+    {
+      this.scheduledJobs = this.deviceInformation.scheduleStatus.scheduled;
     }
-    return "Unknown";
   }
 }

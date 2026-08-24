@@ -1,5 +1,11 @@
-<ng-container *ngIf="(configuredDevice$ | async) as device">
-	<button (click)="clickAction(device)" class="float-md-right btn btn-link ml-2" [disabled]="disabled">
+<ng-container *ngIf="inline !== null else normal">
+	<span *ngIf="(configuredDevice$ | async) as device" (click)="clickAction(device)">
+		<ng-content></ng-content>
+	</span>
+</ng-container>
+<ng-template #normal>
+	<button *ngIf="(configuredDevice$ | async) as device" (click)="clickAction(device)" class="btn btn-link"
+		[disabled]="disabled">
 		<ng-content></ng-content>
 	</button>
-</ng-container>
+</ng-template>

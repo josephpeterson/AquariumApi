@@ -1,6 +1,7 @@
+import { GpioPinValue } from "./GpioPinValue";
+
 export class WirelessDeviceSensor {
   id: number;
   pin: number;
-  value: boolean;
-
+  value: GpioPinValue;
 }

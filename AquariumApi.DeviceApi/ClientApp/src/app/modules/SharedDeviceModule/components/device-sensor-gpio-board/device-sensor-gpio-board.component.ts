@@ -19,6 +19,7 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
   @Input() inputModel: number;
   @Output() inputModelChange = new EventEmitter<GpioPinTypes>();
   @Output() onChange = new EventEmitter();
+  public boardModel;
 
   public gpioPorts: Array<Array<GpioPortStatus>> = [];
 
@@ -28,13 +29,13 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
   constructor(private aquariumDeviceService: AquariumDeviceService) {
   }
   ngOnInit() {
-    var boardModel = RaspberryPiModels.filter(x => x.name.indexOf(this.configuredDevice.settings.boardType) != -1)[0];
-    if (boardModel)
-      for (var i = 0; i < boardModel.gpioConfiguration.length; i++) {
-        this.gpioPorts.push(boardModel.gpioConfiguration[i].map(gpio => {
+    this.boardModel = RaspberryPiModels.filter(x => x.name.indexOf(this.configuredDevice.settings.boardType) != -1)[0];
+    if (this.boardModel)
+      for (var i = 0; i < this.boardModel.gpioConfiguration.length; i++) {
+        this.gpioPorts.push(this.boardModel.gpioConfiguration[i].map(gpio => {
           var boardPin = new GpioPortStatus();
           boardPin.type = gpio;
-          boardPin.logicalBoardPin = boardModel.getLogicalPinLocation(gpio);
+          boardPin.logicalBoardPin = this.boardModel.getLogicalPinLocation(gpio);
           boardPin.disabled = this.isPortDisabled(gpio);
           boardPin.selected = this.inputModel == boardPin.logicalBoardPin;
           var used = this.isPortUsed(gpio);
@@ -57,7 +58,7 @@ export class DeviceSensorGpioBoardComponent implements OnInit {
     var used;
     if (this.configuredDevice.sensors)
       this.configuredDevice.sensors.filter(x => x.locationId == null).forEach(s => {
-        if (s.pin == portType && s.pin != this.inputModel) {
+        if (s.pin == this.boardModel.getLogicalPinLocation(portType) && s.pin != this.inputModel) {
           used = true;
           used = s;
         }

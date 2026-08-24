@@ -94,15 +94,7 @@ namespace AquariumApi.DeviceApi
             DeviceConfiguration deviceConfiguration = null;
             if (File.Exists(filePath))
             {
-                try
-                {
-                    deviceConfiguration = JsonConvert.DeserializeObject<DeviceConfiguration>(File.ReadAllText(filePath));
-                    return deviceConfiguration;
-                }
-                catch
-                {
-                    return null;
-                }
+                deviceConfiguration = JsonConvert.DeserializeObject<DeviceConfiguration>(File.ReadAllText(filePath));
             }
             if(deviceConfiguration == null)
             {

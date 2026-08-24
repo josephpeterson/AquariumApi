@@ -85,6 +85,7 @@ import {MatSlideToggleModule} from '@angular/material/slide-toggle';
         DeviceScheduleListComponent,
         DeviceTaskUpsertButtonComponent,
         DeviceTaskListComponent,
+        DeviceScheduledJobListComponent,
 
         //Sensors
         DeviceSensorTestButtonComponent,

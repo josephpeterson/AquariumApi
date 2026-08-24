@@ -1,0 +1,17 @@
+.device-sensor-test-button {
+    color: darkkhaki;
+
+}
+.device-sensor-test-button .bi-slash-circle
+{
+    color:lightgray;
+}
+
+.device-sensor-test-button.clickable {
+    cursor: pointer;
+
+}
+
+.device-sensor-test-button.clickable:hover {
+    color: rgb(212, 206, 114);
+}
